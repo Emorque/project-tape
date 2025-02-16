@@ -12,16 +12,20 @@
     "@react-three/drei": "^9.121.5",
     "@react-three/fiber": "^8.17.14",
     "@types/three": "^0.173.0",
+    "@wavesurfer/react": "^1.0.9",
     "gsap": "^3.12.7",
     "next": "14.2.22",
     "react": "^18",
     "react-dom": "^18",
-    "three": "^0.173.0"
+    "react-window": "^1.8.11",
+    "three": "^0.173.0",
+    "wavesurfer.js": "^7.9.1"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/react-window": "^1.8.8",
     "eslint": "^8",
     "eslint-config-next": "14.2.22",
     "typescript": "^5"

@@ -83,7 +83,7 @@ export function Game() {
   const [editorMapExists, setEditorMapExists] = useState<boolean>(false);
   const [editorURL, setEditorURL] = useState<string | null>(null)
   const [editorBtn, setEditorBtn] = useState<boolean>(false);
-  const [eMap, setEMap] = useState<[]>([])
+  // const [eMap, setEMap] = useState<[]>([])
 
     const editorChange = (e: ChangeEvent<HTMLInputElement>) => { 
       const file = e.target.files?.[0];
@@ -810,7 +810,7 @@ export function Game() {
       if (mapString) {
         map = JSON.parse(mapString);
         setEditorMapExists(true);
-        setEMap(map);
+        // setEMap(map);
       }
       else {
         alert("No Map Found.")

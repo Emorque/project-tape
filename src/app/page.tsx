@@ -2,6 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { CameraControls, Html} from '@react-three/drei';
+import Link from 'next/link'
 import { Room } from "./components/Room"
 import { Game } from "./components/Game"
 import "./page.css";
@@ -83,7 +84,7 @@ export default function Home() {
         <Room/>
         <Html 
         className="content"
-          position={[30, 25, 0]}
+          position={[30, 25, 10]}
           transform
           occlude
           rotation={[0, -Math.PI / 2, 0]}
@@ -92,20 +93,40 @@ export default function Home() {
             <SongSelect focusProp={handleNewFocus}/>
           </div>
         </Html>
+
+        <Html 
+        className="content"
+          position={[10, 25, -12]}
+          transform
+          occlude
+          // rotation={[0, -Math.PI / 2, 0]}
+        >
+          <div className="annotation" style={databaseStyle}>
+            {/* <Link></Link> */}
+            <Link href="/editor">Visit Editor</Link>
+          </div>
+        </Html>
         <CameraController focus={focusPoint} cameraRef={cameraControlsRef}/>
       </Canvas>
       <div id='menuOptions'>
         <button onClick={() => {
           setFocusPoint([-20,30,30, 15, 10, 0]);
           setPlayerView(false)
-          
-          }}>Editor</button>
+          setStartVisible(false);
+          }}>Start</button>
         <button onClick={() => {
-          setFocusPoint([15,25,0, 20, 25, 0]);
+          setFocusPoint([15,25,10, 20, 25, 10]);
           setPlayerView(true);
-          
+          setStartVisible(false);
           }}>Player
-          </button>
+        </button>
+        <button onClick={() => {
+          setFocusPoint([10,25,10, 10, 25, -12]);
+          setPlayerView(true);
+          setStartVisible(false);
+          
+          }}>Editor
+        </button>
       </div>
       <div id="startScreen" style={startScreenStyle}>
         <button onClick={() => {
