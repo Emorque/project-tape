@@ -12,6 +12,7 @@
     "@react-three/drei": "^9.121.5",
     "@react-three/fiber": "^8.17.14",
     "@types/three": "^0.173.0",
+    "gsap": "^3.12.7",
     "next": "14.2.22",
     "react": "^18",
     "react-dom": "^18",

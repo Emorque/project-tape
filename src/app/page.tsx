@@ -3,9 +3,9 @@
 import { Canvas } from "@react-three/fiber";
 import { CameraControls, Html} from '@react-three/drei';
 import { Room } from "./components/Room"
+import { Game } from "./components/Game"
 import "./page.css";
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link.js';
 
 interface CameraControlsProp {
   focus : [number,number,number, number,number,number]
@@ -48,27 +48,27 @@ function SongSelect({focusProp} : SongSelectProps) {
 
 export default function Home() {
   const cameraControlsRef = useRef<CameraControls>(null);
-  const [focusPoint, setFocusPoint] = useState<[number, number, number, number, number, number]>([-3,2,2, 0, 2, 1])
+  const [focusPoint, setFocusPoint] = useState<[number, number, number, number, number, number]>([-20,30,30, 15, 10, 0])
   const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
   const [startVisible, setStartVisible] = useState<boolean>(false);
 
   const databaseStyle = {
-    opacity: playerView ? 1 : 0, // Smooth fade-in and fade-out
-    visibility: playerView ? "visible" : "hidden", // Keeps the element in the layout, but invisible
-    transition: 'opacity 2s ease, visibility 2s' // Apply transition for opacity, and a delay for visibility
+    opacity: playerView ? 1 : 0, 
+    visibility: playerView ? "visible" : "hidden",
+    transition: 'opacity 2s ease, visibility 2s' 
   } as React.CSSProperties;
   
   const stageStyle = {
-    opacity: songPlaying ? 1 : 0, // Smooth fade-in and fade-out
-    visibility: songPlaying ? "visible" : "hidden", // Keeps the element in the layout, but invisible
-    transition: 'opacity 2s ease, visibility 2s' // Apply transition for opacity, and a delay for visibility
+    opacity: songPlaying ? 1 : 0, 
+    visibility: songPlaying ? "visible" : "hidden",
+    transition: 'opacity 2s ease, visibility 2s'
   } as React.CSSProperties;
   
   const startScreenStyle = {
-    opacity: startVisible ? 1 : 0, // Smooth fade-in and fade-out
-    visibility: startVisible ? "visible" : "hidden", // Keeps the element in the layout, but invisible
-    transition: 'opacity 2s ease, visibility 2s' // Apply transition for opacity, and a delay for visibility
+    opacity: startVisible ? 1 : 0,
+    visibility: startVisible ? "visible" : "hidden",
+    transition: 'opacity 2s ease, visibility 2s'
   } as React.CSSProperties;
 
   const handleNewFocus = (newFocus: [number,number,number,number,number,number]) => { 
@@ -114,8 +114,7 @@ export default function Home() {
           }}>Play Song</button>
       </div>
       <div id="songScreen" style={stageStyle}>
-          <h1>HIIIIIIIIIIIIIII</h1>
-          
+          <Game/>
           {/* <iframe   width={300}  height={200} src="https://emorque.github.io/testing_meyda/"></iframe> */}
       </div>
     </div>
