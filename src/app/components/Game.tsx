@@ -79,8 +79,8 @@ export function Game() {
 
   const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
 
-  // Editor Map
-  const [editorMapExists, setEditorMapExists] = useState<boolean>(false);
+  // Editor Map //Uncomment the below code to reintegrate user maps
+  // const [editorMapExists, setEditorMapExists] = useState<boolean>(false); 
   const [editorURL, setEditorURL] = useState<string | null>(null)
   const [editorBtn, setEditorBtn] = useState<boolean>(false);
   // const [eMap, setEMap] = useState<[]>([])
@@ -945,7 +945,7 @@ export function Game() {
                 
                 <div style={{display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center'}}>
                   <button id='editorBtn' onClick={editorMap} style={{padding: 2, width: "100%"}}>Play Your Editor Map</button>
-                  {editorMapExists &&
+                  {true &&
                   <>
                     <input type="file" accept='audio/*' onChange={editorChange}/>
                     <audio src={editorURL ?? ""} controls={false} ref={editorAudioRef} loop={false} />

@@ -36,6 +36,7 @@ export default function AccountForm({ user }: { user: User | null }) {
         setAvatarUrl(data.avatar_url)
       }
     } catch (error) {
+      console.error('User error:', error) // Only used for eslint
       alert('Error loading user data!')
     } finally {
       setLoading(false)
@@ -67,9 +68,13 @@ export default function AccountForm({ user }: { user: User | null }) {
         avatar_url,
         updated_at: new Date().toISOString(),
       })
-      if (error) throw error
+      if (error) {
+        console.error('Supabase Profile error:', error) // Only used for eslint
+        throw error
+      }
       alert('Profile updated!')
     } catch (error) {
+      console.error('Profile Update error:', error) // Only used for eslint
       alert('Error updating the data!')
     } finally {
       setLoading(false)

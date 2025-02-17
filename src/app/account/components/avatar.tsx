@@ -56,6 +56,7 @@ export default function Avatar({
 
       onUpload(filePath)
     } catch (error) {
+      console.error('Avatar error:', error) // Only used for eslint
       alert('Error uploading avatar!')
     } finally {
       setUploading(false)
