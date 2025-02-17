@@ -805,16 +805,17 @@ export function Game() {
     }
 
     const editorMap = () => {
-      const mapString = localStorage.getItem('customMap')
-      let map; 
-      if (mapString) {
-        map = JSON.parse(mapString);
-        setEditorMapExists(true);
-        // setEMap(map);
-      }
-      else {
-        alert("No Map Found.")
-      }
+      console.log("temp");
+      // const mapString = localStorage.getItem('customMap')
+      // let map; 
+      // if (mapString) {
+      //   map = JSON.parse(mapString);
+      //   setEditorMapExists(true);
+      //   setEMap(map);
+      // }
+      // else {
+      //   alert("No Map Found.")
+      // }
     }
 
     // Creating curves from new map format:
