@@ -213,7 +213,6 @@ export default function Home() {
           setFocusPoint([10,25,10, 10, 25, -12]);
           setPlayerView(true);
           setStartVisible(false);
-          
           }}>Editor
         </button>
         <button onClick={() => {
@@ -230,7 +229,6 @@ export default function Home() {
         {selectedSong && gameMap &&
         <Game gMap={gameMap}/>
         }
-        
       </div>
     </div>
   );
