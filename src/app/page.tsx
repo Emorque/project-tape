@@ -1,45 +1,16 @@
 'use client'
 
 import { Canvas } from "@react-three/fiber";
-import { CameraControls, Html, useHelper} from '@react-three/drei';
+import { CameraControls, Html } from '@react-three/drei';
 import Link from 'next/link'
-import { Room } from "./components/Room"
 import { PSRoom } from "./components/Project-tape-scene"
 import { Game } from "./components/Game"
 import "./page.css";
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { songType, sMap } from "@/utils/helperTypes"
+
 import { createClient } from '@/utils/supabase/client'
-import { DirectionalLight, DirectionalLightHelper, RectAreaLight, Vector3 } from "three";
-
-type songType = {
-  mapper_metadata: object,
-  song_id: string,
-  song_metadata: object
-}[];
-
-type sMap = [number,string][]
-
-interface CameraControlsProp {
-  focus : [number,number,number, number,number,number]
-  cameraRef: React.RefObject<CameraControls>
-}
-
-function CameraController({focus, cameraRef} : CameraControlsProp) {
-  useEffect(() => {
-    console.log(cameraRef.current?.getPosition(new Vector3()))
-    if (cameraRef.current) {
-      // cameraRef.current.mouseButtons = {left: 0, middle: 0, right: 0, wheel: 0}
-      // cameraRef.current.touches={ one: 0, three: 0, two: 0 }
-      cameraRef.current.setLookAt(focus[0], focus[1], focus[2], focus[3], focus[4], focus[5], true);
-    }
-  }, [cameraRef, focus]);
-
-  return (<CameraControls
-    enabled={true}
-    ref={cameraRef}
-  />)
-}
 
 interface SongSelectProps {
   focusProp: (newFocus : [number,number,number,number,number,number], songId : string) => void;
@@ -48,7 +19,7 @@ interface SongSelectProps {
 
 function SongSelect({focusProp, songId} : SongSelectProps) {
   const setCustomSong = () => {
-    focusProp([15,20,0, 20, 15, 0], songId)
+    focusProp([14,8,34,   14,7,26], songId)
   }
 
   return (
@@ -61,8 +32,7 @@ function SongSelect({focusProp, songId} : SongSelectProps) {
 }
 
 export default function Home() {
-  const cameraControlsRef = useRef<CameraControls>(null);
-  const [focusPoint, setFocusPoint] = useState<[number, number, number, number, number, number]>([18,2,20.5, -18, 5, 10])
+  const cameraRef = useRef<CameraControls | null>(null);
   const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
   const [startVisible, setStartVisible] = useState<boolean>(false);
@@ -72,7 +42,7 @@ export default function Home() {
 
   const[selectedSong, setSelectedSong] = useState<string | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
-  // Supabase:
+
   const supabase = createClient()
 
   const handlePlay = () => {
@@ -163,34 +133,37 @@ export default function Home() {
   } as React.CSSProperties;
 
   const handleNewFocus = (newFocus: [number,number,number,number,number,number], songId: string) => { 
-    setFocusPoint(newFocus) 
+    updateCamera(newFocus)
     setStartVisible(true)
     setSelectedSong(songId);
   }
 
-  const dLight = useRef<DirectionalLight>(null!)
+  // Remove mouse controls with camera
+  useEffect(() => {
+    if (cameraRef.current) {
+      cameraRef.current.mouseButtons = {left: 0, middle: 0, right: 0, wheel: 0}
+      cameraRef.current.touches={ one: 0, three: 0, two: 0 }
+    }
+  })
 
-
+  const updateCamera = (newFocus: [number,number,number,number,number,number],) => {
+    cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], true);
+  }
 
   return (
     <div id="canvasContainer">
-      <Canvas camera={{position: [18,2,20.5]}}>
-        {/* <ambientLight intensity={3} /> */}
-        useHelper(dLight, DirectionalLightHelper)
-        {/* <ambientLight/> */}
-        <pointLight color={'#ffd1b7'} position={[4,5,17]} intensity={60}/>
-        <pointLight color={'#ffd1b7'} position={[12,5,17]} intensity={60}/>
-        {/* <Room/> */}
-        {/* <rectAreaLight position={[8,14,17]} width={13} height={13} rotation-x={-Math.PI/2} intensity={2}/> */}
+      <Canvas camera={{ position: [36,4,40]}}>
+        <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/>
+        <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
         <PSRoom/>
         <Html 
-        className="content"
-          position={[30, 25, 10]}
+        className="songHTML"
+          position={[14,12,23]}
           transform
           occlude
-          rotation={[0, -Math.PI / 2, 0]}
+          rotation={[Math.PI / 7, 0, 0]}
         >
-          <div className="annotation" style={databaseStyle}>
+          <div className="htmlDiv" style={databaseStyle}>
             <div>
               <p>Songs</p>
               {songs.map((song) => (
@@ -198,37 +171,62 @@ export default function Home() {
                   <SongSelect focusProp={handleNewFocus} songId={song.song_id}/>
                 </div>
               ))}
+              {/* <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p>
+              <p>Songs</p> */}
             </div>
           </div>
         </Html>
 
         <Html 
-        className="content"
-          position={[10, 25, -12]}
+        className="editorHTML"
+          position={[-1.5,7.8,34.73]}
           transform
           occlude
+          rotation={[0, Math.PI /2, 0]}
         >
-          <div className="annotation" style={databaseStyle}>
-            {/* <Link></Link> */}
+          <div className="htmlDiv" style={databaseStyle}>
             <Link href="/editor">Visit Editor</Link>
           </div>
         </Html>
-        <CameraController focus={focusPoint} cameraRef={cameraControlsRef}/>
+        <CameraControls 
+          ref={cameraRef}
+          enabled={true}    
+        />
       </Canvas>
       <div id='menuOptions'>
         <button onClick={() => {
-          setFocusPoint([-20,30,30, 15, 10, 0]);
+          // setFocusPoint([18,2,20.5, -18, 5, 10]); //Way too large, ends up creating curves for setLookAt to adjust 
+          updateCamera([36,4,40,   32,4,38])
           setPlayerView(false)
           setStartVisible(false);
           }}>Start</button>
         <button onClick={() => {
-          setFocusPoint([10,25,10, 10, 25, -12]);
+          updateCamera([4,8,34.5,   -1,7,34.5]);
           setPlayerView(true);
           setStartVisible(false);
           }}>Editor
         </button>
         <button onClick={() => {
-          setFocusPoint([15,25,10, 20, 25, 10]);
+          updateCamera([14,8,34,   14,11,26]);
           setPlayerView(true);
           setStartVisible(false);
           }}>Player

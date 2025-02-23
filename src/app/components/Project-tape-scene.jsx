@@ -5,14 +5,18 @@ Files: project-tape-scene.glb [320.48KB] > C:\Users\13478\Documents\Blender Stuf
 */
 
 import React from 'react'
-import { useGLTF, useAnimations } from '@react-three/drei'
+// import { useGLTF, useAnimations } from '@react-three/drei'
+
+import { useGLTF } from '@react-three/drei'
 
 export function PSRoom(props) {
   const group = React.useRef()
-  const { nodes, materials, animations } = useGLTF('/project-tape-scene-transformed.glb')
-  const { actions } = useAnimations(animations, group)
+
+  // const { nodes, materials, animations } = useGLTF('/project-tape-scene-transformed.glb')
+  const { nodes, materials } = useGLTF('/project-tape-scene-transformed.glb')
+  // const { actions } = useAnimations(animations, group)
   return (
-    <group ref={group} {...props} dispose={null}>
+    <group ref={group} {...props} dispose={null} scale={2}>
       <group name="Scene">
         <group name="Room" position={[9.88, 0.2, 16.274]} scale={[12.327, 12.327, 7.448]}>
           <mesh name="Plane001" geometry={nodes.Plane001.geometry} material={materials.Carpet_Texture} />
