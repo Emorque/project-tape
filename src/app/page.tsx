@@ -1,14 +1,16 @@
 'use client'
 
 import { Canvas } from "@react-three/fiber";
-import { CameraControls, Html} from '@react-three/drei';
+import { CameraControls, Html, useHelper} from '@react-three/drei';
 import Link from 'next/link'
 import { Room } from "./components/Room"
+import { PSRoom } from "./components/Project-tape-scene"
 import { Game } from "./components/Game"
 import "./page.css";
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { createClient } from '@/utils/supabase/client'
+import { DirectionalLight, DirectionalLightHelper, RectAreaLight, Vector3 } from "three";
 
 type songType = {
   mapper_metadata: object,
@@ -25,9 +27,10 @@ interface CameraControlsProp {
 
 function CameraController({focus, cameraRef} : CameraControlsProp) {
   useEffect(() => {
+    console.log(cameraRef.current?.getPosition(new Vector3()))
     if (cameraRef.current) {
-      cameraRef.current.mouseButtons = {left: 0, middle: 0, right: 0, wheel: 0}
-      cameraRef.current.touches={ one: 0, three: 0, two: 0 }
+      // cameraRef.current.mouseButtons = {left: 0, middle: 0, right: 0, wheel: 0}
+      // cameraRef.current.touches={ one: 0, three: 0, two: 0 }
       cameraRef.current.setLookAt(focus[0], focus[1], focus[2], focus[3], focus[4], focus[5], true);
     }
   }, [cameraRef, focus]);
@@ -59,7 +62,7 @@ function SongSelect({focusProp, songId} : SongSelectProps) {
 
 export default function Home() {
   const cameraControlsRef = useRef<CameraControls>(null);
-  const [focusPoint, setFocusPoint] = useState<[number, number, number, number, number, number]>([-20,30,30, 15, 10, 0])
+  const [focusPoint, setFocusPoint] = useState<[number, number, number, number, number, number]>([18,2,20.5, -18, 5, 10])
   const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
   const [startVisible, setStartVisible] = useState<boolean>(false);
@@ -165,11 +168,21 @@ export default function Home() {
     setSelectedSong(songId);
   }
 
+  const dLight = useRef<DirectionalLight>(null!)
+
+
+
   return (
     <div id="canvasContainer">
-      <Canvas>
-        <ambientLight intensity={2} />
-        <Room/>
+      <Canvas camera={{position: [18,2,20.5]}}>
+        {/* <ambientLight intensity={3} /> */}
+        useHelper(dLight, DirectionalLightHelper)
+        {/* <ambientLight/> */}
+        <pointLight color={'#ffd1b7'} position={[4,5,17]} intensity={60}/>
+        <pointLight color={'#ffd1b7'} position={[12,5,17]} intensity={60}/>
+        {/* <Room/> */}
+        {/* <rectAreaLight position={[8,14,17]} width={13} height={13} rotation-x={-Math.PI/2} intensity={2}/> */}
+        <PSRoom/>
         <Html 
         className="content"
           position={[30, 25, 10]}
@@ -194,7 +207,6 @@ export default function Home() {
           position={[10, 25, -12]}
           transform
           occlude
-          // rotation={[0, -Math.PI / 2, 0]}
         >
           <div className="annotation" style={databaseStyle}>
             {/* <Link></Link> */}
