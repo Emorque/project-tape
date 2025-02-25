@@ -3,9 +3,14 @@
     width: 100%;
     position: relative;
     z-index: 10;
-    * {
+    /* * {
         z-index: 100;
-    }
+    } */
+}
+
+#canvas_id {
+    position: absolute;
+    z-index: 10;
 }
 
 #menuOptions {

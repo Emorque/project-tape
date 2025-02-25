@@ -4,7 +4,8 @@ import { Canvas } from "@react-three/fiber";
 import { CameraControls, Html } from '@react-three/drei';
 import Link from 'next/link'
 import { PSRoom } from "./components/Project-tape-scene"
-import { Game } from "./components/Game"
+// import { Game } from "./components/Game"
+import { Tape } from "./components/tape";
 import "./page.css";
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -152,7 +153,7 @@ export default function Home() {
 
   return (
     <div id="canvasContainer">
-      <Canvas camera={{ position: [36,4,40]}}>
+      <Canvas id="canvas_id" camera={{ position: [36,4,40]}}>
         <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/>
         <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
         <PSRoom/>
@@ -237,7 +238,8 @@ export default function Home() {
       </div>
       <div id="songScreen" style={stageStyle}>
         {selectedSong && gameMap &&
-        <Game gMap={gameMap}/>
+        // <Game gMap={gameMap}/>
+        <Tape gMap={gameMap}/>
         }
       </div>
     </div>
