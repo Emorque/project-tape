@@ -21,13 +21,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     const lane_three = useRef<HTMLDivElement>(null);
     const lane_four = useRef<HTMLDivElement>(null);
 
-    // const circle_one = useRef<HTMLDivElement>(null);
-    // const circle_two = useRef<HTMLDivElement>(null);
-    // const circle_three = useRef<HTMLDivElement>(null);
-    // const circle_four = useRef<HTMLDivElement>(null);
-
     const combo_bar = useRef<HTMLDivElement>(null);
-    // const scoreRef = useRef<HTMLParagraphElement>(null);
     // Game controls
     // const [scrollSpeed, setScrollSpeed] = useState<number>(1500); //Make this adjustable in some settings page and get the speed here (Zustand)?
     const scrollSpeed = 1500;
@@ -54,19 +48,24 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     const [mode, setMode] = useState<string>("base")
 
     // Custom Map
-    const [leftTiming, setLeftTiming] = useState<[number,string][]>([])
-    const [rightTiming, setRightTiming] = useState<[number,string][]>([])
-    const [turnTiming, setTurnTiming] = useState<[number,string][]>([])
+    const leftNotes = useRef<[number,string][]>([])
+    const rightNotes = useRef<[number,string][]>([])
+    const turnNotes = useRef<[number,string][]>([])
+    const [leftNoteIndex, setLeftNoteIndex] = useState<number>(0)
+    const [rightNoteIndex, setRightNoteIndex] = useState<number>(0)
+    const [turnNoteIndex, setTurnNoteIndex] = useState<number>(0)
 
-    const [leftNotes, setLeftNotes] = useState<[number,string][]>([])
-    const [rightNotes, setRightNotes] = useState<[number,string][]>([])
-    const [turnNotes, setTurnNotes] = useState<[number,string][]>([])
+    const leftTiming = useRef<[number,string][]>([])
+    const rightTiming = useRef<[number,string][]>([])
+    const turnTiming = useRef<[number,string][]>([])
+    const [leftTimingIndex, setLeftTimingIndex] = useState<number>(0)
+    const [rightTimingIndex, setRightTimingIndex] = useState<number>(0)
+    const [turnTimingIndex, setTurnTimingIndex] = useState<number>(0)
 
     const [firstHitsound, setFirstHitsound] = useState<number>(0);
     const [secondHitsound, setSecondHitsound] = useState<number>(0);
     const [thirdHitsound, setThirdHitsound] = useState<number>(0);
     const [fourthHitsound, setFourthHitsound] = useState<number>(0);
-
 
     // Styling States
     const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
@@ -105,13 +104,14 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
 
     const handleInput = (
         timingList: [number, string][],
-        setTimingList: React.Dispatch<React.SetStateAction<[number, string][]>>,
+        setNoteIndex: React.Dispatch<React.SetStateAction<number>>,
+        noteIndex: number,
         hitsoundIndex: number,
         setHitsoundIndex: React.Dispatch<React.SetStateAction<number>>,
         note: string
         ) => {
         // Check for "Perfect" hit
-        if (timingList[0][0] + 75 >= time && time > timingList[0][0] - 75 && timingList[0][1] === note) {
+        if (timingList[noteIndex][0] + 75 >= time && time > timingList[noteIndex][0] - 75 && timingList[noteIndex][1] === note) {
             hitsoundsRef.current[hitsoundIndex].play();
             setHitsoundIndex((index) => (index + 1) % 3); 
             setScore((score) => score + 5); 
@@ -137,11 +137,11 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 perfectAnimation("cThree")
                 perfectAnimation("cFour")
             }
-            setTimingList((list) => list.slice(1));
+            setNoteIndex((index) => index + 1);
         }
         
         // Check for "Success" hit
-        else if (timingList[0][0] + 150 >= time && time > timingList[0][0] - 150 && timingList[0][1] === note) {
+        else if (timingList[noteIndex][0] + 150 >= time && time > timingList[noteIndex][0] - 150 && timingList[noteIndex][1] === note) {
             hitsoundsRef.current[hitsoundIndex].play();
             setHitsoundIndex((index) => (index + 1) % 3); 
             setScore((score) => score + 3); 
@@ -168,7 +168,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 hitAnimation("cThree")
                 hitAnimation("cFour")
             }
-            setTimingList((list) => list.slice(1)); 
+            setNoteIndex((index) => index + 1); 
         }
         };
 
@@ -178,82 +178,70 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             if (event.key === 'a' || event.key === 'A') {
                 if (direction === "Left") return
                 moveLeft();
-                if (turnTiming.length > 0 && turnTiming[0][0] <= time + 150) {
-                    handleInput(turnTiming, setTurnTiming, firstHitsound, setFirstHitsound, "FT")
+                if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
+                    handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, firstHitsound, setFirstHitsound, "FT")
                 }
             }
-    
     
             if (event.key === 'd' || event.key === 'D') {
                 if (direction === "Right") return
                 moveRight();
-                if (turnTiming.length > 0 && turnTiming[0][0] <= time + 150) {
-                    handleInput(turnTiming, setTurnTiming, thirdHitsound, setThirdHitsound, "ST")
+                if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
+                    handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, thirdHitsound, setThirdHitsound, "ST")
                 }
             }
     
             if (event.key === 'j' || event.key === 'J') {
-                if (direction === 'Left') {
-                    if (leftTiming.length > 0) {
-                        if (leftTiming[0][0] <= time + 150) {
-                            handleInput(leftTiming, setLeftTiming, firstHitsound, setFirstHitsound, "FL")
-                        }
-                        else if (leftTiming[0][0] <= time + 250){
-                            // handleEarlyInput("left")
-                            setComboCount(0);
-                            setMode("base");
-                            earlyAnimation("cOne")
-                        }
+                if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
+                    if (leftTiming.current[leftTimingIndex][0] <= time + 150) {
+                        handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, firstHitsound, setFirstHitsound, "FL")
+                    }
+                    else if (leftTiming.current[leftTimingIndex][0] <= time + 250){
+                        setComboCount(0);
+                        setMode("base");
+                        earlyAnimation("cOne")
                     }
                 }
-        
-                else {
-                    if (leftTiming.length > 0) {
-                        if (leftTiming[0][0] <= time + 150) {
-                            handleInput(leftTiming, setLeftTiming, thirdHitsound, setThirdHitsound, "SL")
-                        }
-                        else if (leftTiming[0][0] <= time + 250) {
-                            // handleEarlyInput("right")
-                            setComboCount(0);
-                            setMode("base");
-                            earlyAnimation("cThree")
-                        }
+                else if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
+                    if (leftTiming.current[leftTimingIndex][0] <= time + 150) {
+                        handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, thirdHitsound, setThirdHitsound, "SL")
+                    }
+                    else if (leftTiming.current[leftTimingIndex][0] <= time + 250) {
+                        setComboCount(0);
+                        setMode("base");
+                        earlyAnimation("cThree")   
                     }
                 }
             }
     
             if (event.key === 'l' || event.key === 'L') {
-                if (direction === 'Left') {
-                    if (rightTiming.length > 0) {
-                        if (rightTiming[0][0] <= time + 150) {
-                            handleInput(rightTiming, setRightTiming, secondHitsound, setSecondHitsound, "FR")
-                        }
-                        else if (rightTiming[0][0] <= time + 250) {
-                            setComboCount(0);
-                            setMode("base");  
-                            earlyAnimation("cTwo")
-                        }
+                if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
+                    if (rightTiming.current[rightTimingIndex][0] <= time + 150) {
+                        handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, secondHitsound, setSecondHitsound, "FR")
+                    }
+                    else if (rightTiming.current[rightTimingIndex][0] <= time + 250) {
+                        setComboCount(0);
+                        setMode("base");  
+                        earlyAnimation("cTwo")
                     }
                 }
         
-                else {
-                    if (rightTiming.length > 0) {
-                        if (rightTiming[0][0] <= time + 150){
-                            handleInput(rightTiming, setRightTiming, fourthHitsound, setFourthHitsound, "SR")
-                        }
-                        else if (rightTiming[0][0] <= time + 250) {
-                            setComboCount(0);
-                            setMode("base");
-                            earlyAnimation("cFour")
-                        }
+                else if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
+                    if (rightTiming.current[rightTimingIndex][0] <= time + 150){
+                        handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, fourthHitsound, setFourthHitsound, "SR")
+                    }
+                    else if (rightTiming.current[rightTimingIndex][0] <= time + 250) {
+                        setComboCount(0);
+                        setMode("base");
+                        earlyAnimation("cFour")
                     }
                 }
             } 
     
             if (event.key === 'p' || event.key === "P") {
-                customMap()
+                restartMap()
             }
-            if (event.key === 'f' || event.key === "F") {
+            if (event.key === 'f' || event.key === "F") { //Fast forward
                 if (audioRef.current) audioRef.current.currentTime = audioRef.current.currentTime + 10;
             }
             if (event.key === 'q' || event.key === "Q") {
@@ -267,7 +255,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             document.removeEventListener('keydown', handleKeyDown);
         };
         // }, [time, direction, leftBtnHold, rightBtnHold, toggleBtnHold, resetBtnHold, leftTiming, rightTiming, turnTiming]);
-        }, [time, direction, leftTiming, rightTiming, turnTiming]);
+        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex]);
 
     const handleEnd = contextSafe(() => {
         gsap.to("#lane-container", {
@@ -310,29 +298,10 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         }
     }
 
-    const customMap = () => {
+    // Start Map
+    useEffect(() => {
         setAudioURL('https://9boushb4a7.ufs.sh/f/9Jv1QVILGRy4BnZDzY7GTJ0cX8hyuefiOLVSvntDKg5EZ1dl');
-  
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-        }
-  
-        setTime(0);
-        setStopwatchActive(false);
-        setStPaused(true);
-        setScore(0);
-        setMissCount(0);
-        setPerfectCount(0);
-        setOkayCount(0);
-        setComboCount(0);
-        setEndScreen(false);
-        gsap.to("#lane-container", {
-            opacity: 1,
-            duration: 1,
-        }) //FIXXXXXX to a contextSafe. Have restart and first playing of a song be different functions. No need to reinitialize a lot of the stuff
-        setMode("base");
-  
+    
         const tempHitsounds: { play: () => void; }[] = []
         for (let i = 0; i < 12; i++) {
           const hitsound  = new Audio('/hitsound.mp3'); // Needed for local 
@@ -340,7 +309,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
           tempHitsounds.push(hitsound);
         } 
         hitsoundsRef.current = tempHitsounds;
-  
+
         const res = (gMap.sort((firstItem: [number,string], secondItem: [number,string]) => firstItem[0] - secondItem[0]))
   
         const lTiming: [number,string][] = [];
@@ -365,27 +334,69 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             tNotes.push([res[i][0], res[i][1]])
           }
         }
-  
-        setLeftTiming(lTiming);
-        setRightTiming(rTiming);
-        setTurnTiming(tTiming);
-  
-        setLeftNotes(lNotes)
-        setRightNotes(rNotes)
-        setTurnNotes(tNotes)
-        
+        leftTiming.current = lTiming;
+        rightTiming.current = rTiming;
+        turnTiming.current = tTiming;
+
+        leftNotes.current = lNotes;
+        rightNotes.current = rNotes;
+        turnNotes.current = tNotes;
+
         setTimeout(() => {
-          setStopwatchActive(true);
-          setStPaused(false);
+            setStopwatchActive(true);
+            setStPaused(false);
         }, scrollSpeed)
-  
+    
         setTimeout(() => {
-          if (audioRef.current) {
-            audioRef.current.play();
-          } 
+            if (audioRef.current) {
+                audioRef.current.play();
+            } 
         }, scrollSpeed * 2)
-        
+    }, [])
+
+    // Restart Map
+    const restartMap = () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        setTime(0);
+        setStopwatchActive(false);
+        setStPaused(true);
+        setScore(0);
+        setMissCount(0);
+        setPerfectCount(0);
+        setOkayCount(0);
+        setComboCount(0);
+        setEndScreen(false);
+
+        setLeftTimingIndex(0);
+        setRightTimingIndex(0);
+        setTurnTimingIndex(0);
+
+        setLeftNoteIndex(0);
+        setRightNoteIndex(0);
+        setTurnNoteIndex(0);
+
+        setTimeout(() => {
+            setStopwatchActive(true);
+            setStPaused(false);
+          }, scrollSpeed)
+    
+          setTimeout(() => {
+            if (audioRef.current) {
+              audioRef.current.play();
+            } 
+          }, scrollSpeed * 2)
+
+        gsap.to("#lane-container", {
+            opacity: 1,
+            duration: 1,
+        }) //FIXXXXXX to a contextSafe. Have restart and first playing of a song be different functions. No need to reinitialize a lot of the stuff
+        setMode("base");
+
         document.querySelectorAll(".bar").forEach(e => e.remove());
+
     }
 
     const createBar = (lane: RefObject<HTMLDivElement>, turnNote : boolean) => {
@@ -405,89 +416,91 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     // Handle Curve Creation
     // Left Notes
     useEffect(() => {
-        if (leftNotes[0] && time === leftNotes[0][0]) {
-        if (leftNotes[0][1] === "FL") {
-            createBar(lane_one, false)
-            setLeftNotes(list => list.slice(1));
-        }
-        if (leftNotes[0][1] === "SL") {
-            createBar(lane_three, false)
-            setLeftNotes(list => list.slice(1));
-        }
+        if (leftNoteIndex < leftNotes.current.length && time === leftNotes.current[leftNoteIndex][0]) {
+            if (leftNotes.current[leftNoteIndex][1] === "FL") {
+                createBar(lane_one, false)
+                setLeftNoteIndex((index) => index + 1);
+            }
+            if (leftNotes.current[leftNoteIndex][1] === "SL") {
+                createBar(lane_three, false)
+                setLeftNoteIndex((index) => index + 1);
+            }
         }   
-    }, [time, leftNotes])
+    }, [time, leftNoteIndex])
 
     // Right Notes
     useEffect(() => {
-        if (rightNotes[0] && time === rightNotes[0][0]) {
-        if (rightNotes[0][1] === "FR") {
-            createBar(lane_two, false)
-            setRightNotes(list => list.slice(1));
-        }
-        if (rightNotes[0][1] === "SR") {
-            createBar(lane_four, false)
-            setRightNotes(list => list.slice(1));
-        }
+        if (rightNoteIndex < rightNotes.current.length && time === rightNotes.current[rightNoteIndex][0]) {
+            if (rightNotes.current[rightNoteIndex][1] === "FR") {
+                createBar(lane_two, false)
+                setRightNoteIndex((index) => index + 1)
+            }
+            if (rightNotes.current[rightNoteIndex][1] === "SR") {
+                createBar(lane_four, false);
+                setRightNoteIndex((index) => index + 1);
+            }
         }   
-    }, [time, rightNotes])
+    }, [time, rightNoteIndex])
 
     // Turn Notes
     useEffect(() => {
-        if (turnNotes[0] && time === turnNotes[0][0]) {
-        if (turnNotes[0][1] === "FT") {
-            createBar(lane_one, true)
-            setTurnNotes(list => list.slice(1));
-        }
-        if (turnNotes[0][1] === "ST") {
-            createBar(lane_three, true)
-            setTurnNotes(list => list.slice(1));
-        }
+        if (turnNoteIndex < turnNotes.current.length && time === turnNotes.current[turnNoteIndex][0]) {
+            if (turnNotes.current[turnNoteIndex][1] === "FT") {
+                createBar(lane_one, true)
+                setTurnNoteIndex((index) => index + 1)
+            }
+            if (turnNotes.current[turnNoteIndex][1] === "ST") {
+                createBar(lane_three, true)
+                setTurnNoteIndex((index) => index + 1)
+            }
         }   
-    }, [time, turnNotes])
+    }, [time, turnNoteIndex])
 
     // Handle Misses
     useEffect(() => {
-        if (leftTiming.length > 0 && leftTiming[0][0] < time - 150) {
-        handleMiss(leftTiming, setLeftTiming);
+        if (leftTimingIndex < leftTiming.current.length && leftTiming.current[leftTimingIndex][0] < time - 150) {
+        handleMiss(leftTimingIndex, setLeftTimingIndex, leftTiming.current);
         }
-        if (rightTiming.length > 0 && rightTiming[0][0] < time - 150) {
-        handleMiss(rightTiming, setRightTiming);
+        if (rightTimingIndex < rightTiming.current.length && rightTiming.current[rightTimingIndex][0] < time - 150) {
+        handleMiss(rightTimingIndex, setRightTimingIndex, rightTiming.current);
         }
-        if (turnTiming.length > 0 && turnTiming[0][0] < time - 150) {
-        handleMiss(turnTiming, setTurnTiming);
+        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] < time - 150) {
+        handleMiss(turnTimingIndex, setTurnTimingIndex, turnTiming.current);
         }
-    }, [time, leftTiming, rightTiming, turnTiming]);
+    }, [time, leftTimingIndex, rightTimingIndex, turnTimingIndex]);
     
 
     const handleMiss = (
-        timingList: [number,string][], 
-        setTimingList: React.Dispatch<React.SetStateAction<[number,string][]>>
+        noteIndex: number, 
+        setNoteIndex: React.Dispatch<React.SetStateAction<number>>,
+        timingList: [number,string][]
     ) => {
         console.log("Missed")
-        if (timingList.length > 0 && timingList[0][0] < time - 150) {
+        // if (timingList.length > 0 && timingList[0][0] < time - 150) {
             if (score > 0) {
                 setScore((score) => score - 1);
             }
             if (combo_bar.current) combo_bar.current.style.transition = "none";
-            if (timingList[0][1] === "FL") missAnimation("cOne")
-            if (timingList[0][1] === "FR") missAnimation("cTwo")
-            if (timingList[0][1] === "SL") missAnimation("cThree")
-            if (timingList[0][1] === "SR") missAnimation("cFour")
+            if (timingList[noteIndex][1] === "FL") missAnimation("cOne")
+            if (timingList[noteIndex][1] === "FR") missAnimation("cTwo")
+            if (timingList[noteIndex][1] === "SL") missAnimation("cThree")
+            if (timingList[noteIndex][1] === "SR") missAnimation("cFour")
 
-            if (timingList[0][1] === "FT") {
+            if (timingList[noteIndex][1] === "FT") {
                 missAnimation("cOne")
                 missAnimation("cTwo")
             }
-            else if (timingList[0][1] === "ST") {
+            else if (timingList[noteIndex][1] === "ST") {
                 missAnimation("cThree")
                 missAnimation("cFour")
             }
         
             setMissCount((count) => count + 1);
             setComboCount(0)
+            if (combo_bar.current) combo_bar.current.style.transition = "none";
             setMode("base")
-            setTimingList((list) => list.slice(1));
-        }
+            setNoteIndex((index) => index + 1)
+        // }
     }
 
     const player_style = {
@@ -495,7 +508,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     }
 
     const combo_style = {
-        width: `${((Math.min(comboCount, 20))/20) * 100}%`
+        width: `${((Math.min(comboCount, 21))/21) * 100}%`
     }
 
     const missAnimation = contextSafe((circle : string) => {
@@ -544,7 +557,6 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         }
     })
 
-    
 
     useGSAP(() => {
         gsap.to("#score_text", {
@@ -558,7 +570,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
 
     return (
     <div>
-        <button onClick={customMap} style={{position: 'absolute', zIndex:2000}}>Play</button>
+        {/* <button onClick={customMap} style={{position: 'absolute', zIndex:2000}}>Play</button> */}
         <div id='game-container'>
             
             <div id='lane-container'>
@@ -600,7 +612,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                     </div>
                 </div>
                 <div id='menu_div'>
-                    <button onClick={customMap} className='gameBtns'>Retry</button>
+                    <button onClick={restartMap} className='gameBtns'>Retry</button>
                     <button onClick={() => {gameMapProp(null)}}className='gameBtns'>Main Menu</button>
                 </div>
             </div>
