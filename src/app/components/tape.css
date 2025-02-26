@@ -17,9 +17,9 @@
     z-index: 1;
     transform: rotateX(70deg) translateY(60px);
     transform-style: preserve-3d;
-    /* border-top: 1px solid red; */
     border-left: 1px solid #eaeaea;
     border-right: 1px solid #eaeaea;
+    /* transition: opacity 0.5s ease; */
 }
 
 #lane-container::after {
@@ -101,18 +101,32 @@
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    top:0;
+    top: 5vh;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.315);
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.767);
 }
 
 #score_div {
     position: relative;
     display: flex;
+    flex-direction: column;
     text-align: center;
     justify-content: center;
-    gap: 10px;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+#hit_stats {
+    position: relative;
+    display: flex;
+    width: 60%;
+    max-width: 320px;
+    div {
+        flex: 1
+    }
 }
 
 #combo-bar {
@@ -153,6 +167,7 @@
     border-radius: 50%;
     border: 1px solid #eaeaea;
     content:"";
+    /* transform: scaleY(60%); DO ANimations with this!*/ 
 }
 
 #cassette-tape::before{
@@ -177,6 +192,49 @@
     content:"";
 }
 
+#menu_div {
+    display: flex;
+    width: 60%;
+    max-width: 320px;
+    opacity: 0;
+    justify-content: space-around;
+    transform: translateY(20px);
+    animation: menuAnimation 4s linear 1 forwards;
+    button {
+        flex: 1
+    }
+}
+
+@keyframes menuAnimation {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    50% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    75% {
+        opacity: 1;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+}
+
+.gameBtns {
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    color: #eaeaea;
+    border: 0;
+    font-family: "Unispace";
+    font-size: medium;
+    cursor: pointer;
+}
 
 @keyframes barAnime {
     0% {
@@ -193,10 +251,37 @@
     z-index: 10;
 }
 
+.circle {
+    position: absolute;
+    width: 50%;
+    max-width: 20px;
+    aspect-ratio: 1;
+    bottom: -22.5px;
+    left: 22.5%;
+    border: 2px solid #eaeaea;
+    background: linear-gradient(to right, transparent 40%, #eaeaea 40%, #eaeaea 60%, transparent 60%);
+    border-radius: 50%;
+    content: "";
+}
+
 @media screen and (min-width: 950px) {
     #lane-container {
         width: 80vw;
         max-width: 500px;
         transform: rotateX(60deg) translateY(-40px);
+    }
+}
+
+@media screen and (min-width: 350px) {
+    .circle {
+        width: 50%;
+        max-width: 20px;
+        left: 40%;
+    }
+}
+
+@media screen and (min-height: 800px) {
+    #end_screen_wrapper {
+        top: 10vh;
     }
 }

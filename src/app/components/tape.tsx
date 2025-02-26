@@ -1,28 +1,36 @@
-"use client";
+// 'use client' taken out because of the gameMapProp. use client is now implied i think b/c parent has use client
 
 import React, { RefObject, useEffect, useRef, useState } from 'react';
 import "./tape.css";
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 interface gameInterface {
-  gMap: [number,string][]
+  gMap: [number,string][];
+  gameMapProp: (currentSong: string | null) => void;
 }
 
-export const Tape = ({gMap} : gameInterface) => {   
+export const Tape = ({gMap, gameMapProp} : gameInterface) => {   
 
     const [audioURL, setAudioURL] = useState<string | null>(null)
     const audioRef = useRef<HTMLAudioElement>(null);
-    // const videoRef = useRef<HTMLIFrameElement>(null);
 
     // Game Visuals
     const lane_one = useRef<HTMLDivElement>(null);
     const lane_two = useRef<HTMLDivElement>(null);
     const lane_three = useRef<HTMLDivElement>(null);
     const lane_four = useRef<HTMLDivElement>(null);
+
+    // const circle_one = useRef<HTMLDivElement>(null);
+    // const circle_two = useRef<HTMLDivElement>(null);
+    // const circle_three = useRef<HTMLDivElement>(null);
+    // const circle_four = useRef<HTMLDivElement>(null);
+
     const combo_bar = useRef<HTMLDivElement>(null);
-    const scoreRef = useRef<HTMLParagraphElement>(null);
+    // const scoreRef = useRef<HTMLParagraphElement>(null);
     // Game controls
-    const [scrollSpeed, setScrollSpeed] = useState<number>(1500); //Make this adjustable in some settings page and get the speed here (Zustand)?
+    // const [scrollSpeed, setScrollSpeed] = useState<number>(1500); //Make this adjustable in some settings page and get the speed here (Zustand)?
+    const scrollSpeed = 1500;
     const [direction, setDirection] = useState<string>("Left");
 
     // Stopwatch
@@ -32,7 +40,7 @@ export const Tape = ({gMap} : gameInterface) => {
     const [time, setTime] = useState<number>(0);
 
     // End Screen
-    const [endScreen, setEndScreen] = useState<boolean>(true);
+    const [endScreen, setEndScreen] = useState<boolean>(false);
 
     // Stats
     const [score, setScore] = useState<number>(0);
@@ -83,26 +91,17 @@ export const Tape = ({gMap} : gameInterface) => {
         }
     }, [stopwatchActive, stPaused]);
 
-    const moveLeft = () => {
-        gsap.to("#lane-selection", {left: "23%", duration: "0.2"})
-        setDirection("Left")
-    }
-    
-    const moveRight = () => {
-        gsap.to("#lane-selection", {left: "73%", duration: "0.2"})
-        setDirection("Right")
-    }
+    const { contextSafe } = useGSAP(); 
 
-    const handleEarlyInput = ( direction: string ) => {
-        console.log(direction)
-        // Animate the circles 
-      }
-    
-    // useEffect(() => {
-    //     if (score > highScore) {
-    //         setHighScore(score);  
-    //     }
-    // }, [score, highScore]);
+    const moveLeft = contextSafe(() => {
+        gsap.to("#lane-selection", {left: "23%", duration: "0.2"});
+        setDirection("Left");
+    })
+
+    const moveRight = contextSafe(() => {
+        gsap.to("#lane-selection", {left: "73%", duration: "0.2"});
+        setDirection("Right");
+    })
 
     const handleInput = (
         timingList: [number, string][],
@@ -125,6 +124,19 @@ export const Tape = ({gMap} : gameInterface) => {
                 if (comboCount > maxCombo) setMaxCombo(comboCount);
             }
             if (combo_bar.current) combo_bar.current.style.transition = "width 1s ease";
+            if (note === "FL") perfectAnimation("cOne")
+            if (note === "FR") perfectAnimation("cTwo")
+            if (note === "SL") perfectAnimation("cThree")
+            if (note === "SR") perfectAnimation("cFour")
+
+            if (note === "FT") {
+                perfectAnimation("cOne")
+                perfectAnimation("cTwo")
+            }
+            else if (note === "ST") {
+                perfectAnimation("cThree")
+                perfectAnimation("cFour")
+            }
             setTimingList((list) => list.slice(1));
         }
         
@@ -143,6 +155,19 @@ export const Tape = ({gMap} : gameInterface) => {
                 }
             }
             if (combo_bar.current) combo_bar.current.style.transition = "width 0.5s ease";
+            if (note === "FL") hitAnimation("cOne")
+            if (note === "FR") hitAnimation("cTwo")
+            if (note === "SL") hitAnimation("cThree")
+            if (note === "SR") hitAnimation("cFour")
+
+            if (note === "FT") {
+                hitAnimation("cOne")
+                hitAnimation("cTwo")
+            }
+            else if (note === "ST") {
+                hitAnimation("cThree")
+                hitAnimation("cFour")
+            }
             setTimingList((list) => list.slice(1)); 
         }
         };
@@ -174,7 +199,10 @@ export const Tape = ({gMap} : gameInterface) => {
                             handleInput(leftTiming, setLeftTiming, firstHitsound, setFirstHitsound, "FL")
                         }
                         else if (leftTiming[0][0] <= time + 250){
-                            handleEarlyInput("left")
+                            // handleEarlyInput("left")
+                            setComboCount(0);
+                            setMode("base");
+                            earlyAnimation("cOne")
                         }
                     }
                 }
@@ -185,7 +213,10 @@ export const Tape = ({gMap} : gameInterface) => {
                             handleInput(leftTiming, setLeftTiming, thirdHitsound, setThirdHitsound, "SL")
                         }
                         else if (leftTiming[0][0] <= time + 250) {
-                            handleEarlyInput("right")
+                            // handleEarlyInput("right")
+                            setComboCount(0);
+                            setMode("base");
+                            earlyAnimation("cThree")
                         }
                     }
                 }
@@ -194,12 +225,14 @@ export const Tape = ({gMap} : gameInterface) => {
             if (event.key === 'l' || event.key === 'L') {
                 if (direction === 'Left') {
                     if (rightTiming.length > 0) {
-                    if (rightTiming[0][0] <= time + 150) {
-                        handleInput(rightTiming, setRightTiming, secondHitsound, setSecondHitsound, "FR")
-                    }
-                    else if (rightTiming[0][0] <= time + 250) {  
-                        handleEarlyInput("left")
-                    }
+                        if (rightTiming[0][0] <= time + 150) {
+                            handleInput(rightTiming, setRightTiming, secondHitsound, setSecondHitsound, "FR")
+                        }
+                        else if (rightTiming[0][0] <= time + 250) {
+                            setComboCount(0);
+                            setMode("base");  
+                            earlyAnimation("cTwo")
+                        }
                     }
                 }
         
@@ -209,7 +242,9 @@ export const Tape = ({gMap} : gameInterface) => {
                             handleInput(rightTiming, setRightTiming, fourthHitsound, setFourthHitsound, "SR")
                         }
                         else if (rightTiming[0][0] <= time + 250) {
-                            handleEarlyInput("right")
+                            setComboCount(0);
+                            setMode("base");
+                            earlyAnimation("cFour")
                         }
                     }
                 }
@@ -233,18 +268,23 @@ export const Tape = ({gMap} : gameInterface) => {
         };
         // }, [time, direction, leftBtnHold, rightBtnHold, toggleBtnHold, resetBtnHold, leftTiming, rightTiming, turnTiming]);
         }, [time, direction, leftTiming, rightTiming, turnTiming]);
+
+    const handleEnd = contextSafe(() => {
+        gsap.to("#lane-container", {
+            opacity: 0,
+            duration: 1,
+        })
+        setTimeout(() => {
+            setEndScreen(true)
+        }, 1000) // Time set to same as opacity time in css "#lane-container"
+    })
+    
     
     useEffect(() => {
-        const handleEnd = () => {
-            setEndScreen(true)
-        }
-
-        audioRef.current?.addEventListener('ended', handleEnd);
-        
+        audioRef.current?.addEventListener('ended', handleEnd);        
         return () => {
             audioRef.current?.removeEventListener('ended', handleEnd);
         }
-
     }, [])
     
 
@@ -286,6 +326,11 @@ export const Tape = ({gMap} : gameInterface) => {
         setPerfectCount(0);
         setOkayCount(0);
         setComboCount(0);
+        setEndScreen(false);
+        gsap.to("#lane-container", {
+            opacity: 1,
+            duration: 1,
+        }) //FIXXXXXX to a contextSafe. Have restart and first playing of a song be different functions. No need to reinitialize a lot of the stuff
         setMode("base");
   
         const tempHitsounds: { play: () => void; }[] = []
@@ -337,10 +382,7 @@ export const Tape = ({gMap} : gameInterface) => {
         setTimeout(() => {
           if (audioRef.current) {
             audioRef.current.play();
-          }  
-        //   if (videoRef.current) {
-        //     videoRef.current.play();
-        //   }
+          } 
         }, scrollSpeed * 2)
         
         document.querySelectorAll(".bar").forEach(e => e.remove());
@@ -427,6 +469,20 @@ export const Tape = ({gMap} : gameInterface) => {
                 setScore((score) => score - 1);
             }
             if (combo_bar.current) combo_bar.current.style.transition = "none";
+            if (timingList[0][1] === "FL") missAnimation("cOne")
+            if (timingList[0][1] === "FR") missAnimation("cTwo")
+            if (timingList[0][1] === "SL") missAnimation("cThree")
+            if (timingList[0][1] === "SR") missAnimation("cFour")
+
+            if (timingList[0][1] === "FT") {
+                missAnimation("cOne")
+                missAnimation("cTwo")
+            }
+            else if (timingList[0][1] === "ST") {
+                missAnimation("cThree")
+                missAnimation("cFour")
+            }
+        
             setMissCount((count) => count + 1);
             setComboCount(0)
             setMode("base")
@@ -435,85 +491,123 @@ export const Tape = ({gMap} : gameInterface) => {
     }
 
     const player_style = {
-        borderBottomColor: (mode === "ex")? "blue" : "red"
+        borderBottomColor: (mode === "ex")? "green" : "red"
     }
 
     const combo_style = {
         width: `${((Math.min(comboCount, 20))/20) * 100}%`
     }
 
-    useEffect(() => {
-        if (endScreen){
-            gsap.to(".score_text", {
-                content: 0,
-                value: score,
-                
-            })
+    const missAnimation = contextSafe((circle : string) => {
+        gsap.timeline()
+        .to(`#${circle}`, {transform: "translateX(-10px)", duration: "0.1"})
+        .to(`#${circle}`, {transform: "translateX(10px)", duration: "0.1"})
+        .to(`#${circle}`, {transform: "translateX(0px)", duration: "0.1"})
+    })
 
+    const earlyAnimation = contextSafe((circle : string) => {
+        if (circle === "cOne" || circle == "cThree") {
+            gsap.timeline()
+            .to(`#${circle}`, {transform: "rotate(-40deg) scale(0.8)", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", duration: "0.1"})
         }
+        else {
+            gsap.timeline()
+            .to(`#${circle}`, {transform: "rotate(40deg) scale(0.8)", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", duration: "0.1"})
+        }
+    })
+
+    const hitAnimation = contextSafe((circle : string) => {
+        if (circle === "cOne" || circle == "cThree") {
+            gsap.timeline()
+            .to(`#${circle}`, {transform: "rotate(40deg) scale(1.2)", borderColor: "blue", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", borderColor: "#eaeaea", duration: "0.1"})
+        }
+        else {
+            gsap.timeline()
+            .to(`#${circle}`, {transform: "rotate(-40deg) scale(1.2)", borderColor: "blue", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", borderColor: "#eaeaea", duration: "0.1"})
+        }
+    })
+
+    const perfectAnimation = contextSafe((circle : string) => {
+        if (circle === "cOne" || circle == "cThree") {
+            gsap.timeline()
+            .to(`#${circle}`, {transform: "rotate(40deg) scale(1.2)", borderColor: "green", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", borderColor: "#eaeaea", duration: "0.1"})
+        }
+        else {
+            gsap.timeline()
+            .to(`#${circle}`, {transform: "rotate(-40deg) scale(1.2)", borderColor: "green", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", borderColor: "#eaeaea", duration: "0.1"})
+        }
+    })
+
+    
+
+    useGSAP(() => {
+        gsap.to("#score_text", {
+            innerText: score,
+            duration: 2,
+            snap: {
+                innerText: 1
+            }
+        })
     }, [endScreen])
 
     return (
     <div>
-        <button onClick={customMap}>Play</button>
-        <div style={{position: 'absolute'}}>
-            <p>{comboCount}</p>
-        </div>
+        <button onClick={customMap} style={{position: 'absolute', zIndex:2000}}>Play</button>
         <div id='game-container'>
             
             <div id='lane-container'>
-                <div ref={lane_one} className='lane lane-one'></div>
-                <div ref={lane_two} className='lane lane-two'></div>
-                <div ref={lane_three} className='lane lane-three'></div>
-                <div ref={lane_four} className='lane lane-four'></div>
+                <div ref={lane_one} className='lane lane-one'> <div id='cOne' className='circle'></div> </div>
+                <div ref={lane_two} className='lane lane-two'> <div id='cTwo' className='circle'></div> </div>
+                <div ref={lane_three} className='lane lane-three'> <div id='cThree' className='circle'></div> </div>
+                <div ref={lane_four} className='lane lane-four'> <div id='cFour' className='circle'></div> </div>
                 <div style={player_style} id='lane-selection'></div>
                 <div id='combo-bar'>
                     <div style={combo_style} ref={combo_bar} id='combo-bar-fill'></div>
                 </div>
             </div>
-        </div>
-        
-        <audio src={audioURL ?? ""} controls={false} ref={audioRef} loop={false} />
-        {/* <iframe 
-            ref={videoRef}
-            id='yt_embed'
-            width="560" 
-            height="315" 
-            src="https://www.youtube-nocookie.com/embed/N3kjewFAklE?si=P4TbPblnO3i04rSB&amp;controls=0" 
-            title="YouTube video player" 
-            frameBorder="0" 
-            allow="accelerometer; clipboard-write; encrypted-media; gyroscope;" 
-            referrerPolicy="strict-origin-when-cross-origin" 
-            allowFullScreen>
-        </iframe>         */}
             {endScreen &&             
             <div id='end_screen_wrapper'>
                 <div>
-                    <p id='score_text' ref={scoreRef}>0</p>
+                    <p id='score_text'>0</p>
                 </div>
                 <div id='cassette-tape'>
                     <div id='inner-cassette'></div>
                 </div>
                 <div id='score_div'>
-                    <div>
-                        <p>{perfectCount}</p>
-                        <p>Perfect</p>    
-                    </div>
-                    <div>
-                        <p>{okayCount}</p>
-                        <p>Okay</p>    
-                    </div>
-                    <div>
-                        <p>{missCount}</p>
-                        <p>Miss</p>    
+                    <div id='hit_stats'>
+                        <div>
+                            <p>{perfectCount}</p>
+                            <p>Perfect</p>    
+                        </div>
+                        <div>
+                            <p>{okayCount}</p>
+                            <p>Okay</p>    
+                        </div>
+                        <div>
+                            <p>{missCount}</p>
+                            <p>Miss</p>    
+                        </div>
                     </div>
                     <div>
                         <p>{maxCombo}</p>
                         <p>Max Combo</p>    
                     </div>
                 </div>
+                <div id='menu_div'>
+                    <button onClick={customMap} className='gameBtns'>Retry</button>
+                    <button onClick={() => {gameMapProp(null)}}className='gameBtns'>Main Menu</button>
+                </div>
             </div>
         }
+        </div>
+        
+        <audio src={audioURL ?? ""} controls={false} ref={audioRef} loop={false} />
     </div>
   )
 }

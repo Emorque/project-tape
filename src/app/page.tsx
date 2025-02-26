@@ -4,7 +4,6 @@ import { Canvas } from "@react-three/fiber";
 import { CameraControls, Html } from '@react-three/drei';
 import Link from 'next/link'
 import { PSRoom } from "./components/Project-tape-scene"
-// import { Game } from "./components/Game"
 import { Tape } from "./components/tape";
 import "./page.css";
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -45,6 +44,8 @@ export default function Home() {
   const[gameMap, setGameMap] = useState<sMap | null>(null)
 
   const supabase = createClient()
+
+  const handleGameMap = (currentSong : string | null) => { setSelectedSong(currentSong); setSongPlaying(false) }
 
   const handlePlay = () => {
     if (selectedSong) {
@@ -239,7 +240,7 @@ export default function Home() {
       <div id="songScreen" style={stageStyle}>
         {selectedSong && gameMap &&
         // <Game gMap={gameMap}/>
-        <Tape gMap={gameMap}/>
+        <Tape gMap={gameMap} gameMapProp={handleGameMap}/>
         }
       </div>
     </div>
