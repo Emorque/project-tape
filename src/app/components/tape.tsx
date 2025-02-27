@@ -25,6 +25,8 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     // Game controls
     // const [scrollSpeed, setScrollSpeed] = useState<number>(1500); //Make this adjustable in some settings page and get the speed here (Zustand)?
     const scrollSpeed = 1500;
+    // const offset = -250;
+    const offset = 0 // Adding offest to the audio only seems like the best, easiest choice 
     const [direction, setDirection] = useState<string>("Left");
 
     // Stopwatch
@@ -69,7 +71,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
 
     // Styling States
     const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
-
+    
     useEffect(() => {
         if (stopwatchActive && !stPaused) {
             intervalRef.current = setInterval(() => {
@@ -102,6 +104,19 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         setDirection("Right");
     })
 
+    const exMode = contextSafe(() => {
+        gsap.timeline()
+        .to("#lane-selection", {transform: "scale(0.1)", duration: "0.15"})
+        .to("#lane-selection", {transform: "scale(1)", duration: "0.15"})
+        setMode("ex")
+    })
+
+    useEffect(() => {
+        if (comboCount > maxCombo) {
+            setMaxCombo(comboCount)
+        }
+    }, [comboCount])
+
     const handleInput = (
         timingList: [number, string][],
         setNoteIndex: React.Dispatch<React.SetStateAction<number>>,
@@ -114,15 +129,16 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         if (timingList[noteIndex][0] + 75 >= time && time > timingList[noteIndex][0] - 75 && timingList[noteIndex][1] === note) {
             hitsoundsRef.current[hitsoundIndex].play();
             setHitsoundIndex((index) => (index + 1) % 3); 
-            setScore((score) => score + 5); 
-            setPerfectCount((perfect) => perfect + 1);
-            if (mode === "base") {
-                if (comboCount === 20 ) {
-                    setMode("ex")
-                }
-                setComboCount((combo) => combo + 1);
-                if (comboCount > maxCombo) setMaxCombo(comboCount);
+            if (mode === "ex"){
+                setScore((score) => score + 300);
             }
+             
+            else {
+                setScore((score) => score + 150);
+            }
+            setPerfectCount((perfect) => perfect + 1);
+            if (mode === "base" && comboCount === 19) exMode()
+            setComboCount((combo) => combo + 1);
             if (combo_bar.current) combo_bar.current.style.transition = "width 1s ease";
             if (note === "FL") perfectAnimation("cOne")
             if (note === "FR") perfectAnimation("cTwo")
@@ -144,16 +160,15 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         else if (timingList[noteIndex][0] + 150 >= time && time > timingList[noteIndex][0] - 150 && timingList[noteIndex][1] === note) {
             hitsoundsRef.current[hitsoundIndex].play();
             setHitsoundIndex((index) => (index + 1) % 3); 
-            setScore((score) => score + 3); 
-            setOkayCount((okay) => okay + 1); 
-            if (mode === "base") {
-                if (comboCount > 19 ) { //Ex happens at 20
-                    setMode("ex")
-                }
-                else {
-                    setComboCount((combo) => combo + 1);
-                }
+            if (mode === "ex"){
+                setScore((score) => score + 200);
             }
+            else {
+                setScore((score) => score + 100);
+            }
+            setOkayCount((okay) => okay + 1); 
+            if (mode === "base" && comboCount === 19) exMode()
+            setComboCount((combo) => combo + 1);
             if (combo_bar.current) combo_bar.current.style.transition = "width 0.5s ease";
             if (note === "FL") hitAnimation("cOne")
             if (note === "FR") hitAnimation("cTwo")
@@ -242,7 +257,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 restartMap()
             }
             if (event.key === 'f' || event.key === "F") { //Fast forward
-                if (audioRef.current) audioRef.current.currentTime = audioRef.current.currentTime + 10;
+                if (audioRef.current) audioRef.current.currentTime = audioRef.current.currentTime + 30;
             }
             if (event.key === 'q' || event.key === "Q") {
                 toggleMap();
@@ -256,15 +271,15 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         };
         // }, [time, direction, leftBtnHold, rightBtnHold, toggleBtnHold, resetBtnHold, leftTiming, rightTiming, turnTiming]);
         }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex]);
-
+    
     const handleEnd = contextSafe(() => {
         gsap.to("#lane-container", {
             opacity: 0,
             duration: 1,
+            onComplete: () => {
+                setEndScreen(true)
+            }
         })
-        setTimeout(() => {
-            setEndScreen(true)
-        }, 1000) // Time set to same as opacity time in css "#lane-container"
     })
     
     
@@ -351,7 +366,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             if (audioRef.current) {
                 audioRef.current.play();
             } 
-        }, scrollSpeed * 2)
+        }, (scrollSpeed * 2) + offset)
     }, [])
 
     // Restart Map
@@ -368,6 +383,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         setPerfectCount(0);
         setOkayCount(0);
         setComboCount(0);
+        setMaxCombo(0);
         setEndScreen(false);
 
         setLeftTimingIndex(0);
@@ -387,7 +403,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             if (audioRef.current) {
               audioRef.current.play();
             } 
-          }, scrollSpeed * 2)
+          }, (scrollSpeed * 2) + offset)
 
         gsap.to("#lane-container", {
             opacity: 1,
@@ -475,11 +491,11 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         setNoteIndex: React.Dispatch<React.SetStateAction<number>>,
         timingList: [number,string][]
     ) => {
-        console.log("Missed")
+        // console.log("Missed")
         // if (timingList.length > 0 && timingList[0][0] < time - 150) {
-            if (score > 0) {
-                setScore((score) => score - 1);
-            }
+            // if (score > 0) {
+            //     setScore((score) => score - 1);
+            // }
             if (combo_bar.current) combo_bar.current.style.transition = "none";
             if (timingList[noteIndex][1] === "FL") missAnimation("cOne")
             if (timingList[noteIndex][1] === "FR") missAnimation("cTwo")
@@ -504,11 +520,11 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     }
 
     const player_style = {
-        borderBottomColor: (mode === "ex")? "green" : "red"
+        borderBottomColor: (mode === "ex")? "green" : "white"
     }
 
     const combo_style = {
-        width: `${((Math.min(comboCount, 21))/21) * 100}%`
+        width: `${((Math.min(comboCount, 20))/20) * 100}%`
     }
 
     const missAnimation = contextSafe((circle : string) => {
@@ -557,66 +573,96 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         }
     })
 
-
     useGSAP(() => {
-        gsap.to("#score_text", {
-            innerText: score,
-            duration: 2,
-            snap: {
-                innerText: 1
-            }
-        })
+        if (endScreen) {
+            gsap.to("#score_text", {
+                innerText: score,
+                duration: 2.5,
+                snap: {
+                    innerText: 1
+                }
+            })
+            setTimeout(() => {
+                // console.log(perfectCount, okayCount, missCount)
+                const lilGuy = document.getElementById('lil_guy');
+                if ((perfectCount + okayCount)/(perfectCount + okayCount + missCount) > 0.7){
+                    lilGuy?.classList.add('happy');
+                    gsap.to("#left_eye", {backgroundColor: "transparent", borderTopWidth: "2", duration: "0.3"});
+                    gsap.to("#right_eye", {backgroundColor: "transparent", borderLeftWidth: "0", borderRightWidth: "0", borderBottomWidth: "0", duration: "0.3"});
+                }
+                else {
+                    lilGuy?.classList.add('sad')
+                    gsap.to("#left_eye", {backgroundColor: "transparent", borderBottomWidth: "2", duration: "0.3"});
+                    gsap.to("#right_eye", {backgroundColor: "transparent", borderLeftWidth: "0", borderRightWidth: "0", borderTopWidth: "0", duration: "0.3"}); 
+                }
+            }, 3000)
+        }
     }, [endScreen])
+
+    const gameBtnStyle = {
+        cursor: endScreen? "pointer" : "default"
+    }
 
     return (
     <div>
-        {/* <button onClick={customMap} style={{position: 'absolute', zIndex:2000}}>Play</button> */}
         <div id='game-container'>
-            
             <div id='lane-container'>
                 <div ref={lane_one} className='lane lane-one'> <div id='cOne' className='circle'></div> </div>
                 <div ref={lane_two} className='lane lane-two'> <div id='cTwo' className='circle'></div> </div>
                 <div ref={lane_three} className='lane lane-three'> <div id='cThree' className='circle'></div> </div>
                 <div ref={lane_four} className='lane lane-four'> <div id='cFour' className='circle'></div> </div>
-                <div style={player_style} id='lane-selection'></div>
+                <div style={player_style} id='lane-selection'>
+                    <div id='lane-selection-inner'></div>
+                    {(mode === "ex") && 
+                        <div id='ex-lane'></div>
+                    }
+                </div>
                 <div id='combo-bar'>
                     <div style={combo_style} ref={combo_bar} id='combo-bar-fill'></div>
                 </div>
-            </div>
-            {endScreen &&             
-            <div id='end_screen_wrapper'>
-                <div>
-                    <p id='score_text'>0</p>
-                </div>
-                <div id='cassette-tape'>
-                    <div id='inner-cassette'></div>
-                </div>
-                <div id='score_div'>
-                    <div id='hit_stats'>
-                        <div>
-                            <p>{perfectCount}</p>
-                            <p>Perfect</p>    
-                        </div>
-                        <div>
-                            <p>{okayCount}</p>
-                            <p>Okay</p>    
-                        </div>
-                        <div>
-                            <p>{missCount}</p>
-                            <p>Miss</p>    
-                        </div>
-                    </div>
+            </div> 
+
+
+            {endScreen && 
+                <div id='end_screen_wrapper'>
                     <div>
-                        <p>{maxCombo}</p>
-                        <p>Max Combo</p>    
+                        <p id='score_text'>0</p>
+                    </div>
+                    <div id='cassette-tape'>
+                        <div id='lil_guy_container'>
+                            <div id='lil_guy'>
+                                <div className='eyes' id='left_eye'></div>
+                                <div className='eyes' id='right_eye'></div>
+                            </div>
+                        </div>
+                        <div id='inner-cassette'></div>
+                    </div>
+                    <div id='score_div'>
+                        <div id='hit_stats'>
+                            <div>
+                                <p>{perfectCount}</p>
+                                <p>Perfect</p>    
+                            </div>
+                            <div>
+                                <p>{okayCount}</p>
+                                <p>Okay</p>    
+                            </div>
+                            <div>
+                                <p>{missCount}</p>
+                                <p>Miss</p>    
+                            </div>
+                        </div>
+                        <div>
+                            <p>{maxCombo}</p>
+                            <p>Max Combo</p>    
+                        </div>
+                    </div>
+                    <div id='menu_div'>
+                        <button disabled={!endScreen} onClick={restartMap} style={gameBtnStyle} className='gameBtns'>Retry</button>
+                        <button disabled={!endScreen} onClick={() => {gameMapProp(null)}} style={gameBtnStyle}className='gameBtns'>Main Menu</button>
                     </div>
                 </div>
-                <div id='menu_div'>
-                    <button onClick={restartMap} className='gameBtns'>Retry</button>
-                    <button onClick={() => {gameMapProp(null)}}className='gameBtns'>Main Menu</button>
-                </div>
-            </div>
-        }
+            }
         </div>
         
         <audio src={audioURL ?? ""} controls={false} ref={audioRef} loop={false} />
