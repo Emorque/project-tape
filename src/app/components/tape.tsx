@@ -64,10 +64,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     const [rightTimingIndex, setRightTimingIndex] = useState<number>(0)
     const [turnTimingIndex, setTurnTimingIndex] = useState<number>(0)
 
-    const [firstHitsound, setFirstHitsound] = useState<number>(0);
-    const [secondHitsound, setSecondHitsound] = useState<number>(0);
-    const [thirdHitsound, setThirdHitsound] = useState<number>(0);
-    const [fourthHitsound, setFourthHitsound] = useState<number>(0);
+    const [hitsoundIndex, setHitsoundIndex] = useState<number>(0);
 
     // Styling States
     const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
@@ -121,18 +118,15 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         timingList: [number, string][],
         setNoteIndex: React.Dispatch<React.SetStateAction<number>>,
         noteIndex: number,
-        hitsoundIndex: number,
-        setHitsoundIndex: React.Dispatch<React.SetStateAction<number>>,
         note: string
         ) => {
         // Check for "Perfect" hit
         if (timingList[noteIndex][0] + 75 >= time && time > timingList[noteIndex][0] - 75 && timingList[noteIndex][1] === note) {
             hitsoundsRef.current[hitsoundIndex].play();
-            setHitsoundIndex((index) => (index + 1) % 3); 
+            setHitsoundIndex((index) => (index + 1) % 12); 
             if (mode === "ex"){
                 setScore((score) => score + 300);
             }
-             
             else {
                 setScore((score) => score + 150);
             }
@@ -141,11 +135,10 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             setComboCount((combo) => combo + 1);
             if (combo_bar.current) combo_bar.current.style.transition = "width 1s ease";
             if (note === "FL") perfectAnimation("cOne")
-            if (note === "FR") perfectAnimation("cTwo")
-            if (note === "SL") perfectAnimation("cThree")
-            if (note === "SR") perfectAnimation("cFour")
-
-            if (note === "FT") {
+            else if (note === "FR") perfectAnimation("cTwo")
+            else if (note === "SL") perfectAnimation("cThree")
+            else if (note === "SR") perfectAnimation("cFour")
+            else if (note === "FT") {
                 perfectAnimation("cOne")
                 perfectAnimation("cTwo")
             }
@@ -159,7 +152,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         // Check for "Success" hit
         else if (timingList[noteIndex][0] + 150 >= time && time > timingList[noteIndex][0] - 150 && timingList[noteIndex][1] === note) {
             hitsoundsRef.current[hitsoundIndex].play();
-            setHitsoundIndex((index) => (index + 1) % 3); 
+            setHitsoundIndex((index) => (index + 1) % 12); 
             if (mode === "ex"){
                 setScore((score) => score + 200);
             }
@@ -171,11 +164,10 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             setComboCount((combo) => combo + 1);
             if (combo_bar.current) combo_bar.current.style.transition = "width 0.5s ease";
             if (note === "FL") hitAnimation("cOne")
-            if (note === "FR") hitAnimation("cTwo")
-            if (note === "SL") hitAnimation("cThree")
-            if (note === "SR") hitAnimation("cFour")
-
-            if (note === "FT") {
+            else if (note === "FR") hitAnimation("cTwo")
+            else if (note === "SL") hitAnimation("cThree")
+            else if (note === "SR") hitAnimation("cFour")
+            else if (note === "FT") {
                 hitAnimation("cOne")
                 hitAnimation("cTwo")
             }
@@ -185,7 +177,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             }
             setNoteIndex((index) => index + 1); 
         }
-        };
+    };
 
     useEffect(() => {
         const handleKeyDown = (event: { key: string; repeat : boolean}) => {
@@ -194,7 +186,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 if (direction === "Left") return
                 moveLeft();
                 if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
-                    handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, firstHitsound, setFirstHitsound, "FT")
+                    handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "FT")
                 }
             }
     
@@ -202,14 +194,14 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 if (direction === "Right") return
                 moveRight();
                 if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
-                    handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, thirdHitsound, setThirdHitsound, "ST")
+                    handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "ST")
                 }
             }
     
             if (event.key === 'j' || event.key === 'J') {
                 if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
                     if (leftTiming.current[leftTimingIndex][0] <= time + 150) {
-                        handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, firstHitsound, setFirstHitsound, "FL")
+                        handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "FL")
                     }
                     else if (leftTiming.current[leftTimingIndex][0] <= time + 250){
                         setComboCount(0);
@@ -219,7 +211,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 }
                 else if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
                     if (leftTiming.current[leftTimingIndex][0] <= time + 150) {
-                        handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, thirdHitsound, setThirdHitsound, "SL")
+                        handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "SL")
                     }
                     else if (leftTiming.current[leftTimingIndex][0] <= time + 250) {
                         setComboCount(0);
@@ -232,7 +224,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             if (event.key === 'l' || event.key === 'L') {
                 if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
                     if (rightTiming.current[rightTimingIndex][0] <= time + 150) {
-                        handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, secondHitsound, setSecondHitsound, "FR")
+                        handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "FR")
                     }
                     else if (rightTiming.current[rightTimingIndex][0] <= time + 250) {
                         setComboCount(0);
@@ -243,7 +235,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         
                 else if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
                     if (rightTiming.current[rightTimingIndex][0] <= time + 150){
-                        handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, fourthHitsound, setFourthHitsound, "SR")
+                        handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "SR")
                     }
                     else if (rightTiming.current[rightTimingIndex][0] <= time + 250) {
                         setComboCount(0);
@@ -270,7 +262,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             document.removeEventListener('keydown', handleKeyDown);
         };
         // }, [time, direction, leftBtnHold, rightBtnHold, toggleBtnHold, resetBtnHold, leftTiming, rightTiming, turnTiming]);
-        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex]);
+        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex]);
     
     const handleEnd = contextSafe(() => {
         gsap.to("#lane-container", {
@@ -281,7 +273,6 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             }
         })
     })
-    
     
     useEffect(() => {
         audioRef.current?.addEventListener('ended', handleEnd);        
@@ -423,10 +414,14 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             else newBar.classList.add("right")            
         }
         lane.current?.appendChild(newBar);
-        newBar.style.animation = `barAnime ${scrollSpeed/1000}s linear`
-        newBar.addEventListener("animationend", () => {
+        newBar.style.animation = `barAnime ${scrollSpeed}ms linear`
+        const cleanup = () => {
             lane.current?.removeChild(newBar);
-        })
+        }
+        newBar.addEventListener("animationend", cleanup)
+        return () => {
+            newBar.removeEventListener("animationend", cleanup)
+        }
     }
 
     // Handle Curve Creation
@@ -491,32 +486,24 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         setNoteIndex: React.Dispatch<React.SetStateAction<number>>,
         timingList: [number,string][]
     ) => {
-        // console.log("Missed")
-        // if (timingList.length > 0 && timingList[0][0] < time - 150) {
-            // if (score > 0) {
-            //     setScore((score) => score - 1);
-            // }
-            if (combo_bar.current) combo_bar.current.style.transition = "none";
-            if (timingList[noteIndex][1] === "FL") missAnimation("cOne")
-            if (timingList[noteIndex][1] === "FR") missAnimation("cTwo")
-            if (timingList[noteIndex][1] === "SL") missAnimation("cThree")
-            if (timingList[noteIndex][1] === "SR") missAnimation("cFour")
-
-            if (timingList[noteIndex][1] === "FT") {
-                missAnimation("cOne")
-                missAnimation("cTwo")
-            }
-            else if (timingList[noteIndex][1] === "ST") {
-                missAnimation("cThree")
-                missAnimation("cFour")
-            }
-        
-            setMissCount((count) => count + 1);
-            setComboCount(0)
-            if (combo_bar.current) combo_bar.current.style.transition = "none";
-            setMode("base")
-            setNoteIndex((index) => index + 1)
-        // }
+        if (timingList[noteIndex][1] === "FL") missAnimation("cOne")
+        else if (timingList[noteIndex][1] === "FR") missAnimation("cTwo")
+        else if (timingList[noteIndex][1] === "SL") missAnimation("cThree")
+        else if (timingList[noteIndex][1] === "SR") missAnimation("cFour")
+        else if (timingList[noteIndex][1] === "FT") {
+            missAnimation("cOne")
+            missAnimation("cTwo")
+        }
+        else if (timingList[noteIndex][1] === "ST") {
+            missAnimation("cThree")
+            missAnimation("cFour")
+        }
+    
+        setMissCount((count) => count + 1);
+        setComboCount(0)
+        if (combo_bar.current) combo_bar.current.style.transition = "none";
+        setMode("base")
+        setNoteIndex((index) => index + 1)
     }
 
     const player_style = {
@@ -583,7 +570,6 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 }
             })
             setTimeout(() => {
-                // console.log(perfectCount, okayCount, missCount)
                 const lilGuy = document.getElementById('lil_guy');
                 if ((perfectCount + okayCount)/(perfectCount + okayCount + missCount) > 0.7){
                     lilGuy?.classList.add('happy');
@@ -598,10 +584,6 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             }, 3000)
         }
     }, [endScreen])
-
-    const gameBtnStyle = {
-        cursor: endScreen? "pointer" : "default"
-    }
 
     return (
     <div>
@@ -658,8 +640,8 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                         </div>
                     </div>
                     <div id='menu_div'>
-                        <button disabled={!endScreen} onClick={restartMap} style={gameBtnStyle} className='gameBtns'>Retry</button>
-                        <button disabled={!endScreen} onClick={() => {gameMapProp(null)}} style={gameBtnStyle}className='gameBtns'>Main Menu</button>
+                        <button onClick={restartMap} className='gameBtns'>Retry</button>
+                        <button onClick={() => {gameMapProp(null)}} className='gameBtns'>Main Menu</button>
                     </div>
                 </div>
             }

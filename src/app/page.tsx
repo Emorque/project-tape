@@ -45,7 +45,11 @@ export default function Home() {
 
   const supabase = createClient()
 
-  const handleGameMap = (currentSong : string | null) => { setSelectedSong(currentSong); setSongPlaying(false) }
+  const handleGameMap = (currentSong : string | null) => { 
+    setSelectedSong(currentSong); 
+    setSongPlaying(false) 
+    setGameMap(null);
+  }
 
   const handlePlay = () => {
     if (selectedSong) {
