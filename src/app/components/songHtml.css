@@ -1,0 +1,170 @@
+#songHtml {
+    width: 100%;
+    height: 100%;
+    background-color: #171a1c;
+    border-radius: 1%;
+    /* overflow: auto;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 100;
+    padding: 10px;
+    letter-spacing: 1px;
+    gap: 5px; */
+}
+
+#account {
+    width: 100%;
+    background-color: red;
+    height: 5%;
+}
+
+#content_container {
+    width: 100%;
+    display: flex;
+    background-color: white;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#tape_info {
+    background-color: blue;
+    height: 50%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1%
+}
+
+#tape {
+    background-color: palegoldenrod;
+    width: 100%;
+    height: 30%;
+}
+
+#data {
+    height: 5%;
+    width: 100%;
+    background-color: #326d4a;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+}
+
+#leaderboard_btn {
+    height: 5%;
+    width: 100%;
+    background-color: purple;
+}
+
+#play_btn {
+    height: 5%;
+    width: 100%;
+    background-color: purple;
+}
+
+#description_container {
+    width: 100%;
+    height: 52%;
+    background-color: aquamarine;
+    overflow: auto;
+    scrollbar-width: thin;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    p{
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
+}
+
+#genre_language {
+    word-break: break-all;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+}
+
+#songList_leaderboard {
+    background-color: green;
+    height: 50%;
+    width: 100%;
+}
+
+#song_list_container {
+    width: 100%;
+    height: 100%;
+    background-color:cornflowerblue;
+}
+
+#bookmark_nav {
+    width: 100%;
+    height: 5%;
+    background-color:hotpink;
+}
+
+.container {
+    width: 100%;
+    height: 100%;
+}
+
+#song_list {
+    width: 100%;
+    height: 95%;
+    background-color: crimson;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: auto;
+    scrollbar-width: thin;
+}
+
+.song_card {
+    min-height: 60px;
+    width: 100%;
+    background-color: white;
+    display: flex;
+}
+
+.song_metadata {
+    height: 100%;
+    background-color:darkkhaki;
+}
+
+#leaderboard {
+    width: 100%;
+    height: 90%;
+    background-color: crimson;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: auto;
+    scrollbar-width: thin;
+}
+
+#leaderboard_nav {
+    background-color: darkgreen;
+    width: 100%;
+    height: 10%;
+}
+
+.leaderboard_card{
+    width: 100%;
+    min-height: 30px;
+    background-color: darkslateblue;
+}
+
+@media screen and (min-width: 600px) {
+    #content_container {
+        flex-direction: row;
+    }
+    #tape_info {
+        height: 100%;
+        width: 50%;
+    }
+    #songList_leaderboard {
+        height: 100%;
+        width: 50%;
+    }
+}

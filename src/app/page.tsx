@@ -6,39 +6,37 @@ import Link from 'next/link'
 import { PSRoom } from "./components/Project-tape-scene"
 import { Tape } from "./components/tape";
 import "./page.css";
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-import { songType, sMap } from "@/utils/helperTypes"
+import { sMap } from "@/utils/helperTypes"
 
 import { createClient } from '@/utils/supabase/client'
+import { SongHtml } from "./components/songHtml";
 
-interface SongSelectProps {
-  focusProp: (newFocus : [number,number,number,number,number,number], songId : string) => void;
-  songId: string
-}
+// interface SongSelectProps {
+//   focusProp: (newFocus : [number,number,number,number,number,number], songId : string) => void;
+//   songId: string
+// }
 
-function SongSelect({focusProp, songId} : SongSelectProps) {
-  const setCustomSong = () => {
-    focusProp([14,8,34,   14,7,26], songId)
-  }
+// function SongSelect({focusProp, songId} : SongSelectProps) {
+//   const setCustomSong = () => {
+//     focusProp([14,8,34,   14,7,26], songId)
+//   }
 
-  return (
-    <div>
-      <div>
-        <button onClick={setCustomSong}>Set Custom Song: ${songId}</button>
-      </div>
-    </div>
-  )
-}
+//   return (
+//     <div>
+//       <div>
+//         <button onClick={setCustomSong}>Set Custom Song: ${songId}</button>
+//       </div>
+//     </div>
+//   )
+// }
 
 export default function Home() {
   const cameraRef = useRef<CameraControls | null>(null);
   const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
   const [startVisible, setStartVisible] = useState<boolean>(false);
-
-  const [loading, setLoading] = useState<boolean>(false);
-  const [songs, setSongs] = useState<songType>([])
 
   const[selectedSong, setSelectedSong] = useState<string | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
@@ -63,7 +61,7 @@ export default function Home() {
   }
 
   const getMap = useCallback(async (selectedSong : string) => {
-    console.log("called Supabase for Map", loading)
+    console.log("called Supabase for Map")
     try {
       const { data: songMap, error, status } = await supabase
       .from('songs')
@@ -87,39 +85,6 @@ export default function Home() {
     }
   }, [])
 
-  const getSongs  = useCallback(async () => {
-    console.log("called Supabase for Songs")
-    try {
-      setLoading(true)
-
-      const { data: songs, error, status } = await supabase
-      .from('songs')
-      .select('song_id, song_metadata, mapper_metadata')
-
-      if (error && status !== 406) {
-        console.log(error)
-        throw error
-      }
-
-      if (songs) {
-        setSongs(songs)
-      }
-    } catch (error) {
-      console.error('User error:', error) // Only used for eslint
-      alert('Error loading user data!')
-    } finally {
-      setLoading(false)
-    }
-  }, [supabase])
-
-  useEffect(() => {
-    getSongs()
-  }, [getSongs])
-
-  useEffect(() =>{
-    console.log(songs)
-  }, [songs])
-
   const databaseStyle = {
     opacity: playerView ? 1 : 0, 
     visibility: playerView ? "visible" : "hidden",
@@ -138,20 +103,6 @@ export default function Home() {
     transition: 'opacity 2s ease, visibility 2s'
   } as React.CSSProperties;
 
-  const handleNewFocus = (newFocus: [number,number,number,number,number,number], songId: string) => { 
-    updateCamera(newFocus)
-    setStartVisible(true)
-    setSelectedSong(songId);
-  }
-
-  // Remove mouse controls with camera
-  useEffect(() => {
-    if (cameraRef.current) {
-      cameraRef.current.mouseButtons = {left: 0, middle: 0, right: 0, wheel: 0}
-      cameraRef.current.touches={ one: 0, three: 0, two: 0 }
-    }
-  })
-
   const updateCamera = (newFocus: [number,number,number,number,number,number],) => {
     cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], true);
   }
@@ -167,38 +118,10 @@ export default function Home() {
           position={[14,12,23]}
           transform
           occlude
-          rotation={[Math.PI / 7, 0, 0]}
+          rotation={[0, 0, 0]}
         >
           <div className="htmlDiv" style={databaseStyle}>
-            <div>
-              <p>Songs</p>
-              {songs.map((song) => (
-                <div key={song.song_id}>
-                  <SongSelect focusProp={handleNewFocus} songId={song.song_id}/>
-                </div>
-              ))}
-              {/* <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p>
-              <p>Songs</p> */}
-            </div>
+            <SongHtml/>
           </div>
         </Html>
 
@@ -215,12 +138,13 @@ export default function Home() {
         </Html>
         <CameraControls 
           ref={cameraRef}
-          enabled={true}    
+          enabled={true} 
+          touches={{one: 0, two: 0, three: 0}} //Both removes touch/mouse controls. Needed to get scroll on HTML to work
+          mouseButtons={{left: 0, right: 0, wheel: 0, middle: 0}}
         />
       </Canvas>
       <div id='menuOptions'>
         <button onClick={() => {
-          // setFocusPoint([18,2,20.5, -18, 5, 10]); //Way too large, ends up creating curves for setLookAt to adjust 
           updateCamera([36,4,40,   32,4,38])
           setPlayerView(false)
           setStartVisible(false);
@@ -232,7 +156,7 @@ export default function Home() {
           }}>Editor
         </button>
         <button onClick={() => {
-          updateCamera([14,8,34,   14,11,26]);
+          updateCamera([14,12,34,   14,12,26]);
           setPlayerView(true);
           setStartVisible(false);
           }}>Player
@@ -243,7 +167,6 @@ export default function Home() {
       </div>
       <div id="songScreen" style={stageStyle}>
         {selectedSong && gameMap &&
-        // <Game gMap={gameMap}/>
         <Tape gMap={gameMap} gameMapProp={handleGameMap}/>
         }
       </div>
