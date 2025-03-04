@@ -13,32 +13,13 @@ import { sMap } from "@/utils/helperTypes"
 import { createClient } from '@/utils/supabase/client'
 import { SongHtml } from "./components/songHtml";
 
-// interface SongSelectProps {
-//   focusProp: (newFocus : [number,number,number,number,number,number], songId : string) => void;
-//   songId: string
-// }
-
-// function SongSelect({focusProp, songId} : SongSelectProps) {
-//   const setCustomSong = () => {
-//     focusProp([14,8,34,   14,7,26], songId)
-//   }
-
-//   return (
-//     <div>
-//       <div>
-//         <button onClick={setCustomSong}>Set Custom Song: ${songId}</button>
-//       </div>
-//     </div>
-//   )
-// }
-
 export default function Home() {
   const cameraRef = useRef<CameraControls | null>(null);
   const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
-  const [startVisible, setStartVisible] = useState<boolean>(false);
 
   const[selectedSong, setSelectedSong] = useState<string | null>(null)
+  const[songLink, setSongLink] = useState<string | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
 
   const supabase = createClient()
@@ -49,23 +30,12 @@ export default function Home() {
     setGameMap(null);
   }
 
-  const handlePlay = () => {
-    if (selectedSong) {
-      setSongPlaying(true);
-      setStartVisible(false);          
-      getMap(selectedSong);
-    }
-    else {
-      alert('no song selected')
-    }
-  }
-
   const getMap = useCallback(async (selectedSong : string) => {
     console.log("called Supabase for Map")
     try {
       const { data: songMap, error, status } = await supabase
       .from('songs')
-      .select('song_map')
+      .select('song_map, song_link')
       .eq('song_id', selectedSong)
       .single()
 
@@ -75,15 +45,18 @@ export default function Home() {
       }
 
       if (songMap) {
+        console.log("hefuisfhbuirfbui")
+        console.log("fefa", songMap.song_map)
         setGameMap(songMap.song_map)
+        setSongLink(songMap.song_link)
       }
     } catch (error) {
       console.error('User error:', error) // Only used for eslint
       alert('Error loading user data!')
     } finally {
-      console.log('loaded', gameMap)
+      console.log('loaded gameMap')
     }
-  }, [])
+  }, [supabase])
 
   const databaseStyle = {
     opacity: playerView ? 1 : 0, 
@@ -96,15 +69,16 @@ export default function Home() {
     visibility: songPlaying ? "visible" : "hidden",
     transition: 'opacity 2s ease, visibility 2s'
   } as React.CSSProperties;
-  
-  const startScreenStyle = {
-    opacity: startVisible ? 1 : 0,
-    visibility: startVisible ? "visible" : "hidden",
-    transition: 'opacity 2s ease, visibility 2s'
-  } as React.CSSProperties;
 
   const updateCamera = (newFocus: [number,number,number,number,number,number],) => {
     cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], true);
+  }
+
+  const handleSelectedSong = (songID: string) => {
+    updateCamera([14,8,34,   14, 7, 26])
+    setSelectedSong(songID); 
+    setSongPlaying(true);
+    getMap(songID);
   }
 
   return (
@@ -121,7 +95,7 @@ export default function Home() {
           rotation={[0, 0, 0]}
         >
           <div className="htmlDiv" style={databaseStyle}>
-            <SongHtml/>
+            <SongHtml songToPlay={handleSelectedSong}/>
           </div>
         </Html>
 
@@ -144,30 +118,28 @@ export default function Home() {
         />
       </Canvas>
       <div id='menuOptions'>
-        <button onClick={() => {
+        <button className="menuBtn" onClick={() => {
           updateCamera([36,4,40,   32,4,38])
           setPlayerView(false)
-          setStartVisible(false);
-          }}>Start</button>
-        <button onClick={() => {
+          }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
+              <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+            </svg>
+          </button>
+        <button className="menuBtn" onClick={() => {
           updateCamera([4,8,34.5,   -1,7,34.5]);
           setPlayerView(true);
-          setStartVisible(false);
-          }}>Editor
+          }}><p>Computer</p>
         </button>
-        <button onClick={() => {
+        <button className="menuBtn" onClick={() => {
           updateCamera([14,12,34,   14,12,26]);
           setPlayerView(true);
-          setStartVisible(false);
-          }}>Player
+          }}><p>Songs</p>
         </button>
       </div>
-      <div id="startScreen" style={startScreenStyle}>
-        <button onClick={handlePlay}>Play Song</button>
-      </div>
       <div id="songScreen" style={stageStyle}>
-        {selectedSong && gameMap &&
-        <Tape gMap={gameMap} gameMapProp={handleGameMap}/>
+        {selectedSong && gameMap && songPlaying && songLink && 
+        <Tape gMap={gameMap} sLink={songLink} gameMapProp={handleGameMap}/>
         }
       </div>
     </div>

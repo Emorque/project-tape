@@ -7,11 +7,11 @@ import { useGSAP } from '@gsap/react';
 
 interface gameInterface {
   gMap: [number,string][];
+  sLink: string;
   gameMapProp: (currentSong: string | null) => void;
 }
 
-export const Tape = ({gMap, gameMapProp} : gameInterface) => {   
-
+export const Tape = ({gMap, sLink, gameMapProp} : gameInterface) => {   
     const [audioURL, setAudioURL] = useState<string | null>(null)
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -275,9 +275,10 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     })
     
     useEffect(() => {
-        audioRef.current?.addEventListener('ended', handleEnd);        
+        const audioReference = audioRef.current;
+        audioReference?.addEventListener('ended', handleEnd);        
         return () => {
-            audioRef.current?.removeEventListener('ended', handleEnd);
+            audioReference?.removeEventListener('ended', handleEnd);
         }
     }, [])
     
@@ -306,7 +307,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
 
     // Start Map
     useEffect(() => {
-        setAudioURL('https://9boushb4a7.ufs.sh/f/9Jv1QVILGRy4BnZDzY7GTJ0cX8hyuefiOLVSvntDKg5EZ1dl');
+        setAudioURL(sLink);
     
         const tempHitsounds: { play: () => void; }[] = []
         for (let i = 0; i < 12; i++) {

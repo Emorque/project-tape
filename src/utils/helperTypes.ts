@@ -1,6 +1,6 @@
 export type songType = {
   song_id: string,
-  song_metadata: songMetadata
+  song_metadata: songMetadata,
 };
 
 type songMetadata = {
@@ -21,3 +21,10 @@ export type mapMetadata = {
 
 export type sMap = [number,string][]
   
+export type ranking = {
+  user_id: string,
+  username: string,
+  score: number,
+  accuracy: number,
+  max_combo: number,
+}
