@@ -1,34 +1,24 @@
 #songHtml {
     width: 100%;
     height: 100%;
-    background-color: #171a1c;
+    background-color: var(--black);
     border-radius: 1%;
-    /* overflow: auto;
-    cursor: pointer;
-    font-size: 20px;
-    font-weight: 100;
-    padding: 10px;
-    letter-spacing: 1px;
-    gap: 5px; */
 }
 
 #account {
     width: 100%;
-    background-color: red;
     height: 5%;
 }
 
 #content_container {
     width: 100%;
     display: flex;
-    background-color: white;
     height: 100%;
     display: flex;
     flex-direction: column;
 }
 
 #tape_info {
-    background-color: blue;
     height: 50%;
     width: 100%;
     display: flex;
@@ -37,24 +27,25 @@
 }
 
 #tape {
-    background-color: palegoldenrod;
+    background-color: var(--grey);
     width: 100%;
     height: 30%;
+}
+
+#leaderboard_btn, #play_btn {
+    padding: 5px;
+    border-radius: 6px;
 }
 
 #leaderboard_btn {
     height: fit-content;
     width: 95%;
-    padding: 1%;
     margin: 1px auto;
-    background-color: purple;
 }
 
 #play_btn {
     height: fit-content;
     width: fit-content;
-    background-color: purple;
-    padding: 1%;
     margin: 0 auto;
 }
 
@@ -63,7 +54,7 @@
     width: 95%;
     padding: 5px 20px;
     margin: 0 auto;
-    background-color: #326d4a;
+    background-color: var(--green);
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
@@ -71,39 +62,39 @@
 
 .tooltip {
     display: flex;
-    gap: 10px;
     position: relative;
+    p {
+        padding-right: 5px;
+    }
 }
 
 .tooltip_text {
     visibility: hidden;
     width: fit-content;
-    background-color: black;
+    background-color: var(--grey);
     color: #eaeaea;
     text-align: center;
     border-radius: 6px;
-    padding: 5px 0;
-
+    padding: 5px;
     position: absolute;
     bottom: 125%;
-    left: 0%;
+    left: -5%;
 }
 
-.tooltip:hover .tooltip_text {
+.tooltip > p:hover ~ .tooltip_text,
+.tooltip > svg:hover ~ .tooltip_text {
     visibility: visible;
 }
 
-
-
 #description_container {
     width: 95%;
-    height: 52%;
+    height: 45%;
     margin: 0 auto;
     padding: 10px;
-    background-color: aquamarine;
+    background-color: var(--white);
     overflow: auto;
     scrollbar-width: thin;
-    scrollbar-color: black transparent;
+    scrollbar-color: var(--grey) transparent;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -122,7 +113,6 @@
 }
 
 #songList_leaderboard {
-    background-color: green;
     height: 50%;
     width: 100%;
 }
@@ -130,20 +120,21 @@
 #song_list_container {
     width: 100%;
     height: 100%;
-    background-color:cornflowerblue;
 }
 
 #bookmark_nav {
     width: 100%;
-    /* margin: 0 auto; */
-    height: fit-content;
+    height: 25px;
     display: flex;
+    align-items: center;
     gap: 10px;
-    padding: 5px 3%; 
-    background-color:hotpink;
+    padding: 0 3%; 
+    background-color: var(--green);
     button {
         background-color: transparent;
         border: 0;
+        padding: 4px 0 0 0;
+        margin: 0;
     }
 }
 
@@ -155,51 +146,55 @@
 
 #song_list {
     width: 100%;
-    height: 95%;
+    height: calc(100% - 20px);
     padding: 10px;
-    background-color: crimson;
+    background-color: var(--black);
     display: flex;
     flex-direction: column;
-    align-items: end;
+    align-items: flex-end;
     gap: 10px;
     overflow: auto;
     scrollbar-width: thin;
-    scrollbar-color: black transparent;
+    scrollbar-color: var(--grey) transparent;
 }
 
 .song_btn{
-    background-color:darkkhaki;
+    background-color:var(--white);
+    color: black;
     border-radius: 6px;
     width: 95%;
     padding: 5px;
     height: fit-content;
-    transition: width 0.2s ease;
+    border-color: var(--white);
+    transition: all 0.2s ease;
 }
 
 .song_btn.active{
     width: 100%;
+    border-color: var(--grey);
 }
 
 .song_btn:hover {
     width: 100%;
+    border-color: var(--grey);
 }
 
 .song_metadata {
     display: flex;
     flex-direction: column;
-    align-items: start;
+    align-items: flex-start;
 }
 
 .lb {
     overflow: scroll;
     scrollbar-width: thin;
-    scrollbar-color: black transparent;
+    scrollbar-color: var(--grey) transparent;
 }
 
 #leaderboard {
     width: 100%;
     height: 100%;
-    background-color: crimson;
+    background-color: var(--grey);
     scrollbar-width: thin;
     padding: 10px;
 }
@@ -208,6 +203,7 @@ th,
 td {
   border: 1px solid rgb(160 160 160);
   padding: 8px 10px;
+  color: var(--white)
 }
 
 
@@ -217,11 +213,11 @@ td {
         flex-direction: row;
     }
     #tape_info {
-        height: 100%;
+        height: 95%;
         width: 50%;
     }
     #songList_leaderboard {
-        height: 100%;
+        height: 95%;
         width: 50%;
     }
 }

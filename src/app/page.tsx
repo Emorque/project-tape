@@ -80,6 +80,10 @@ export default function Home() {
     setSongPlaying(true);
     getMap(songID);
   }
+  
+  // useEffect(() => {
+  //   updateCamera([36,4,40,   32,4,38])
+  // }, [])
 
   return (
     <div id="canvasContainer">
@@ -136,7 +140,68 @@ export default function Home() {
           setPlayerView(true);
           }}><p>Songs</p>
         </button>
+        <button className="menuBtn" onClick={() => {
+          updateCamera([4,8,34.5,   -1,7,34.5]);
+          setPlayerView(true);
+          }}><p>Settings</p>
+        </button>
       </div>
+      
+
+      <div id='main_menu'>
+        <div>
+          <h1>Project Tape</h1>
+        </div>
+        <button className="cas_btn" onClick={() => {
+          updateCamera([14,12,34,   14,12,26]);
+          setPlayerView(true);
+          }}><p>PLay</p>
+          <div className="cas_bottom">
+          </div>
+          <div className="cas_bar">
+            <div className="cas_circle">
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+            </div>
+            <div className="cas_circle">
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+            </div>
+          </div>
+        </button>
+
+        <button className="menu_btn" onClick={() => {
+          updateCamera([36,4,40,   32,4,38])
+          setPlayerView(false)
+          }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
+              <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+            </svg>
+          </button>
+
+        <button className="menu_btn" onClick={() => {
+          updateCamera([14,12,34,   14,12,26]);
+          setPlayerView(true);
+          }}><p>PLay</p>
+        </button>
+
+        <button className="menu_btn" onClick={() => {
+          updateCamera([4,8,34.5,   -1,7,34.5]);
+          setPlayerView(true);
+          }}><p>Edit</p>
+        </button>
+
+        <button className="menu_btn" onClick={() => {
+          updateCamera([4,8,34.5,   -1,7,34.5]);
+          setPlayerView(true);
+          }}><p>Settings</p>
+        </button>
+
+      </div>
+
+
       <div id="songScreen" style={stageStyle}>
         {selectedSong && gameMap && songPlaying && songLink && 
         <Tape gMap={gameMap} sLink={songLink} gameMapProp={handleGameMap}/>
