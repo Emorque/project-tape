@@ -35,6 +35,7 @@
 #leaderboard_btn, #play_btn {
     padding: 5px;
     border-radius: 6px;
+    cursor: pointer;
 }
 
 #leaderboard_btn {
@@ -167,6 +168,7 @@
     height: fit-content;
     border-color: var(--white);
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .song_btn.active{
@@ -203,7 +205,8 @@ th,
 td {
   border: 1px solid rgb(160 160 160);
   padding: 8px 10px;
-  color: var(--white)
+  color: #ffffff;
+  letter-spacing: 1px;
 }
 
 

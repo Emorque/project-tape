@@ -3,9 +3,6 @@
     width: 100%;
     position: relative;
     z-index: 10;
-    /* * {
-        z-index: 100;
-    } */
 }
 
 #canvas_id {
@@ -16,19 +13,29 @@
 #main_menu {
     position: absolute;
     top:30%;
-    left:0%;
     z-index: 200;
     width: 20%;
-    /* height: 50%; */
+    max-width: 200px;
+    min-width: 175px;
     display: flex;
     flex-direction: column;
-    background-color: white;
+    gap: 0px;
+    transition: left 1s ease;
 }
 
 .cas_btn {
     width: 100%;
-    aspect-ratio: 10/6;
+    aspect-ratio: 12/6;
     position: relative;
+    border: 5px solid var(--black);
+    cursor: pointer;
+    &:nth-of-type(2){
+        border-top: 0
+    }
+    &:nth-of-type(3) {
+        border-top:0
+    }
+    
 }
 
 .cas_btn:hover {
@@ -40,9 +47,9 @@
 .cas_bottom {
     position: absolute;
     bottom: 0;
-    border-bottom: 3vw solid var(--black);
-    border-left: 5vw solid transparent;
-    border-right: 5vw solid transparent;
+    border-bottom: min(3vw, 20px) solid var(--black);
+    border-left: min(5vw, 40px) solid transparent;
+    border-right: min(5vw, 40px) solid transparent;
     height: 0;
     left: 5%;
     width: 90%;
@@ -52,15 +59,14 @@
 .cas_bottom::after {
     position: absolute;
     content: "";
-    border-bottom: 3vw solid var(--grey);
-    border-left: 5vw solid transparent;
-    border-right: 5vw solid transparent;
+    border-bottom: min(3vw, 20px) solid var(--grey);
+    border-left: min(5vw, 40px) solid transparent;
+    border-right: min(5vw, 40px) solid transparent;
     height: 0;
     scale: 0.9;
     width: 100%;
-    /* left: 50%; Position it in the center */
     transform: translateX(-55%) translateY(5%);
-    top: 0; /* Position it at the top of the parent element */
+    top: 0; 
 }
 
 .cas_bar {
@@ -70,18 +76,18 @@
     top:15%;
     left: 25%;
     content: "";
-    background-color: white;
+    background-color: var(--black);
 }
 
 .cas_circle {
     background-color: transparent;
-    border: 1px solid white;
-    width: 20%;
+    border: 5px solid var(--black);
+    width: 25%;
     aspect-ratio: 1;
     border-radius: 50%;
     content: "";
     position: absolute;
-    top:0;
+    top:-2px;
     transition: transform 1s ease;
     &:nth-of-type(1){
         right: calc(100% + 5px);
@@ -97,7 +103,7 @@
     left: 0;
     width: 100%;;
     aspect-ratio: 6/1;
-    background: linear-gradient(to right, white 15%,transparent 15%, transparent 85%, white 85%);
+    background: linear-gradient(to right, var(--black) 15%,transparent 15%, transparent 85%, var(--black) 85%);
     &:nth-of-type(2){
         transform:rotate(60deg);
     }
@@ -115,24 +121,22 @@
 #menuOptions {
     position: absolute;
     top:0;
-    left: 0;
     height: 30px;
+    max-width: 95%;
     z-index: 200;
     display: flex;
     background-color: transparent;
     gap: 0px;
+    transition: left 1s ease;
 }
 
-/* .cas_bar {
-    position: absolute;
-    top: 10%;
-    left: 50%;
-    width: 100px;
-    transform: translate(-50%, -50%);
-    aspect-ratio: 10/1;
-    content: "";
-    background-color: white;
-} */
+.unactiveMenu {
+    left: -100%
+}
+
+.activeMenu {
+    left:0%;
+}
 
 .menuBtn {
     position: relative;
@@ -141,8 +145,12 @@
     border: 1px solid var(--black);
     border-left: 0;
     cursor: pointer;
-    p, svg {
+    h3 {
         transform: skew(40deg);
+        letter-spacing: 1px;
+    }
+    svg {
+        transform: scale(1.5) skew(40deg);
     }
 }
 

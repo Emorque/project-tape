@@ -5,6 +5,7 @@ import { CameraControls, Html } from '@react-three/drei';
 import Link from 'next/link'
 import { PSRoom } from "./components/Project-tape-scene"
 import { Tape } from "./components/tape";
+import { Settings } from "./components/settings";
 import "./page.css";
 import { useCallback, useRef, useState } from 'react';
 
@@ -21,6 +22,7 @@ export default function Home() {
   const[selectedSong, setSelectedSong] = useState<string | null>(null)
   const[songLink, setSongLink] = useState<string | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
+  const[mainMenuActive, setMainMenu] = useState<boolean>(true)
 
   const supabase = createClient()
 
@@ -61,13 +63,13 @@ export default function Home() {
   const databaseStyle = {
     opacity: playerView ? 1 : 0, 
     visibility: playerView ? "visible" : "hidden",
-    transition: 'opacity 2s ease, visibility 2s' 
+    transition: 'opacity 1s ease, visibility 1s' 
   } as React.CSSProperties;
   
   const stageStyle = {
     opacity: songPlaying ? 1 : 0, 
     visibility: songPlaying ? "visible" : "hidden",
-    transition: 'opacity 2s ease, visibility 2s'
+    transition: 'opacity 1s ease, visibility 1s'
   } as React.CSSProperties;
 
   const updateCamera = (newFocus: [number,number,number,number,number,number],) => {
@@ -121,41 +123,43 @@ export default function Home() {
           mouseButtons={{left: 0, right: 0, wheel: 0, middle: 0}}
         />
       </Canvas>
-      <div id='menuOptions'>
-        <button className="menuBtn" onClick={() => {
+
+      <div id='menuOptions' className={(mainMenuActive)? "unactiveMenu" : "activeMenu"}>
+        <button className="menuBtn" disabled={(mainMenuActive)} onClick={() => {
           updateCamera([36,4,40,   32,4,38])
           setPlayerView(false)
+          setMainMenu(true)
           }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
               <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
             </svg>
           </button>
-        <button className="menuBtn" onClick={() => {
-          updateCamera([4,8,34.5,   -1,7,34.5]);
-          setPlayerView(true);
-          }}><p>Computer</p>
-        </button>
-        <button className="menuBtn" onClick={() => {
+
+        <button className="menuBtn" disabled={(mainMenuActive)} onClick={() => {
           updateCamera([14,12,34,   14,12,26]);
           setPlayerView(true);
-          }}><p>Songs</p>
+          }}><h3>Play</h3>
         </button>
-        <button className="menuBtn" onClick={() => {
+        <button className="menuBtn" disabled={(mainMenuActive)} onClick={() => {
           updateCamera([4,8,34.5,   -1,7,34.5]);
           setPlayerView(true);
-          }}><p>Settings</p>
+          }}><h3>Edit</h3>
+        </button>
+
+        <button className="menuBtn" disabled={(mainMenuActive)} onClick={() => {
+          updateCamera([4,8,34.5,   -1,7,34.5]);
+          setPlayerView(true);
+          }}><h3>Settings</h3>
         </button>
       </div>
       
 
-      <div id='main_menu'>
-        <div>
-          <h1>Project Tape</h1>
-        </div>
-        <button className="cas_btn" onClick={() => {
+      <div id='main_menu' className={(mainMenuActive)? "activeMenu" : "unactiveMenu"}>
+        <button className="cas_btn" disabled={(!mainMenuActive)} onClick={() => {
           updateCamera([14,12,34,   14,12,26]);
           setPlayerView(true);
-          }}><p>PLay</p>
+          setMainMenu(false)
+          }}><h1>Play</h1>
           <div className="cas_bottom">
           </div>
           <div className="cas_bar">
@@ -172,35 +176,51 @@ export default function Home() {
           </div>
         </button>
 
-        <button className="menu_btn" onClick={() => {
-          updateCamera([36,4,40,   32,4,38])
-          setPlayerView(false)
-          }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
-              <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-            </svg>
-          </button>
-
-        <button className="menu_btn" onClick={() => {
-          updateCamera([14,12,34,   14,12,26]);
-          setPlayerView(true);
-          }}><p>PLay</p>
-        </button>
-
-        <button className="menu_btn" onClick={() => {
+        <button className="cas_btn" disabled={(!mainMenuActive)} onClick={() => {
           updateCamera([4,8,34.5,   -1,7,34.5]);
           setPlayerView(true);
-          }}><p>Edit</p>
+          setMainMenu(false)
+          }}><h1>Edit</h1>
+          <div className="cas_bottom">
+          </div>
+          <div className="cas_bar">
+            <div className="cas_circle">
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+            </div>
+            <div className="cas_circle">
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+            </div>
+          </div>
         </button>
 
-        <button className="menu_btn" onClick={() => {
+
+        <button className="cas_btn" disabled={(!mainMenuActive)} onClick={() => {
           updateCamera([4,8,34.5,   -1,7,34.5]);
           setPlayerView(true);
-          }}><p>Settings</p>
+          setMainMenu(false)
+          }}><h1>Settings</h1>
+          <div className="cas_bottom">
+          </div>
+          <div className="cas_bar">
+            <div className="cas_circle">
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+            </div>
+            <div className="cas_circle">
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+            </div>
+          </div>
         </button>
-
       </div>
 
+      <Settings/>
 
       <div id="songScreen" style={stageStyle}>
         {selectedSong && gameMap && songPlaying && songLink && 
