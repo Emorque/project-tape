@@ -146,7 +146,7 @@ export const SongHtml = ({songToPlay} : SongHtmlProps) => {
                     </div>
                     
                     <button id="play_btn" onClick={playSong} disabled={selectedSong.note_count === 0}>
-                        Play
+                        Load
                     </button>
 
                     <div id="data">

@@ -2,6 +2,21 @@
     box-sizing: border-box; /* Ensure borders don't add extra size */
 }
 
+#editor_page {
+    overflow: auto;
+    width: 100%;
+    height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--grey) transparent;
+    button {
+        background-color: rgb(250, 238, 223);
+        border: 0;
+        padding: 5px;
+        color: black;
+        cursor: pointer;
+    }
+}
+
 #topbar-container {
     width: 1200px;
     position: relative;
@@ -136,10 +151,4 @@
 }
 
 
-button {
-    background-color: rgb(250, 238, 223);
-    border: 0;
-    padding: 5px;
-    color: black;
-    cursor: pointer;
-}
+

@@ -23,12 +23,14 @@ export default function Home() {
   const[songLink, setSongLink] = useState<string | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
   const[menu, setMenu] = useState<string>("main_menu")
-  const[userSettings, setUserSettings] = useState<settingsType | null>(null)
+  const[userSettings, setUserSettings] = useState<settingsType | null>(null);
+  const[settingsView, setSettingsView] = useState<boolean>(false);
 
   const supabase = createClient()
 
   const handleGameMap = (currentSong : string | null) => { 
-    setSelectedSong(currentSong); 
+    setSelectedSong(currentSong);
+    updateCamera([14,12,34,   14,12,26]); //Set back to Songs Div 
     setSongPlaying(false) 
     setGameMap(null);
   }
@@ -78,6 +80,12 @@ export default function Home() {
     transition: 'opacity 1s ease, visibility 1s'
   } as React.CSSProperties;
 
+  const settingsStyle = {
+    visibility: (menu === "settings_menu")? "visible" : "hidden",
+    left: (menu === "settings_menu")? "0%" : "-100%",
+    transition: 'left 1s ease, visibility 1s'
+  } as React.CSSProperties
+
   const updateCamera = (newFocus: [number,number,number,number,number,number],) => {
     cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], true);
   }
@@ -85,7 +93,7 @@ export default function Home() {
   const handleSelectedSong = (songID: string) => {
     updateCamera([14,8,34,   14, 7, 26])
     setSelectedSong(songID); 
-    setSongPlaying(true);
+    // setSongPlaying(true);
     getMap(songID);
   }
   
@@ -143,16 +151,10 @@ export default function Home() {
           }}><h3>Play</h3>
         </button>
         <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([4,8,34.5,   -1,7,34.5]);
+          updateCamera([4,8,34.7,   -1,7,34.7]);
           setPlayerView(true);
           }}><h3>Edit</h3>
         </button>
-
-        {/* <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([36,4,40,   32,4,38])
-          setPlayerView(false);
-          }}><h3>Settings</h3>
-        </button> */}
       </div>
       
 
@@ -179,7 +181,7 @@ export default function Home() {
         </button>
 
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
-          updateCamera([4,8,34.5,   -1,7,34.5]);
+          updateCamera([4,8,34.7,   -1,7,34.7]);
           setPlayerView(true);
           setMenu("sub_menu")
           }}><h1>Edit</h1>
@@ -204,6 +206,7 @@ export default function Home() {
           // updateCamera([4,8,34.5,   -1,7,34.5]);
           // setPlayerView(true);
           setMenu("settings_menu")
+          setSettingsView(true);
           }}><h1>Settings</h1>
           <div className="cas_bottom">
           </div>
@@ -222,15 +225,26 @@ export default function Home() {
         </button>
       </div>
 
-      <div id="settings_wrapper" className={(menu === "settings_menu")? "activeMenu" : "unactiveMenu"}>
-        <button id="setting_back_btn" onClick={() => {setMenu("main_menu")}}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
-            <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-          </svg>
-        </button>
-        <Settings saveSettings={handleNewSettings}/>
+
+      <div id="settings_wrapper" style={settingsStyle}>
+        {(settingsView) && 
+        <>
+          <button id="setting_back_btn" onClick={() => {
+            setMenu("main_menu")
+            setTimeout(() => {
+              setSettingsView(false)
+            }, 1000)
+            }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
+              <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+            </svg>
+          </button>
+          <Settings saveSettings={handleNewSettings}/>      
+        </>
+          }
       </div>
 
+      
       <div id="songScreen" style={stageStyle}>
         {selectedSong && gameMap && songPlaying && songLink && userSettings &&
         <Tape gMap={gameMap} sLink={songLink} gameMapProp={handleGameMap} settings={userSettings}/>

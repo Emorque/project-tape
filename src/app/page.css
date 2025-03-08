@@ -15,7 +15,7 @@
     top:30%;
     z-index: 200;
     width: 20%;
-    max-width: 200px;
+    max-width: 250px;
     min-width: 175px;
     display: flex;
     flex-direction: column;
@@ -141,7 +141,7 @@
     background-color: var(--grey);   
     scrollbar-width: thin;
     scrollbar-color: var(--white) transparent; 
-    transition: left 1s ease;
+    /* transition: left 1s ease; */
     overflow: auto;
 }
 
@@ -216,8 +216,17 @@
 }
 
 .editorHTML {
-    width: 181px;
-    height: 127px;
+    width: 176px;
+    height: 122px;
+    div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--black);
+    }
+    a {
+        font-size: 1.6rem;
+    }
 }
 
 .htmlDiv {
