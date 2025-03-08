@@ -130,6 +130,28 @@
     transition: left 1s ease;
 }
 
+#settings_wrapper {
+    position: absolute;
+    z-index: 200;
+    top: 0;
+    width: 80%;
+    max-width: 1000px;
+    height: 80%;
+    top: 10%;
+    background-color: var(--grey);   
+    scrollbar-width: thin;
+    scrollbar-color: var(--white) transparent; 
+    transition: left 1s ease;
+    overflow: auto;
+}
+
+#setting_back_btn {
+    background-color: var(--black);
+    svg {
+        fill: var(--white);
+    }
+}
+
 .unactiveMenu {
     left: -100%
 }

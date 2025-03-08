@@ -9,7 +9,7 @@ import { Settings } from "./components/settings";
 import "./page.css";
 import { useCallback, useRef, useState } from 'react';
 
-import { sMap } from "@/utils/helperTypes"
+import { sMap, settingsType } from "@/utils/helperTypes"
 
 import { createClient } from '@/utils/supabase/client'
 import { SongHtml } from "./components/songHtml";
@@ -22,7 +22,8 @@ export default function Home() {
   const[selectedSong, setSelectedSong] = useState<string | null>(null)
   const[songLink, setSongLink] = useState<string | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
-  const[mainMenuActive, setMainMenu] = useState<boolean>(true)
+  const[menu, setMenu] = useState<string>("main_menu")
+  const[userSettings, setUserSettings] = useState<settingsType | null>(null)
 
   const supabase = createClient()
 
@@ -30,6 +31,11 @@ export default function Home() {
     setSelectedSong(currentSong); 
     setSongPlaying(false) 
     setGameMap(null);
+  }
+
+  const handleNewSettings = (newSettings: settingsType | null) => {
+    setUserSettings(newSettings)
+    console.log(newSettings)
   }
 
   const getMap = useCallback(async (selectedSong : string) => {
@@ -83,10 +89,6 @@ export default function Home() {
     getMap(songID);
   }
   
-  // useEffect(() => {
-  //   updateCamera([36,4,40,   32,4,38])
-  // }, [])
-
   return (
     <div id="canvasContainer">
       <Canvas id="canvas_id" camera={{ position: [36,4,40]}}>
@@ -124,41 +126,41 @@ export default function Home() {
         />
       </Canvas>
 
-      <div id='menuOptions' className={(mainMenuActive)? "unactiveMenu" : "activeMenu"}>
-        <button className="menuBtn" disabled={(mainMenuActive)} onClick={() => {
+      <div id='menuOptions' className={(menu === "sub_menu")? "activeMenu" : "unactiveMenu"}>
+        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
           updateCamera([36,4,40,   32,4,38])
           setPlayerView(false)
-          setMainMenu(true)
+          setMenu("main_menu")
           }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
               <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
             </svg>
           </button>
 
-        <button className="menuBtn" disabled={(mainMenuActive)} onClick={() => {
+        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
           updateCamera([14,12,34,   14,12,26]);
           setPlayerView(true);
           }}><h3>Play</h3>
         </button>
-        <button className="menuBtn" disabled={(mainMenuActive)} onClick={() => {
+        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
           updateCamera([4,8,34.5,   -1,7,34.5]);
           setPlayerView(true);
           }}><h3>Edit</h3>
         </button>
 
-        <button className="menuBtn" disabled={(mainMenuActive)} onClick={() => {
-          updateCamera([4,8,34.5,   -1,7,34.5]);
-          setPlayerView(true);
+        {/* <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
+          updateCamera([36,4,40,   32,4,38])
+          setPlayerView(false);
           }}><h3>Settings</h3>
-        </button>
+        </button> */}
       </div>
       
 
-      <div id='main_menu' className={(mainMenuActive)? "activeMenu" : "unactiveMenu"}>
-        <button className="cas_btn" disabled={(!mainMenuActive)} onClick={() => {
+      <div id='main_menu' className={(menu === "main_menu")? "activeMenu" : "unactiveMenu"}>
+        <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
           updateCamera([14,12,34,   14,12,26]);
           setPlayerView(true);
-          setMainMenu(false)
+          setMenu("sub_menu")
           }}><h1>Play</h1>
           <div className="cas_bottom">
           </div>
@@ -176,10 +178,10 @@ export default function Home() {
           </div>
         </button>
 
-        <button className="cas_btn" disabled={(!mainMenuActive)} onClick={() => {
+        <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
           updateCamera([4,8,34.5,   -1,7,34.5]);
           setPlayerView(true);
-          setMainMenu(false)
+          setMenu("sub_menu")
           }}><h1>Edit</h1>
           <div className="cas_bottom">
           </div>
@@ -198,10 +200,10 @@ export default function Home() {
         </button>
 
 
-        <button className="cas_btn" disabled={(!mainMenuActive)} onClick={() => {
-          updateCamera([4,8,34.5,   -1,7,34.5]);
-          setPlayerView(true);
-          setMainMenu(false)
+        <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
+          // updateCamera([4,8,34.5,   -1,7,34.5]);
+          // setPlayerView(true);
+          setMenu("settings_menu")
           }}><h1>Settings</h1>
           <div className="cas_bottom">
           </div>
@@ -220,11 +222,18 @@ export default function Home() {
         </button>
       </div>
 
-      <Settings/>
+      <div id="settings_wrapper" className={(menu === "settings_menu")? "activeMenu" : "unactiveMenu"}>
+        <button id="setting_back_btn" onClick={() => {setMenu("main_menu")}}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
+            <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+          </svg>
+        </button>
+        <Settings saveSettings={handleNewSettings}/>
+      </div>
 
       <div id="songScreen" style={stageStyle}>
-        {selectedSong && gameMap && songPlaying && songLink && 
-        <Tape gMap={gameMap} sLink={songLink} gameMapProp={handleGameMap}/>
+        {selectedSong && gameMap && songPlaying && songLink && userSettings &&
+        <Tape gMap={gameMap} sLink={songLink} gameMapProp={handleGameMap} settings={userSettings}/>
         }
       </div>
     </div>

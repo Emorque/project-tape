@@ -28,3 +28,17 @@ export type ranking = {
   accuracy: number,
   max_combo: number,
 }
+
+export type settingsType = {
+    lLane: string,
+    rLane: string,
+    lTurn: string,
+    rTurn: string,
+
+    scrollSpd: number,
+
+    gpVolume: number,
+    hsVolume: number,
+
+    offset: number
+}

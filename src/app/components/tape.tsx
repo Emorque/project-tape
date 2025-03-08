@@ -4,14 +4,16 @@ import React, { RefObject, useEffect, useRef, useState } from 'react';
 import "./tape.css";
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { settingsType } from '@/utils/helperTypes';
 
 interface gameInterface {
   gMap: [number,string][];
   sLink: string;
   gameMapProp: (currentSong: string | null) => void;
+  settings: settingsType
 }
 
-export const Tape = ({gMap, sLink, gameMapProp} : gameInterface) => {   
+export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {   
     const [audioURL, setAudioURL] = useState<string | null>(null)
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -26,7 +28,7 @@ export const Tape = ({gMap, sLink, gameMapProp} : gameInterface) => {
     // const [scrollSpeed, setScrollSpeed] = useState<number>(1500); //Make this adjustable in some settings page and get the speed here (Zustand)?
     const scrollSpeed = 1500;
     // const offset = -250;
-    const offset = 0 // Adding offest to the audio only seems like the best, easiest choice 
+    const offset = -500 // Adding offest to the audio only seems like the best, easiest choice 
     const [direction, setDirection] = useState<string>("Left");
 
     // Stopwatch
@@ -307,6 +309,7 @@ export const Tape = ({gMap, sLink, gameMapProp} : gameInterface) => {
 
     // Start Map
     useEffect(() => {
+        console.log("Settings Loaded in Map", settings)
         setAudioURL(sLink);
     
         const tempHitsounds: { play: () => void; }[] = []
