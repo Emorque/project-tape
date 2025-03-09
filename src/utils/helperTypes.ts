@@ -35,6 +35,9 @@ export type settingsType = {
     lTurn: string,
     rTurn: string,
 
+    pause: string,
+    restart: string,
+
     scrollSpd: number,
 
     gpVolume: number,

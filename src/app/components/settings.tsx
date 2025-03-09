@@ -13,6 +13,8 @@ export const Settings = ({saveSettings} : settingsInterface) => {
     const [rightAction, setRightAction] = useState<string>("D")
     const [leftTurn, setLeftTurn] = useState<string>("J")
     const [rightTurn, setRightTurn] = useState<string>("L")
+    const [pauseBtn, setPauseBtn] = useState<string>("Q")
+    const [restartBtn, setRestartBtn] = useState<string>("P")
     const [actionKey, setActionKey] = useState<string>("")
     
     const [disableMapping, setDisabedMapping] = useState<boolean>(false)
@@ -47,7 +49,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             console.log(actionKey)
 
             if (actionKey === "LL") {
-                if (key === rightAction || key === leftTurn || key === rightTurn) {
+                if (key === rightAction || key === leftTurn || key === rightTurn || key === pauseBtn || key === restartBtn) {
                     // alert("Cannot Have Same Key")
                     keyError("#leftLaneBtn");
                     setDisabedMapping(true);
@@ -61,7 +63,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             }
 
             if (actionKey === "RL") {
-                if (key === leftAction || key === leftTurn || key === rightTurn) {
+                if (key === leftAction || key === leftTurn || key === rightTurn || key === pauseBtn || key === restartBtn) {
                     keyError("#rightLaneBtn");
                     setDisabedMapping(true);
                     setTimeout(() => {
@@ -74,7 +76,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             }
 
             if (actionKey === "LT") {
-                if (key === leftAction || key === rightAction || key === rightTurn) {
+                if (key === leftAction || key === rightAction || key === rightTurn || key === pauseBtn || key === restartBtn) {
                     keyError("#leftTurnBtn");
                     setDisabedMapping(true);
                     setTimeout(() => {
@@ -87,7 +89,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             }
 
             if (actionKey === "RT") {
-                if (key === leftAction || key === rightAction || key === leftTurn) {
+                if (key === leftAction || key === rightAction || key === leftTurn || key === pauseBtn || key === restartBtn) {
                     keyError("#rightTurnBtn");
                     setDisabedMapping(true);
                     setTimeout(() => {
@@ -98,6 +100,32 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 console.log("key", key)
                 setRightTurn(key)
             }
+
+            if (actionKey === "Pause") {
+                if (key === leftAction || key === rightAction || key === leftTurn || key === rightTurn || key === restartBtn) {
+                    keyError("#pauseBtn");
+                    setDisabedMapping(true);
+                    setTimeout(() => {
+                        setDisabedMapping(false)
+                    }, 1500)
+                    return
+                }
+                console.log("key", key)
+                setPauseBtn(key)
+            }
+
+            if (actionKey === "Restart") {
+                if (key === leftAction || key === rightAction || key === leftTurn || key === rightTurn || key === pauseBtn) {
+                    keyError("#restartBtn");
+                    setDisabedMapping(true);
+                    setTimeout(() => {
+                        setDisabedMapping(false)
+                    }, 1500)
+                    return
+                }
+                console.log("key", key)
+                setRestartBtn(key)
+            }
         }
 
 
@@ -107,7 +135,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [leftAction, rightAction, leftTurn, rightTurn, actionKey, disableMapping])  
+    }, [leftAction, rightAction, leftTurn, rightTurn, pauseBtn, restartBtn, actionKey, disableMapping])  
 
 
     // Grabbing local
@@ -117,10 +145,13 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         if (!localSettings) {
             console.log("no local settings")
             updateSettings = {
-                lLane: "A",
-                rLane: "D",
-                lTurn: "J",
-                rTurn: "L",
+                lLane: "J",
+                rLane: "L",
+                lTurn: "A",
+                rTurn: "D",
+                
+                pause: "Q",
+                restart: "P",
 
                 scrollSpd: 1500,
 
@@ -140,6 +171,9 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         setRightAction(updateSettings.rLane);
         setLeftTurn(updateSettings.lTurn);
         setRightTurn(updateSettings.rTurn);
+
+        setPauseBtn(updateSettings.pause);
+        setRestartBtn(updateSettings.restart);
 
         setScrollSpeed(updateSettings.scrollSpd);
 
@@ -187,6 +221,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
     
 
     const newActionKey = (newKey: string) => {
+        if (disableMapping) return;
         if (actionKey === newKey) {
             setActionKey("")
         }
@@ -203,6 +238,9 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             rLane: rightAction,
             lTurn: leftTurn,
             rTurn: rightTurn,
+
+            pause: pauseBtn,
+            restart: restartBtn,
 
             scrollSpd: scrollSpeed,
             
@@ -237,6 +275,14 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         backgroundColor: (actionKey === "RT")? "#91a89a" : "#1a1a1a",
         color: (actionKey === "RT")? "#1d1d1d" : "#eaeaea"
     }
+    const pauseBtnStyle = {
+        backgroundColor: (actionKey === "Pause")? "#91a89a" : "#1a1a1a",
+        color: (actionKey === "Pause")? "#1d1d1d" : "#eaeaea"
+    }
+    const restartBtnStyle = {
+        backgroundColor: (actionKey === "Restart")? "#91a89a" : "#1a1a1a",
+        color: (actionKey === "Restart")? "#1d1d1d" : "#eaeaea"
+    }
 
 
     return (
@@ -246,6 +292,22 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 <div className="setting_tooltip_text">
                     Set Keybinds
                 </div>
+
+                <div className="horizontal_div">                    
+                    <h2>Left Turn Button</h2>
+                    <button id="leftTurnBtn" className="action_btn" style={leftTurnStyle} onClick={() => {
+                        newActionKey("LT")
+                    }}>{leftTurn}</button>
+                </div>
+
+                <div className="horizontal_div">                    
+                    <h2>Right Turn Button</h2>
+                    <button id="rightTurnBtn" className="action_btn" style={rightTurnStyle} onClick={() => {
+                        newActionKey("RT")
+                    }}>{rightTurn}
+                    </button>
+                </div>
+
                 <div className="horizontal_div">
                     <h2>Left Lane Button</h2>
                     <button id="leftLaneBtn" className="action_btn" style={leftLaneStyle} onClick={() => {
@@ -261,17 +323,18 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 </div>
 
                 <div className="horizontal_div">                    
-                    <h2>Left Turn Button</h2>
-                    <button id="leftTurnBtn" className="action_btn" style={leftTurnStyle} onClick={() => {
-                        newActionKey("LT")
-                    }}>{leftTurn}</button>
+                    <h2>Pause Button</h2>
+                    <button id="pauseBtn" className="action_btn" style={pauseBtnStyle} onClick={() => {
+                        newActionKey("Pause")
+                    }}>{pauseBtn}
+                    </button>
                 </div>
 
                 <div className="horizontal_div">                    
-                    <h2>Right Turn Button</h2>
-                    <button id="rightTurnBtn" className="action_btn" style={rightTurnStyle} onClick={() => {
-                        newActionKey("RT")
-                    }}>{rightTurn}
+                    <h2>Restart Button</h2>
+                    <button id="restartBtn" className="action_btn" style={restartBtnStyle} onClick={() => {
+                        newActionKey("Restart")
+                    }}>{restartBtn}
 
                     <h2 id="mapping_error">Keybind Conflict</h2>
 

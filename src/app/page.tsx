@@ -7,7 +7,7 @@ import { PSRoom } from "./components/Project-tape-scene"
 import { Tape } from "./components/tape";
 import { Settings } from "./components/settings";
 import "./page.css";
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { sMap, settingsType } from "@/utils/helperTypes"
 
@@ -20,11 +20,14 @@ export default function Home() {
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
 
   const[selectedSong, setSelectedSong] = useState<string | null>(null)
-  const[songLink, setSongLink] = useState<string | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
   const[menu, setMenu] = useState<string>("main_menu")
   const[userSettings, setUserSettings] = useState<settingsType | null>(null);
   const[settingsView, setSettingsView] = useState<boolean>(false);
+
+  const [audioURL, setAudioURL] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [audioReady, setAudioReady] = useState<boolean>(false);
 
   const supabase = createClient()
 
@@ -58,15 +61,47 @@ export default function Home() {
         console.log("hefuisfhbuirfbui")
         console.log("fefa", songMap.song_map)
         setGameMap(songMap.song_map)
-        setSongLink(songMap.song_link)
+        setAudioURL(songMap.song_link);
       }
     } catch (error) {
       console.error('User error:', error) // Only used for eslint
       alert('Error loading user data!')
     } finally {
-      console.log('loaded gameMap')
+      console.log('loaded game_map and audio')
     }
   }, [supabase])
+
+  useEffect(() => {
+      const localSettings = localStorage.getItem("settings")
+      let updateSettings : settingsType 
+      if (!localSettings) {
+          console.log("no local settings")
+          updateSettings = {
+              lLane: "J",
+              rLane: "L",
+              lTurn: "A",
+              rTurn: "D",
+
+              pause: "Q",
+              restart: "P",
+
+              scrollSpd: 1500,
+
+              gpVolume: 1,
+              hsVolume: 1,
+
+              offset: 0
+          }
+      }
+      else{
+          updateSettings = JSON.parse(localSettings);
+      }
+      
+      // Come back to fix in case some users delete/rename keys
+      setUserSettings(updateSettings)
+      localStorage.setItem("settings", JSON.stringify(updateSettings))
+
+  }, [])
 
   const databaseStyle = {
     opacity: playerView ? 1 : 0, 
@@ -93,9 +128,24 @@ export default function Home() {
   const handleSelectedSong = (songID: string) => {
     updateCamera([14,8,34,   14, 7, 26])
     setSelectedSong(songID); 
-    // setSongPlaying(true);
+    setSongPlaying(true);
     getMap(songID);
   }
+
+      const handleSongReady = () => {
+        // Song is ready
+        console.log("song is ready")
+        setAudioReady(true)
+    }
+
+    const handleSongError = () => {
+        console.log("error loading song")
+        setAudioReady(false);
+    } 
+
+    useEffect(() => {
+        console.log("audio is Ready: ", audioReady)
+    }, [audioReady])
   
   return (
     <div id="canvasContainer">
@@ -205,6 +255,7 @@ export default function Home() {
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
           // updateCamera([4,8,34.5,   -1,7,34.5]);
           // setPlayerView(true);
+          if (settingsView) return; //If not checked and settigns btn is clicked too soon, settings div doesn't load.
           setMenu("settings_menu")
           setSettingsView(true);
           }}><h1>Settings</h1>
@@ -244,10 +295,19 @@ export default function Home() {
           }
       </div>
 
+      <audio 
+        src={audioURL ?? ""} 
+        controls={false} 
+        ref={audioRef} 
+        loop={false} 
+        onCanPlayThrough={handleSongReady}
+        onError={handleSongError}
+        
+      />
       
       <div id="songScreen" style={stageStyle}>
-        {selectedSong && gameMap && songPlaying && songLink && userSettings &&
-        <Tape gMap={gameMap} sLink={songLink} gameMapProp={handleGameMap} settings={userSettings}/>
+        {selectedSong && gameMap && songPlaying && userSettings && audioRef &&
+        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef}/>
         }
       </div>
     </div>

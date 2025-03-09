@@ -8,31 +8,40 @@ import { settingsType } from '@/utils/helperTypes';
 
 interface gameInterface {
   gMap: [number,string][];
-  sLink: string;
   gameMapProp: (currentSong: string | null) => void;
-  settings: settingsType
+  settings: settingsType;
+  audioProp: React.RefObject<HTMLAudioElement>
 }
 
-export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {   
-    const [audioURL, setAudioURL] = useState<string | null>(null)
-    const audioRef = useRef<HTMLAudioElement>(null);
+const getKeyMapping = (key : string) => {
+    const res = [(key === "Spacebar") ? " " : key.charAt(0).toUpperCase() + key.slice(1), (key === "Spacebar") ? " " : key.charAt(0).toLowerCase() + key.slice(1)]
+    return res
+}
 
+export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) => {   
     // Game Visuals
     const lane_one = useRef<HTMLDivElement>(null);
     const lane_two = useRef<HTMLDivElement>(null);
     const lane_three = useRef<HTMLDivElement>(null);
     const lane_four = useRef<HTMLDivElement>(null);
 
+    const buttonMappings = {
+        leftLane : getKeyMapping(settings.lLane),
+        rightLane : getKeyMapping(settings.rLane),
+        leftTurn : getKeyMapping(settings.lTurn),
+        rightTurn : getKeyMapping(settings.rTurn),
+        pause: getKeyMapping(settings.pause),
+        restart: getKeyMapping(settings.restart)
+    }
+
+
     const combo_bar = useRef<HTMLDivElement>(null);
     // Game controls
-    // const [scrollSpeed, setScrollSpeed] = useState<number>(1500); //Make this adjustable in some settings page and get the speed here (Zustand)?
-    const scrollSpeed = 1500;
-    // const offset = -250;
-    const offset = -500 // Adding offest to the audio only seems like the best, easiest choice 
+    const scrollSpeed = settings.scrollSpd;
+    const offset = settings.offset
     const [direction, setDirection] = useState<string>("Left");
 
     // Stopwatch
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [stopwatchActive, setStopwatchActive] = useState<boolean>(false);
     const [stPaused, setStPaused] = useState<boolean>(true);
     const [time, setTime] = useState<number>(0);
@@ -70,25 +79,28 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
 
     // Styling States
     const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
-    
+
     useEffect(() => {
-        if (stopwatchActive && !stPaused) {
-            intervalRef.current = setInterval(() => {
-                setTime((time) => time + 10);
-            }, 10)
+        let animationFrameId: number;
+        let lastTime: number | null = null;
+    
+        const updateTime = (currentTime: number) => {
+            if (!lastTime) lastTime = currentTime; // Initialize lastTime on first frame
+            const deltaTime = currentTime - lastTime; // Calculate time since last frame
+            lastTime = currentTime;
+    
+            if (!stPaused) {
+                setTime((prevTime) => prevTime + deltaTime); // Update elapsed time
+            }
+    
+            animationFrameId = requestAnimationFrame(updateTime); // Call next frame
+        };
+    
+        if (stopwatchActive) {
+            animationFrameId = requestAnimationFrame(updateTime); // Start the timer
         }
-        else {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null
-            };
-        }
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null
-            };
-        }
+    
+        return () => cancelAnimationFrame(animationFrameId); // Clean up on unmount or pause
     }, [stopwatchActive, stPaused]);
 
     const { contextSafe } = useGSAP(); 
@@ -183,8 +195,9 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
 
     useEffect(() => {
         const handleKeyDown = (event: { key: string; repeat : boolean}) => {
+            console.log(buttonMappings)
             if (event.repeat) return;
-            if (event.key === 'a' || event.key === 'A') {
+            if (event.key === buttonMappings.leftTurn[0] || event.key === buttonMappings.leftTurn[1]) {
                 if (direction === "Left") return
                 moveLeft();
                 if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
@@ -192,7 +205,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
                 }
             }
     
-            if (event.key === 'd' || event.key === 'D') {
+            if (event.key === buttonMappings.rightTurn[0] || event.key === buttonMappings.rightTurn[1]) {
                 if (direction === "Right") return
                 moveRight();
                 if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
@@ -200,7 +213,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
                 }
             }
     
-            if (event.key === 'j' || event.key === 'J') {
+            if (event.key === buttonMappings.leftLane[0] || event.key === buttonMappings.leftLane[1]) {
                 if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
                     if (leftTiming.current[leftTimingIndex][0] <= time + 150) {
                         handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "FL")
@@ -223,7 +236,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
                 }
             }
     
-            if (event.key === 'l' || event.key === 'L') {
+            if (event.key === buttonMappings.rightLane[0]|| event.key === buttonMappings.rightLane[1]) {
                 if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
                     if (rightTiming.current[rightTimingIndex][0] <= time + 150) {
                         handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "FR")
@@ -247,13 +260,13 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
                 }
             } 
     
-            if (event.key === 'p' || event.key === "P") {
+            if (event.key === buttonMappings.restart[0]|| event.key === buttonMappings.restart[1]) {
                 restartMap()
             }
-            if (event.key === 'f' || event.key === "F") { //Fast forward
-                if (audioRef.current) audioRef.current.currentTime = audioRef.current.currentTime + 30;
-            }
-            if (event.key === 'q' || event.key === "Q") {
+            // if (event.key === 'f' || event.key === "F") { 
+            //     if (audioProp.current) audioProp.current.currentTime = audioProp.current.currentTime + 30;
+            // }
+            if (event.key === buttonMappings.pause[0]|| event.key === buttonMappings.pause[1]) {
                 toggleMap();
             }
         }
@@ -263,7 +276,6 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-        // }, [time, direction, leftBtnHold, rightBtnHold, toggleBtnHold, resetBtnHold, leftTiming, rightTiming, turnTiming]);
         }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex]);
     
     const handleEnd = contextSafe(() => {
@@ -277,7 +289,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
     })
     
     useEffect(() => {
-        const audioReference = audioRef.current;
+        const audioReference = audioProp.current;
         audioReference?.addEventListener('ended', handleEnd);        
         return () => {
             audioReference?.removeEventListener('ended', handleEnd);
@@ -287,9 +299,9 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
 
     const toggleMap = () => {
         const curves = document.querySelectorAll('.bar');
-        if (audioRef.current) {
-            if (audioRef.current.paused) {
-            audioRef.current.play();
+        if (audioProp.current) {
+            if (audioProp.current.paused) {
+                audioProp.current.play();
             setStopwatchActive(true);
             setStPaused(false);
             for (let i = 0; i < curves.length; i++) {
@@ -297,7 +309,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
             }
             }
             else {
-            audioRef.current.pause();
+            audioProp.current.pause();
             setStopwatchActive(false);
             setStPaused(true);
             for (let i = 0; i < curves.length; i++) {
@@ -310,12 +322,13 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
     // Start Map
     useEffect(() => {
         console.log("Settings Loaded in Map", settings)
-        setAudioURL(sLink);
+        
+
     
         const tempHitsounds: { play: () => void; }[] = []
         for (let i = 0; i < 12; i++) {
           const hitsound  = new Audio('/hitsound.mp3'); // Needed for local 
-          hitsound.volume = 1
+          hitsound.volume = settings.hsVolume
           tempHitsounds.push(hitsound);
         } 
         hitsoundsRef.current = tempHitsounds;
@@ -358,17 +371,18 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
         }, scrollSpeed)
     
         setTimeout(() => {
-            if (audioRef.current) {
-                audioRef.current.play();
+            if (audioProp.current) {
+                audioProp.current.volume = settings.gpVolume
+                audioProp.current.play();
             } 
         }, (scrollSpeed * 2) + offset)
     }, [])
 
     // Restart Map
     const restartMap = () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
+        if (audioProp.current) {
+            audioProp.current.pause();
+            audioProp.current.currentTime = 0;
         }
         setTime(0);
         setStopwatchActive(false);
@@ -395,8 +409,8 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
           }, scrollSpeed)
     
           setTimeout(() => {
-            if (audioRef.current) {
-              audioRef.current.play();
+            if (audioProp.current) {
+                audioProp.current.play();
             } 
           }, (scrollSpeed * 2) + offset)
 
@@ -431,7 +445,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
     // Handle Curve Creation
     // Left Notes
     useEffect(() => {
-        if (leftNoteIndex < leftNotes.current.length && time === leftNotes.current[leftNoteIndex][0]) {
+        if (leftNoteIndex < leftNotes.current.length && time >= leftNotes.current[leftNoteIndex][0]) {
             if (leftNotes.current[leftNoteIndex][1] === "FL") {
                 createBar(lane_one, false)
                 setLeftNoteIndex((index) => index + 1);
@@ -445,7 +459,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
 
     // Right Notes
     useEffect(() => {
-        if (rightNoteIndex < rightNotes.current.length && time === rightNotes.current[rightNoteIndex][0]) {
+        if (rightNoteIndex < rightNotes.current.length && time >= rightNotes.current[rightNoteIndex][0]) {
             if (rightNotes.current[rightNoteIndex][1] === "FR") {
                 createBar(lane_two, false)
                 setRightNoteIndex((index) => index + 1)
@@ -459,7 +473,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
 
     // Turn Notes
     useEffect(() => {
-        if (turnNoteIndex < turnNotes.current.length && time === turnNotes.current[turnNoteIndex][0]) {
+        if (turnNoteIndex < turnNotes.current.length && time >= turnNotes.current[turnNoteIndex][0]) {
             if (turnNotes.current[turnNoteIndex][1] === "FT") {
                 createBar(lane_one, true)
                 setTurnNoteIndex((index) => index + 1)
@@ -612,7 +626,7 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
             {endScreen && 
                 <div id='end_screen_wrapper'>
                     <div>
-                        <p id='score_text'>0</p>
+                        <h1 id='score_text'>0</h1>
                     </div>
                     <div id='cassette-tape'>
                         <div id='lil_guy_container'>
@@ -626,21 +640,21 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
                     <div id='score_div'>
                         <div id='hit_stats'>
                             <div>
-                                <p>{perfectCount}</p>
-                                <p>Perfect</p>    
+                                <h2>{perfectCount}</h2>
+                                <h2>Perfect</h2>    
                             </div>
                             <div>
-                                <p>{okayCount}</p>
-                                <p>Okay</p>    
+                                <h2>{okayCount}</h2>
+                                <h2>Okay</h2>    
                             </div>
                             <div>
-                                <p>{missCount}</p>
-                                <p>Miss</p>    
+                                <h2>{missCount}</h2>
+                                <h2>Miss</h2>    
                             </div>
                         </div>
                         <div>
-                            <p>{maxCombo}</p>
-                            <p>Max Combo</p>    
+                            <h2>{maxCombo}</h2>
+                            <h2>Max Combo</h2>    
                         </div>
                     </div>
                     <div id='menu_div'>
@@ -650,8 +664,6 @@ export const Tape = ({gMap, sLink, gameMapProp, settings} : gameInterface) => {
                 </div>
             }
         </div>
-        
-        <audio src={audioURL ?? ""} controls={false} ref={audioRef} loop={false} />
     </div>
   )
 }
