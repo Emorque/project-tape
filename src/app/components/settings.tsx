@@ -46,7 +46,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             
             const key = (event.key === " ") ? "Spacebar" : event.key.charAt(0).toUpperCase() + event.key.slice(1);
             
-            console.log(actionKey)
+            // console.log(actionKey)
 
             if (actionKey === "LL") {
                 if (key === rightAction || key === leftTurn || key === rightTurn || key === pauseBtn || key === restartBtn) {
@@ -58,7 +58,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                     }, 1500)
                     return
                 }
-                console.log("key", key)
+                // console.log("key", key)
                 setLeftAction(key)
             }
 
@@ -71,7 +71,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                     }, 1500)
                     return
                 }
-                console.log("key", key)
+                // console.log("key", key)
                 setRightAction(key)
             }
 
@@ -84,7 +84,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                     }, 1500)
                     return
                 }
-                console.log("key", key)
+                // console.log("key", key)
                 setLeftTurn(key)
             }
 
@@ -97,7 +97,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                     }, 1500)
                     return
                 }
-                console.log("key", key)
+                // console.log("key", key)
                 setRightTurn(key)
             }
 
@@ -110,7 +110,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                     }, 1500)
                     return
                 }
-                console.log("key", key)
+                // console.log("key", key)
                 setPauseBtn(key)
             }
 
@@ -123,7 +123,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                     }, 1500)
                     return
                 }
-                console.log("key", key)
+                // console.log("key", key)
                 setRestartBtn(key)
             }
         }
@@ -143,7 +143,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         const localSettings = localStorage.getItem("settings")
         let updateSettings : settingsType 
         if (!localSettings) {
-            console.log("no local settings")
+            console.log("No Local Settings")
             updateSettings = {
                 lLane: "J",
                 rLane: "L",
@@ -189,17 +189,17 @@ export const Settings = ({saveSettings} : settingsInterface) => {
     }, [])
 
     const handleGameplayVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log(event.target.value)
+        // console.log(event.target.value)
         setGameplayVolume(parseFloat(event.target.value))
     }
 
     const handleHitsoundVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log(event.target.value)
+        // console.log(event.target.value)
         setHitsoundVolume(parseFloat(event.target.value))
     }
 
     const handleScrollSpdChange = (event : React.ChangeEvent<HTMLInputElement>) => {
-        console.log(event.target.value)
+        // console.log(event.target.value)
         setScrollSpeed(parseInt(event.target.value))
     }
 

@@ -13,6 +13,8 @@ import { sMap, settingsType } from "@/utils/helperTypes"
 
 import { createClient } from '@/utils/supabase/client'
 import { SongHtml } from "./components/songHtml";
+import { type User } from '@supabase/supabase-js'
+
 
 export default function Home() {
   const cameraRef = useRef<CameraControls | null>(null);
@@ -31,6 +33,41 @@ export default function Home() {
 
   const supabase = createClient()
 
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      // Fetch the current session
+      // const { data: session, error: sessionError } = await supabase.auth.getUser();
+
+      // if (sessionError || !session.user) {
+      //   console.error('No session found:', sessionError);
+      //   return;
+      // }
+
+      // Fetch the user's profile data
+      // const { data: profile, error: profileError } = await supabase
+      //   .from('profiles') // Replace with your table name
+      //   // .select('username, avatar_url')
+      //   // .eq('id', session.user.id)
+      //   // .single();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      // if (profileError) {
+      //   console.error('Error fetching profile:', profileError);
+      //   return;
+      // }
+
+      setUser(user);
+      // console.log(user)
+    };
+
+    fetchUser();
+  }, []);
+
   const handleGameMap = (currentSong : string | null) => { 
     setSelectedSong(currentSong);
     updateCamera([14,12,34,   14,12,26]); //Set back to Songs Div 
@@ -40,7 +77,7 @@ export default function Home() {
 
   const handleNewSettings = (newSettings: settingsType | null) => {
     setUserSettings(newSettings)
-    console.log(newSettings)
+    // console.log(newSettings)
   }
 
   const getMap = useCallback(async (selectedSong : string) => {
@@ -58,8 +95,7 @@ export default function Home() {
       }
 
       if (songMap) {
-        console.log("hefuisfhbuirfbui")
-        console.log("fefa", songMap.song_map)
+        // console.log("fefa", songMap.song_map)
         setGameMap(songMap.song_map)
         setAudioURL(songMap.song_link);
       }
@@ -75,7 +111,7 @@ export default function Home() {
       const localSettings = localStorage.getItem("settings")
       let updateSettings : settingsType 
       if (!localSettings) {
-          console.log("no local settings")
+          console.log("No Local Settings")
           updateSettings = {
               lLane: "J",
               rLane: "L",
@@ -127,28 +163,40 @@ export default function Home() {
 
   const handleSelectedSong = (songID: string) => {
     updateCamera([14,8,34,   14, 7, 26])
-    setSelectedSong(songID); 
     setSongPlaying(true);
+    setSelectedSong(songID); 
     getMap(songID);
   }
 
-      const handleSongReady = () => {
-        // Song is ready
-        console.log("song is ready")
-        setAudioReady(true)
-    }
+  const handleSongReady = () => {
+    // Song is ready
+    console.log("Song is Ready")
+    setAudioReady(true)
+  }
 
-    const handleSongError = () => {
-        console.log("error loading song")
-        setAudioReady(false);
-    } 
+  const handleSongError = () => {
+    console.log("Error Loading Song")
+    setAudioReady(false);
+  } 
 
-    useEffect(() => {
-        console.log("audio is Ready: ", audioReady)
-    }, [audioReady])
+  // useEffect(() => {
+  //   console.log("Audio is Ready: ", audioReady)
+  // }, [audioReady])
   
   return (
     <div id="canvasContainer">
+{/*       
+      {!(loading) && 
+      <div id="temp_play_btn">
+        <button onClick={(() => {
+              updateCamera([14,8,34,   14, 7, 26])
+              setSongPlaying(true);
+        })}>
+          Play
+        </button>
+      </div>
+      }
+       */}
       <Canvas id="canvas_id" camera={{ position: [36,4,40]}}>
         <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/>
         <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
@@ -161,7 +209,7 @@ export default function Home() {
           rotation={[0, 0, 0]}
         >
           <div className="htmlDiv" style={databaseStyle}>
-            <SongHtml songToPlay={handleSelectedSong}/>
+            <SongHtml songToPlay={handleSelectedSong} user={user}/>
           </div>
         </Html>
 
@@ -302,11 +350,10 @@ export default function Home() {
         loop={false} 
         onCanPlayThrough={handleSongReady}
         onError={handleSongError}
-        
       />
       
       <div id="songScreen" style={stageStyle}>
-        {selectedSong && gameMap && songPlaying && userSettings && audioRef &&
+        {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady &&
         <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef}/>
         }
       </div>

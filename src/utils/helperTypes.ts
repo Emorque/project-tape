@@ -10,6 +10,7 @@ type songMetadata = {
 }
 
 export type mapMetadata = {
+  song_name: string,
   bpm: number,
   genre: string,
   source: string,

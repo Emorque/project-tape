@@ -195,7 +195,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
 
     useEffect(() => {
         const handleKeyDown = (event: { key: string; repeat : boolean}) => {
-            console.log(buttonMappings)
+            // console.log(buttonMappings)
             if (event.repeat) return;
             if (event.key === buttonMappings.leftTurn[0] || event.key === buttonMappings.leftTurn[1]) {
                 if (direction === "Left") return
@@ -321,10 +321,8 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
 
     // Start Map
     useEffect(() => {
-        console.log("Settings Loaded in Map", settings)
+        // console.log("Settings Loaded in Map", settings)
         
-
-    
         const tempHitsounds: { play: () => void; }[] = []
         for (let i = 0; i < 12; i++) {
           const hitsound  = new Audio('/hitsound.mp3'); // Needed for local 
