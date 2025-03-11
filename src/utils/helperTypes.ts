@@ -3,7 +3,11 @@ export type songType = {
   song_metadata: songMetadata,
 };
 
-type songMetadata = {
+export type bookmarkedSongs = {
+  [song_id: string] : {song_metadata : songMetadata } 
+}
+
+export type songMetadata = {
   song_name: string,
   song_artist: string,
   song_mapper: string

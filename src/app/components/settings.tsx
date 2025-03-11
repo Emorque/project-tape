@@ -33,8 +33,8 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         gsap.to("#mapping_error", {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
     })
 
-    const saveAnimation = contextSafe(() => {
-        gsap.to("#save_tooltip_text", {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
+    const bottomAnimation = contextSafe((btn : string) => {
+        gsap.to(btn, {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
     })
 
     // Button Assigment
@@ -250,13 +250,54 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             offset: boundedOffset
         }
         setOffset(boundedOffset)
-        saveAnimation()
+        bottomAnimation("#save_tooltip_text")
         setDisabedSave(true)
         setTimeout(() => {
             setDisabedSave(false)
         }, 1500)
         localStorage.setItem("settings", JSON.stringify(newSettings))
         saveSettings(newSettings);
+    }
+
+    const resetSettings = () => {
+        const defaultSettings :settingsType = {
+            lLane: "J",
+            rLane: "L",
+            lTurn: "A",
+            rTurn: "D",
+            
+            pause: "Q",
+            restart: "P",
+
+            scrollSpd: 1500,
+
+            gpVolume: 1,
+            hsVolume: 1,
+
+            offset: 0
+        }
+
+        setLeftAction(defaultSettings.lLane);
+        setRightAction(defaultSettings.rLane);
+        setLeftTurn(defaultSettings.lTurn);
+        setRightTurn(defaultSettings.rTurn);
+
+        setPauseBtn(defaultSettings.pause);
+        setRestartBtn(defaultSettings.restart);
+
+        setScrollSpeed(defaultSettings.scrollSpd);
+
+        setGameplayVolume(defaultSettings.gpVolume);
+        setHitsoundVolume(defaultSettings.hsVolume);
+
+        setOffset(defaultSettings.offset)
+
+        bottomAnimation("#reset_tooltip_text")
+
+        setDisabedSave(true)
+        setTimeout(() => {
+            setDisabedSave(false)
+        }, 500)
     }
 
     const leftLaneStyle =  {
@@ -283,7 +324,6 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         backgroundColor: (actionKey === "Restart")? "#91a89a" : "#1a1a1a",
         color: (actionKey === "Restart")? "#1d1d1d" : "#eaeaea"
     }
-
 
     return (
         <div id="settings_container">
@@ -448,12 +488,24 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                     </div>
                 </div>
             </div>
-            <button id="save_btn" disabled={disabledSave} onClick={() => uploadSettings()}>
-                Save Settings
-                <div id="save_tooltip_text">
-                    Settings Saved
-                </div>
-            </button>
+
+            <div id="save_reset_btns">
+                <button className="bottom_btns" disabled={disabledSave} onClick={() => uploadSettings()}>
+                    Save Settings
+                    <div id="save_tooltip_text" className="bottom_tooltip_text">
+                        Settings Saved
+                    </div>
+                </button>
+
+                <button className="bottom_btns" disabled={disabledSave} onClick={() => resetSettings()}>
+                    Reset All Bindings
+                    <div id="reset_tooltip_text" className="bottom_tooltip_text">
+                        Bindings Reset
+                    </div>
+                </button>
+            </div>
+
+            <br/>
         </div>
     )
 }

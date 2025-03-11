@@ -174,6 +174,17 @@
     }
 }
 
+#title_bookmark {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    div {
+        background-color: transparent;
+        border: 0;    
+    }
+}
+
 #genre_language {
     word-break: break-all;
     display: grid;
@@ -213,7 +224,26 @@
     position: relative;
 }
 
-#song_list {
+.song_list {
+    width: 100%;
+    height: calc(100% - 25px);
+    padding: 10px;
+    background-color: var(--black);
+    gap: 10px;
+    flex-direction: column;
+    align-items: flex-end;
+    display: none;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--grey) transparent;
+}
+
+.active_list {
+    display: flex;
+}
+
+
+#bookmark_list {
     width: 100%;
     height: calc(100% - 25px);
     padding: 10px;
