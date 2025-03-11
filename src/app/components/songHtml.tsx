@@ -38,12 +38,14 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
         song_length: 0,
         description: ""
     })
+    const [songLoading, setSongLoading] = useState<boolean>(true);
 
     // const [profileLoading, setProfileLoading] = useState<boolean>(true)
     const [username, setUsername] = useState<string | null>(null)
     const [avatar_url, setAvatarUrl] = useState<string | null>(null)
 
     const [leaderboardList, setLeaderboardList] = useState<[string, ranking[]]>(["",[]])
+    const [leaderboardLoading, setLeaderboardLoading] = useState<boolean>(true);
     
     const [bookmarkActive, setBookmarkActive] = useState<boolean>(false);
     const [bookmarkedSongs, setBookmarkSongs] = useState<bookmarkedSongs>({});
@@ -52,7 +54,6 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
         if (!user) return; // Error without this. Likely because it would query profiles with a null id without it
         try {
             // setProfileLoading(true)
-    
           const { data, error, status } = await supabase
             .from('profiles')
             .select(`username, avatar_url`)
@@ -85,6 +86,7 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
 
     const loadSongs = useCallback(async () => {
         try {
+        
         const { data: songs, error } = await supabase
         .from('songs')
         .select('song_id,song_metadata')
@@ -113,26 +115,28 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
     const updateSong = useCallback(async (song_id : string) => {
         if (songID === song_id) return;
         try {
-        const { data: song, error } = await supabase
-        .from('songs')
-        .select('map_metadata')
-        .eq('song_id', song_id)
-    
-          if (error) {
-            console.log(error)
-            throw error
-          }
-    
-          if (song) {
-            setSelectedSong(song[0].map_metadata)
-            setSongID(song_id)
-            // setSongIndex(index);
-          }
+            setSongLoading(true)
+            const { data: song, error } = await supabase
+            .from('songs')
+            .select('map_metadata')
+            .eq('song_id', song_id)
+        
+            if (error) {
+                console.log(error)
+                throw error
+            }
+        
+            if (song) {
+                setSelectedSong(song[0].map_metadata)
+                setSongID(song_id)
+                // setSongIndex(index);
+            }
         } catch (error) {
-          console.error('Song error:', error) // Only used for eslint
-          alert('Error Updating Song!')
+            console.error('Song error:', error) // Only used for eslint
+            alert('Error Updating Song!')
         } finally {
-          console.log('Updated Songs')
+            console.log('Updated Songs')
+            setSongLoading(false)
         }
     }, [supabase, songID])
 
@@ -155,6 +159,7 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
     // TODO: make leaderboard have a loading component
     const updateLeaderboard = useCallback(async (song_id : string) => {
         try {
+        setLeaderboardLoading(true)
         const { data: leaderboard, error } = await supabase
         .from('leaderboard')
         .select('*')
@@ -178,6 +183,7 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
           alert('Error loading Leaderboard!')
         } finally {
           console.log('Loaded Leaderboard')
+          setLeaderboardLoading(false);
         }
     }, [supabase])
 
@@ -240,7 +246,7 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
                 <div id="title_wrapper">
                     {/* TODO: Make this on only appear on hover, and have links to an account page, and sign in/out */}
                     <h2 id="song_title"> 
-                        {selectedSong.song_name}
+                        {songLoading? "" : selectedSong.song_name}
                     </h2>
                 </div>
                 <div id="account_nav">
@@ -256,14 +262,14 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
                     <div id="tape">
                     </div>
                     
-                    <button id="play_btn" onClick={playSong} disabled={selectedSong.note_count === 0}>
+                    <button id="play_btn" onClick={playSong} disabled={selectedSong.note_count === 0 || songLoading}>
                         Play
                     </button>
 
                     <div id="data">
                         <div className="tooltip_wrapper">
                             <div className="tooltip">
-                                <p>{formatTime(selectedSong.song_length)}</p>
+                                <p>{songLoading? "0:00" : formatTime(selectedSong.song_length)}</p>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-clock" viewBox="0 0 16 16">
                                     <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
                                     <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
@@ -276,7 +282,7 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
 
                         <div className="tooltip_wrapper">
                             <div className="tooltip">
-                                <p>{selectedSong.bpm}</p>
+                                <p>{songLoading? "0" : selectedSong.bpm}</p>
                                 <svg fill="#000" height="16" width="16" viewBox="0 0 213.605 213.605"> <g id="SVGRepo_bgCarrier"></g><g id="SVGRepo_tracerCarrier"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M200.203,161.656L143.86,4.962C142.79,1.985,139.966,0,136.803,0h-60c-3.164,0-5.987,1.985-7.058,4.962L13.402,161.656 c-0.292,0.814-0.442,1.672-0.442,2.538v41.912c0,4.142,3.358,7.5,7.5,7.5h172.686c4.142,0,7.5-3.358,7.5-7.5v-41.912 C200.646,163.329,200.496,162.47,200.203,161.656z M82.076,15h49.453l50.949,141.694h-70.676v-4.861h7.5c2.761,0,5-2.239,5-5 s-2.239-5-5-5h-7.5v-7.36h7.5c2.761,0,5-2.239,5-5s-2.239-5-5-5h-7.5v-7.36h7.5c2.761,0,5-2.239,5-5s-2.239-5-5-5h-7.5v-7.361h7.5 c2.761,0,5-2.239,5-5s-2.239-5-5-5h-7.5V47.333c0-2.761-2.239-5-5-5s-5,2.239-5,5v42.418h-7.5c-2.761,0-5,2.239-5,5s2.239,5,5,5 h7.5v7.361h-7.5c-2.761,0-5,2.239-5,5s2.239,5,5,5h7.5v7.36h-7.5c-2.761,0-5,2.239-5,5s2.239,5,5,5h7.5v7.36h-7.5 c-2.761,0-5,2.239-5,5s2.239,5,5,5h7.5v4.861H31.127L82.076,15z M27.96,198.605v-26.912h157.686v26.912H27.96z"></path> </g> </g></svg>
                                 <div className="tooltip_text">Song BPM
                                 </div>
@@ -285,7 +291,7 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
 
                         <div className="tooltip_wrapper">                        
                             <div className="tooltip">
-                                <p>{selectedSong.note_count}</p>
+                                <p>{songLoading? "0" : selectedSong.note_count}</p>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-cassette" viewBox="0 0 16 16">
                                     <path d="M4 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2m9-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0M7 6a1 1 0 0 0 0 2h2a1 1 0 1 0 0-2z"/>
                                     <path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2zM1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-.691l-1.362-2.724A.5.5 0 0 0 12 10H4a.5.5 0 0 0-.447.276L2.19 13H1.5a.5.5 0 0 1-.5-.5zM11.691 11l1 2H3.309l1-2z"/>
@@ -297,33 +303,52 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
                         </div>
                     </div>
                     <div id="description_container">
+                        {songLoading? 
+                        <div className="song_loading">
+                            <div className="cas_bar">
+                                <div className="cas_circle">
+                                    <span className="cas_teeth"></span>
+                                    <span className="cas_teeth"></span>
+                                    <span className="cas_teeth"></span>
+                                </div>
+                                <div className="cas_circle">
+                                    <span className="cas_teeth"></span>
+                                    <span className="cas_teeth"></span>
+                                    <span className="cas_teeth"></span>
+                                </div>
+                            </div>
+                        </div>             
+                        :
+                        <>
                         {selectedSong.source && 
-                        <div>
-                            <a href={selectedSong.source} target="blank">Source</a>
-                        </div>
-                        }
-                        {selectedSong.genre && selectedSong.language && 
-                        <div id="genre_language">
                             <div>
-                                <h2>Genre</h2>
-                                <p>{selectedSong.genre}</p>
+                                <a href={selectedSong.source} target="blank">Source</a>
                             </div>
+                            }
+                            {selectedSong.genre && selectedSong.language && 
+                            <div id="genre_language">
+                                <div>
+                                    <h2>Genre</h2>
+                                    <p>{selectedSong.genre}</p>
+                                </div>
+                                <div>
+                                    <h2>Language</h2>
+                                    <p>{selectedSong.language}</p>
+                                </div>
+                            </div>
+                            }
+                            {selectedSong.description && 
                             <div>
-                                <h2>Language</h2>
-                                <p>{selectedSong.language}</p>
-                            </div>
-                        </div>
-                        }
-                        {selectedSong.description && 
-                        <div>
-                            <h2>Description</h2>
-                            <p>
-                                {selectedSong.description}
-                            </p>
-                        </div>                        
+                                <h2>Description</h2>
+                                <p>
+                                    {selectedSong.description}
+                                </p>
+                            </div>                        
+                            }
+                        </>
                         }
                     </div>
-                    <button id="leaderboard_btn" onClick={toggleTab} disabled={selectedSong.note_count === 0}>
+                    <button id="leaderboard_btn" onClick={toggleTab} disabled={selectedSong.note_count === 0 || songLoading}>
                         {(tab === "songs")? "Leaderboard" : "Songs"}
                     </button>
                 </div>
@@ -454,7 +479,26 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
                         </div>
                         :
                         <div className={"container lb"}>
-                            <table id="leaderboard">
+                            {leaderboardLoading?
+                            // {true?
+                                 <div className="cas_loading">
+                                    {/* <div className="cas_bottom">
+                                    </div> */}
+                                    <div className="cas_bar">
+                                        <div className="cas_circle">
+                                        <span className="cas_teeth"></span>
+                                        <span className="cas_teeth"></span>
+                                        <span className="cas_teeth"></span>
+                                        </div>
+                                        <div className="cas_circle">
+                                        <span className="cas_teeth"></span>
+                                        <span className="cas_teeth"></span>
+                                        <span className="cas_teeth"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                :
+                                <table id="leaderboard">
                                 <thead>
                                     <tr>
                                         <th scope="col">Rank</th>
@@ -475,8 +519,8 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
                                             <td>{player.max_combo}</td>
                                         </tr>
                                         // <button className="" key={index}>{index}: {player.player_id} - Score: {player.score} - Acc: {player.accuracy} - MC: {player.max_combo}</button>
-                                    )
-                                })}
+                                        )
+                                    })}
                                     {/* <tr>
                                         <th scope="row">{3}</th>
                                         <td>{233}</td>
@@ -535,6 +579,7 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
                                     </tr> */}
                                 </tbody>
                             </table>
+                            }
                         </div>
                         }
                     </div>
