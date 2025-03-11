@@ -99,16 +99,17 @@
 
 .cas_teeth {
     position:absolute;
-    top: 40%;
-    left: 0;
-    width: 100%;;
+    left:50%; 
+    top:50%; 
+    transform: translate(-50%, -50%);
+    width: 110%;;
     aspect-ratio: 6/1;
     background: linear-gradient(to right, var(--black) 15%,transparent 15%, transparent 85%, var(--black) 85%);
     &:nth-of-type(2){
-        transform:rotate(60deg);
+        transform: translate(-50%, -50%) rotate(60deg);
     }
     &:nth-of-type(3){
-        transform:rotate(-60deg);
+        transform: translate(-50%, -50%) rotate(-60deg);
     }
 }
 

@@ -325,8 +325,8 @@
 
 
 .song_loading {
-    width: 90%;
-    aspect-ratio: 2/1;
+    height: 70%;
+    width: 70%;
     position: relative;
     margin: 0 auto;
 
@@ -334,6 +334,7 @@
         background-color: var(--black);
     }
     .cas_circle {
+        top:-5px;
         border-color: var(--black);
         animation: leaderboard_loading 12s linear infinite;
     }

@@ -19,6 +19,8 @@ const getKeyMapping = (key : string) => {
 }
 
 export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) => {   
+    const [gameState, setGameState] = useState<string>("Waiting"); //False is for paused/complete, True is when the song is playing
+    
     // Game Visuals
     const lane_one = useRef<HTMLDivElement>(null);
     const lane_two = useRef<HTMLDivElement>(null);
@@ -197,6 +199,14 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
         const handleKeyDown = (event: { key: string; repeat : boolean}) => {
             // console.log(buttonMappings)
             if (event.repeat) return;
+
+            if (gameState === "End" || gameState === "Waiting") return;
+
+            if (event.key === buttonMappings.pause[0]|| event.key === buttonMappings.pause[1]) {
+                pauseMap();
+            }
+            if(gameState === "Paused") return; //If false, that means game is complete/paused
+
             if (event.key === buttonMappings.leftTurn[0] || event.key === buttonMappings.leftTurn[1]) {
                 if (direction === "Left") return
                 moveLeft();
@@ -263,11 +273,8 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
             if (event.key === buttonMappings.restart[0]|| event.key === buttonMappings.restart[1]) {
                 restartMap()
             }
-            // if (event.key === 'f' || event.key === "F") { 
-            //     if (audioProp.current) audioProp.current.currentTime = audioProp.current.currentTime + 30;
-            // }
-            if (event.key === buttonMappings.pause[0]|| event.key === buttonMappings.pause[1]) {
-                toggleMap();
+            if (event.key === 'f' || event.key === "F") { 
+                if (audioProp.current) audioProp.current.currentTime = audioProp.current.currentTime + 30;
             }
         }
         document.addEventListener('keydown', handleKeyDown);
@@ -276,7 +283,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex]);
+        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex, gameState]);
     
     const handleEnd = contextSafe(() => {
         gsap.to("#lane-container", {
@@ -284,6 +291,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
             duration: 1,
             onComplete: () => {
                 setEndScreen(true)
+                setGameState("End")
             }
         })
     })
@@ -295,26 +303,30 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
             audioReference?.removeEventListener('ended', handleEnd);
         }
     }, [])
-    
 
-    const toggleMap = () => {
+    const resumeMap = () => {
         const curves = document.querySelectorAll('.bar');
         if (audioProp.current) {
-            if (audioProp.current.paused) {
-                audioProp.current.play();
+            audioProp.current.play();
             setStopwatchActive(true);
             setStPaused(false);
+            setGameState("Running");
             for (let i = 0; i < curves.length; i++) {
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "running";
             }
-            }
-            else {
+        }
+    }
+    
+
+    const pauseMap = () => {
+        const curves = document.querySelectorAll('.bar');
+        if (audioProp.current) {
             audioProp.current.pause();
             setStopwatchActive(false);
             setStPaused(true);
+            setGameState("Paused"); //Pause game
             for (let i = 0; i < curves.length; i++) {
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "paused";
-            }
             }
         }
     }
@@ -366,14 +378,15 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
         setTimeout(() => {
             setStopwatchActive(true);
             setStPaused(false);
-        }, scrollSpeed)
+        }, scrollSpeed + offset + 3000)
     
         setTimeout(() => {
             if (audioProp.current) {
                 audioProp.current.volume = settings.gpVolume
                 audioProp.current.play();
+                setGameState("Running")
             } 
-        }, (scrollSpeed * 2) + offset)
+        }, (scrollSpeed * 2) + offset + 3000)
     }, [])
 
     // Restart Map
@@ -401,16 +414,19 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
         setRightNoteIndex(0);
         setTurnNoteIndex(0);
 
+        setGameState("Waiting")
+
         setTimeout(() => {
             setStopwatchActive(true);
             setStPaused(false);
-          }, scrollSpeed)
+          }, scrollSpeed + offset + 3000)
     
           setTimeout(() => {
             if (audioProp.current) {
                 audioProp.current.play();
+                setGameState("Running")
             } 
-          }, (scrollSpeed * 2) + offset)
+          }, (scrollSpeed * 2) + offset + 3000)
 
         gsap.to("#lane-container", {
             opacity: 1,
@@ -620,6 +636,27 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) =
                 </div>
             </div> 
 
+            <div id='pause_wrapper' className={(gameState === "Paused")? "pause_active" : 'pause_unactive'}>
+                <div id="pause_screen">
+                    <button onClick={() => resumeMap()}>Resume</button>
+                    <button onClick={() => restartMap()}>Retry</button>
+                    <button onClick={() => {gameMapProp(null)}}>Main Menu</button>
+                </div>
+            </div>
+
+            {gameState === "Waiting"? 
+            <div id='waiting_wrapper'>
+                <div id='countdown'>
+                    <span>3</span>
+                    <span>2</span>
+                    <span>1</span>
+                    <span>0</span>
+                </div>
+            </div>
+            :
+            <>
+            </>
+            }
 
             {endScreen && 
                 <div id='end_screen_wrapper'>
