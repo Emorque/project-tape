@@ -37,36 +37,12 @@ export default function Home() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      // Fetch the current session
-      // const { data: session, error: sessionError } = await supabase.auth.getUser();
-
-      // if (sessionError || !session.user) {
-      //   console.error('No session found:', sessionError);
-      //   return;
-      // }
-
-      // Fetch the user's profile data
-      // const { data: profile, error: profileError } = await supabase
-      //   .from('profiles') // Replace with your table name
-      //   // .select('username, avatar_url')
-      //   // .eq('id', session.user.id)
-      //   // .single();
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      // if (profileError) {
-      //   console.error('Error fetching profile:', profileError);
-      //   return;
-      // }
-
+      const { data: { user }, } = await supabase.auth.getUser()
       setUser(user);
-      // console.log(user)
     };
 
     fetchUser();
-  }, []);
+  }, [supabase]);
 
   const handleGameMap = (currentSong : string | null) => { 
     setSelectedSong(currentSong);
@@ -182,7 +158,42 @@ export default function Home() {
   // useEffect(() => {
   //   console.log("Audio is Ready: ", audioReady)
   // }, [audioReady])
+  const [username, setUsername] = useState<string | null>(null)
+  const [avatar_url, setAvatarUrl] = useState<string | null>(null)
+
+  const getProfile = useCallback(async () => {
+      if (!user) return; // Error without this. Likely because it would query profiles with a null id without it
+      try {
+          // setProfileLoading(true)
+        const { data, error, status } = await supabase
+          .from('profiles')
+          .select(`username, avatar_url`)
+          .eq('id', user?.id)
+          .single()
   
+        if (error && status !== 406) {
+          console.log(error)
+          throw error
+        }
+  
+        if (data) {
+          setUsername(data.username)
+          setAvatarUrl(data.avatar_url)
+        }
+      } catch (error) {
+          console.log(error);
+          console.log("Unsigned User");
+      //   alert('Error loading user data!')
+      } finally {
+          console.log("User loaded")
+          // setProfileLoading(false)
+      }
+    }, [user, supabase])
+  
+    useEffect(() => {
+      getProfile()
+    }, [user, getProfile])
+
   return (
     <div id="canvasContainer">
 {/*       
@@ -209,7 +220,7 @@ export default function Home() {
           rotation={[0, 0, 0]}
         >
           <div className="htmlDiv" style={databaseStyle}>
-            <SongHtml songToPlay={handleSelectedSong} user={user}/>
+            <SongHtml songToPlay={handleSelectedSong} username={username} avatar_url={avatar_url}/>
           </div>
         </Html>
 
@@ -353,8 +364,8 @@ export default function Home() {
       />
       
       <div id="songScreen" style={stageStyle}>
-        {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady &&
-        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef}/>
+        {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && 
+        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} username={username}/>
         }
       </div>
     </div>

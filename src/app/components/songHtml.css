@@ -41,6 +41,7 @@
     justify-content: flex-end;
     align-items: center;
     gap: 5px;
+    position: relative;
 }
 
 #avatar_wrapper {
@@ -48,6 +49,42 @@
     height: 30px;
     width: 30px;
     margin-right: 5px;
+    position: relative;
+}
+
+#user_info {
+    visibility: hidden;
+    width: fit-content;
+    height: fit-content;
+    background-color: var(--black);
+    color: #eaeaea;
+    text-align: center;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    top: 100%;
+    z-index: 10;
+
+    button, a {
+        color: var(--white);
+        background-color: var(--black);
+        border: 0;
+        padding: 5px;
+    }
+    button:hover, a:hover {
+        color: var(--green);
+        background-color: var(--black);
+    }
+}
+
+#avatar_wrapper:hover ~ #user_info{
+    visibility: visible;
+}
+
+#user_info:hover {
+    visibility: visible;
 }
 
 #content_container {

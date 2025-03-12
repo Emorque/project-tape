@@ -4,6 +4,8 @@ import { createClient } from '@/utils/supabase/client'
 import { type User } from '@supabase/supabase-js'
 import Avatar from './components/avatar'
 
+import "./account_form.css"
+
 // ...
 
 export default function AccountForm({ user }: { user: User | null }) {
@@ -82,7 +84,7 @@ export default function AccountForm({ user }: { user: User | null }) {
   }
 
   return (
-    <div className="form-widget">
+    <div id='account_form' className="form-widget">
 
        <Avatar
         uid={user?.id ?? null}
@@ -94,11 +96,12 @@ export default function AccountForm({ user }: { user: User | null }) {
         }}
       />
 
-      <div>
+      <div className='account_div'>
         <label htmlFor="email">Email</label>
         <input id="email" type="text" value={user?.email} disabled />
       </div>
-      <div>
+
+      <div className='account_div'>
         <label htmlFor="fullName">Full Name</label>
         <input
           id="fullName"
@@ -107,7 +110,8 @@ export default function AccountForm({ user }: { user: User | null }) {
           onChange={(e) => setFullname(e.target.value)}
         />
       </div>
-      <div>
+
+      <div className='account_div'>
         <label htmlFor="username">Username</label>
         <input
           id="username"
@@ -116,7 +120,8 @@ export default function AccountForm({ user }: { user: User | null }) {
           onChange={(e) => setUsername(e.target.value)}
         />
       </div>
-      <div>
+
+      <div className='account_div'>
         <label htmlFor="website">Website</label>
         <input
           id="website"
@@ -126,7 +131,7 @@ export default function AccountForm({ user }: { user: User | null }) {
         />
       </div>
 
-      <div>
+      <div id='account_btns'>
         <button
           className="button primary block"
           onClick={() => updateProfile({ fullname, username, website, avatar_url })}
@@ -134,9 +139,7 @@ export default function AccountForm({ user }: { user: User | null }) {
         >
           {loading ? 'Loading ...' : 'Update'}
         </button>
-      </div>
 
-      <div>
         <form action="/auth/signout" method="post">
           <button className="button block" type="submit">
             Sign out

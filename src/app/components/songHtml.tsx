@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from "react"
 import "./songHtml.css"
 import { createClient } from '@/utils/supabase/client'
 import { songType, mapMetadata, ranking, bookmarkedSongs, songMetadata } from "@/utils/helperTypes"
-import { type User } from '@supabase/supabase-js'
+import Link from 'next/link'
 import HomeAvatar from "./home_avatar"
 
 interface SongHtmlProps {
     songToPlay : (songID: string) => void,
-    user : User | null
+    username: string | null,
+    avatar_url : string | null
 }
 
 const formatTime = (seconds: number) => {
@@ -20,11 +21,9 @@ const formatTime = (seconds: number) => {
 
     return `${formattedMinutes}:${formattedSeconds}`;
 }
+const supabase = createClient()
 
-
-export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {   
-    const supabase = createClient()
-
+export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => {   
     const [tab, setTab] = useState<string>("songs")
     const [songlist, setSongList] = useState<songType[]>([])
     const [songID, setSongID] = useState<string>("")
@@ -41,47 +40,13 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
     const [songLoading, setSongLoading] = useState<boolean>(true);
 
     // const [profileLoading, setProfileLoading] = useState<boolean>(true)
-    const [username, setUsername] = useState<string | null>(null)
-    const [avatar_url, setAvatarUrl] = useState<string | null>(null)
+
 
     const [leaderboardList, setLeaderboardList] = useState<[string, ranking[]]>(["",[]])
     const [leaderboardLoading, setLeaderboardLoading] = useState<boolean>(true);
     
     const [bookmarkActive, setBookmarkActive] = useState<boolean>(false);
     const [bookmarkedSongs, setBookmarkSongs] = useState<bookmarkedSongs>({});
-    
-    const getProfile = useCallback(async () => {
-        if (!user) return; // Error without this. Likely because it would query profiles with a null id without it
-        try {
-            // setProfileLoading(true)
-          const { data, error, status } = await supabase
-            .from('profiles')
-            .select(`username, avatar_url`)
-            .eq('id', user?.id)
-            .single()
-    
-          if (error && status !== 406) {
-            console.log(error)
-            throw error
-          }
-    
-          if (data) {
-            setUsername(data.username)
-            setAvatarUrl(data.avatar_url)
-          }
-        } catch (error) {
-            console.log(error);
-            console.log("Unsigned User");
-        //   alert('Error loading user data!')
-        } finally {
-            console.log("User loaded")
-            // setProfileLoading(false)
-        }
-      }, [user, supabase])
-    
-      useEffect(() => {
-        getProfile()
-      }, [user, getProfile])
 
 
     const loadSongs = useCallback(async () => {
@@ -250,11 +215,26 @@ export const SongHtml = ({songToPlay, user} : SongHtmlProps) => {
                     </h2>
                 </div>
                 <div id="account_nav">
-                    <h2>{username || ''}</h2>
+                    {/* <h2>{username || ''}</h2> */}
                     <HomeAvatar
                         url={avatar_url}
                         size={30}
                     />
+                    <div id="user_info">
+                        {(username && avatar_url)?
+                        <>
+                        <h3>{username}</h3>
+                        <form action="/auth/signout" method="post">
+                            <button className="button block" type="submit">
+                                Sign Out
+                            </button>
+                        </form>   
+                        </>
+                        :
+                        <Link href="/login">Sign In/Up</Link>
+                        }
+                    </div>
+                    {/* <Link href="/login">Sign In / Up</Link> */}
                 </div>
             </div>
             <div id="content_container">
