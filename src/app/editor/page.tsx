@@ -405,7 +405,7 @@ export default function Editor() {
   }
   
   return (
-    <div style={{backgroundColor: 'black', color: 'white'}}>
+    <div id="editor_page" style={{backgroundColor: 'black', color: 'white'}}>
       <div style={{display: 'flex', gap: 20, flexDirection: 'column', alignItems: 'center', padding: 20}}>
           <input type="file" accept='audio/*' onChange={audioChange}/>
       </div>

@@ -1,36 +1,61 @@
 // 'use client' taken out because of the gameMapProp. use client is now implied i think b/c parent has use client
 
-import React, { RefObject, useEffect, useRef, useState } from 'react';
+import React, { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import "./tape.css";
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { settingsType } from '@/utils/helperTypes';
+import { type User } from '@supabase/supabase-js'
+import { createClient } from '@/utils/supabase/client'
+
+const supabase = createClient()
 
 interface gameInterface {
   gMap: [number,string][];
   gameMapProp: (currentSong: string | null) => void;
+  settings: settingsType;
+  audioProp: React.RefObject<HTMLAudioElement>;
+  user : User | null;
+  song_id: string;
+  username: string | null
 }
 
-export const Tape = ({gMap, gameMapProp} : gameInterface) => {   
+const getKeyMapping = (key : string) => {
+    const res = [(key === "Spacebar") ? " " : key.charAt(0).toUpperCase() + key.slice(1), (key === "Spacebar") ? " " : key.charAt(0).toLowerCase() + key.slice(1)]
+    return res
+}
 
-    const [audioURL, setAudioURL] = useState<string | null>(null)
-    const audioRef = useRef<HTMLAudioElement>(null);
+const getAccuracy = (perfect: number, okay: number, miss: number) => {
+    const total = perfect + okay + miss;
+    const accuracy = ((perfect + okay) / total) * 100
+    return accuracy.toFixed(2)
+}
 
+export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, username} : gameInterface) => {   
+    const [gameState, setGameState] = useState<string>("Waiting"); //False is for paused/complete, True is when the song is playing
+    
     // Game Visuals
     const lane_one = useRef<HTMLDivElement>(null);
     const lane_two = useRef<HTMLDivElement>(null);
     const lane_three = useRef<HTMLDivElement>(null);
     const lane_four = useRef<HTMLDivElement>(null);
 
+    const buttonMappings = {
+        leftLane : getKeyMapping(settings.lLane),
+        rightLane : getKeyMapping(settings.rLane),
+        leftTurn : getKeyMapping(settings.lTurn),
+        rightTurn : getKeyMapping(settings.rTurn),
+        pause: getKeyMapping(settings.pause),
+        restart: getKeyMapping(settings.restart)
+    }
+
     const combo_bar = useRef<HTMLDivElement>(null);
     // Game controls
-    // const [scrollSpeed, setScrollSpeed] = useState<number>(1500); //Make this adjustable in some settings page and get the speed here (Zustand)?
-    const scrollSpeed = 1500;
-    // const offset = -250;
-    const offset = 0 // Adding offest to the audio only seems like the best, easiest choice 
+    const scrollSpeed = settings.scrollSpd;
+    const offset = settings.offset
     const [direction, setDirection] = useState<string>("Left");
 
     // Stopwatch
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [stopwatchActive, setStopwatchActive] = useState<boolean>(false);
     const [stPaused, setStPaused] = useState<boolean>(true);
     const [time, setTime] = useState<number>(0);
@@ -68,25 +93,32 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
 
     // Styling States
     const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
+
+    // Score for Leaderboard
+    const [scoreUploading, setScoreUploading] = useState<boolean>(true)
+    const [leaderboardText, setLeadboardText] = useState<string>("Loading")
     
     useEffect(() => {
-        if (stopwatchActive && !stPaused) {
-            intervalRef.current = setInterval(() => {
-                setTime((time) => time + 10);
-            }, 10)
+        let animationFrameId: number;
+        let lastTime: number | null = null;
+    
+        const updateTime = (currentTime: number) => {
+            if (!lastTime) lastTime = currentTime; // Initialize lastTime on first frame
+            const deltaTime = currentTime - lastTime; // Calculate time since last frame
+            lastTime = currentTime;
+    
+            if (!stPaused) {
+                setTime((prevTime) => prevTime + deltaTime); // Update elapsed time
+            }
+    
+            animationFrameId = requestAnimationFrame(updateTime); // Call next frame
+        };
+    
+        if (stopwatchActive) {
+            animationFrameId = requestAnimationFrame(updateTime); // Start the timer
         }
-        else {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null
-            };
-        }
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null
-            };
-        }
+    
+        return () => cancelAnimationFrame(animationFrameId); // Clean up on unmount or pause
     }, [stopwatchActive, stPaused]);
 
     const { contextSafe } = useGSAP(); 
@@ -181,8 +213,17 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
 
     useEffect(() => {
         const handleKeyDown = (event: { key: string; repeat : boolean}) => {
+            // console.log(buttonMappings)
             if (event.repeat) return;
-            if (event.key === 'a' || event.key === 'A') {
+
+            if (gameState === "End" || gameState === "Waiting") return;
+
+            if (event.key === buttonMappings.pause[0]|| event.key === buttonMappings.pause[1]) {
+                pauseMap();
+            }
+            if(gameState === "Paused") return; //If false, that means game is complete/paused
+
+            if (event.key === buttonMappings.leftTurn[0] || event.key === buttonMappings.leftTurn[1]) {
                 if (direction === "Left") return
                 moveLeft();
                 if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
@@ -190,7 +231,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 }
             }
     
-            if (event.key === 'd' || event.key === 'D') {
+            if (event.key === buttonMappings.rightTurn[0] || event.key === buttonMappings.rightTurn[1]) {
                 if (direction === "Right") return
                 moveRight();
                 if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
@@ -198,7 +239,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 }
             }
     
-            if (event.key === 'j' || event.key === 'J') {
+            if (event.key === buttonMappings.leftLane[0] || event.key === buttonMappings.leftLane[1]) {
                 if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
                     if (leftTiming.current[leftTimingIndex][0] <= time + 150) {
                         handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "FL")
@@ -221,7 +262,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 }
             }
     
-            if (event.key === 'l' || event.key === 'L') {
+            if (event.key === buttonMappings.rightLane[0]|| event.key === buttonMappings.rightLane[1]) {
                 if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
                     if (rightTiming.current[rightTimingIndex][0] <= time + 150) {
                         handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "FR")
@@ -245,15 +286,13 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 }
             } 
     
-            if (event.key === 'p' || event.key === "P") {
+            if (event.key === buttonMappings.restart[0]|| event.key === buttonMappings.restart[1]) {
                 restartMap()
             }
-            if (event.key === 'f' || event.key === "F") { //Fast forward
-                if (audioRef.current) audioRef.current.currentTime = audioRef.current.currentTime + 30;
-            }
-            if (event.key === 'q' || event.key === "Q") {
-                toggleMap();
-            }
+            // if (event.key === 'f' || event.key === "F") { 
+            //     if (audioProp.current) audioProp.current.currentTime = audioProp.current.currentTime + 30;
+            //     console.log(gameState)  
+            // }
         }
         document.addEventListener('keydown', handleKeyDown);
     
@@ -261,8 +300,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-        // }, [time, direction, leftBtnHold, rightBtnHold, toggleBtnHold, resetBtnHold, leftTiming, rightTiming, turnTiming]);
-        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex]);
+        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex, gameState]);
     
     const handleEnd = contextSafe(() => {
         gsap.to("#lane-container", {
@@ -270,48 +308,54 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
             duration: 1,
             onComplete: () => {
                 setEndScreen(true)
+                setGameState("End")
             }
         })
     })
     
     useEffect(() => {
-        audioRef.current?.addEventListener('ended', handleEnd);        
+        const audioReference = audioProp.current;
+        audioReference?.addEventListener('ended', handleEnd);        
         return () => {
-            audioRef.current?.removeEventListener('ended', handleEnd);
+            audioReference?.removeEventListener('ended', handleEnd);
         }
     }, [])
-    
 
-    const toggleMap = () => {
+    const resumeMap = () => {
         const curves = document.querySelectorAll('.bar');
-        if (audioRef.current) {
-            if (audioRef.current.paused) {
-            audioRef.current.play();
+        if (audioProp.current) {
+            audioProp.current.play();
             setStopwatchActive(true);
             setStPaused(false);
+            setGameState("Running");
             for (let i = 0; i < curves.length; i++) {
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "running";
             }
-            }
-            else {
-            audioRef.current.pause();
+        }
+    }
+    
+
+    const pauseMap = () => {
+        const curves = document.querySelectorAll('.bar');
+        if (audioProp.current) {
+            audioProp.current.pause();
             setStopwatchActive(false);
             setStPaused(true);
+            setGameState("Paused"); //Pause game
             for (let i = 0; i < curves.length; i++) {
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "paused";
-            }
             }
         }
     }
 
     // Start Map
     useEffect(() => {
-        setAudioURL('https://9boushb4a7.ufs.sh/f/9Jv1QVILGRy4BnZDzY7GTJ0cX8hyuefiOLVSvntDKg5EZ1dl');
-    
+        // console.log("Settings Loaded in Map", settings)
+        
         const tempHitsounds: { play: () => void; }[] = []
         for (let i = 0; i < 12; i++) {
           const hitsound  = new Audio('/hitsound.mp3'); // Needed for local 
-          hitsound.volume = 1
+          hitsound.volume = settings.hsVolume
           tempHitsounds.push(hitsound);
         } 
         hitsoundsRef.current = tempHitsounds;
@@ -351,20 +395,22 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         setTimeout(() => {
             setStopwatchActive(true);
             setStPaused(false);
-        }, scrollSpeed)
+        }, scrollSpeed + offset + 3000)
     
         setTimeout(() => {
-            if (audioRef.current) {
-                audioRef.current.play();
+            if (audioProp.current) {
+                audioProp.current.volume = settings.gpVolume
+                audioProp.current.play();
+                setGameState("Running")
             } 
-        }, (scrollSpeed * 2) + offset)
+        }, (scrollSpeed * 2) + offset + 3000)
     }, [])
 
     // Restart Map
     const restartMap = () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
+        if (audioProp.current) {
+            audioProp.current.pause();
+            audioProp.current.currentTime = 0;
         }
         setTime(0);
         setStopwatchActive(false);
@@ -377,6 +423,8 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         setMaxCombo(0);
         setEndScreen(false);
 
+        // setScoreUploading(true)
+
         setLeftTimingIndex(0);
         setRightTimingIndex(0);
         setTurnTimingIndex(0);
@@ -385,16 +433,19 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         setRightNoteIndex(0);
         setTurnNoteIndex(0);
 
+        setGameState("Waiting")
+
         setTimeout(() => {
             setStopwatchActive(true);
             setStPaused(false);
-          }, scrollSpeed)
+          }, scrollSpeed + offset + 3000)
     
           setTimeout(() => {
-            if (audioRef.current) {
-              audioRef.current.play();
+            if (audioProp.current) {
+                audioProp.current.play();
+                setGameState("Running")
             } 
-          }, (scrollSpeed * 2) + offset)
+          }, (scrollSpeed * 2) + offset + 3000)
 
         gsap.to("#lane-container", {
             opacity: 1,
@@ -427,7 +478,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
     // Handle Curve Creation
     // Left Notes
     useEffect(() => {
-        if (leftNoteIndex < leftNotes.current.length && time === leftNotes.current[leftNoteIndex][0]) {
+        if (leftNoteIndex < leftNotes.current.length && time >= leftNotes.current[leftNoteIndex][0]) {
             if (leftNotes.current[leftNoteIndex][1] === "FL") {
                 createBar(lane_one, false)
                 setLeftNoteIndex((index) => index + 1);
@@ -441,7 +492,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
 
     // Right Notes
     useEffect(() => {
-        if (rightNoteIndex < rightNotes.current.length && time === rightNotes.current[rightNoteIndex][0]) {
+        if (rightNoteIndex < rightNotes.current.length && time >= rightNotes.current[rightNoteIndex][0]) {
             if (rightNotes.current[rightNoteIndex][1] === "FR") {
                 createBar(lane_two, false)
                 setRightNoteIndex((index) => index + 1)
@@ -455,7 +506,7 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
 
     // Turn Notes
     useEffect(() => {
-        if (turnNoteIndex < turnNotes.current.length && time === turnNotes.current[turnNoteIndex][0]) {
+        if (turnNoteIndex < turnNotes.current.length && time >= turnNotes.current[turnNoteIndex][0]) {
             if (turnNotes.current[turnNoteIndex][1] === "FT") {
                 createBar(lane_one, true)
                 setTurnNoteIndex((index) => index + 1)
@@ -585,6 +636,95 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
         }
     }, [endScreen])
 
+    useEffect(() => {
+        console.log(user)
+    }, [])
+
+    const uploadScore = useCallback(async () => {
+        if (!user && gameState === "End") {
+            setLeadboardText("You need to be logged in to upload scores")
+            setScoreUploading(false);
+            return;
+        }
+        if (!user || gameState !== "End") return; // Error without this. Likely because it would query profiles with a null id without it
+        try {
+            setScoreUploading(true)
+
+            const { data, error, status } = await supabase
+            .from('leaderboard')
+            .select(`score`)
+            .eq('user_id', user?.id)
+            .eq('song_id', song_id)
+            .single()
+    
+            if (error && status !== 406) {
+                console.log("Error obtaining leaderboard score", error)
+                throw error
+            }
+    
+            if (data) {
+                if (data.score < score) {
+                    try {
+                        const { error : uploadError } = await supabase
+                        .from('leaderboard')
+                        .update({ score: score })
+                        .eq('user_id', user?.id)
+                        .eq('song_id', song_id)
+
+                        if (uploadError) {
+                            console.log("upload Error", uploadError)
+                            throw error
+                        }
+                    }
+                    catch (uploadError) {
+                        console.log("Error Updating Score", uploadError)
+                    }
+                    finally {
+                        setLeadboardText("Updated Score to Leaderboard")
+                    }
+                }
+                else {
+                    setLeadboardText(`Your Previous Score: ${data.score}`)
+                }
+            }
+            else if (error && error.code === "PGRST116") {
+                console.log("This row with these ids don't exist")
+                try {
+                    const { error : insertError } = await supabase
+                    .from('leaderboard')
+                    .insert([
+                    { 'song_id' : song_id, 'user_id': user?.id, 
+                        'score': score, 
+                        'accuracy': getAccuracy(perfectCount, okayCount, missCount), 
+                        'username' : username, 
+                        'max_combo': maxCombo},
+                    ])
+    
+                    if (insertError) {
+                        console.log("Error inserting score", insertError);
+                        throw insertError
+                    }
+                }                
+                catch (insertError) {
+                    console.log("Error inserting new score to leaderboard", insertError)
+                }
+                finally {
+                    setLeadboardText("Score Uploaded to Leaderboard")
+                }
+            }
+        } catch (error) {
+            console.log("Caught leaderboard error", error);
+        } finally {
+            console.log("Leaderboard Score Complete")
+            setScoreUploading(false)
+        }
+    }, [user, supabase, gameState, perfectCount, okayCount, missCount, score, maxCombo, song_id]);
+    
+    useEffect(() => {
+        uploadScore()
+    }, [user, uploadScore])
+
+
     return (
     <div>
         <div id='game-container'>
@@ -604,11 +744,32 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                 </div>
             </div> 
 
+            <div id='pause_wrapper' className={(gameState === "Paused")? "pause_active" : 'pause_unactive'}>
+                <div id="pause_screen">
+                    <button onClick={() => resumeMap()}>Resume</button>
+                    <button onClick={() => restartMap()}>Retry</button>
+                    <button onClick={() => {gameMapProp(null)}}>Main Menu</button>
+                </div>
+            </div>
+
+            {gameState === "Waiting"? 
+            <div id='waiting_wrapper'>
+                <div id='countdown'>
+                    <span>3</span>
+                    <span>2</span>
+                    <span>1</span>
+                    <span>0</span>
+                </div>
+            </div>
+            :
+            <>
+            </>
+            }
 
             {endScreen && 
                 <div id='end_screen_wrapper'>
                     <div>
-                        <p id='score_text'>0</p>
+                        <h1 id='score_text'>0</h1>
                     </div>
                     <div id='cassette-tape'>
                         <div id='lil_guy_container'>
@@ -622,32 +783,33 @@ export const Tape = ({gMap, gameMapProp} : gameInterface) => {
                     <div id='score_div'>
                         <div id='hit_stats'>
                             <div>
-                                <p>{perfectCount}</p>
-                                <p>Perfect</p>    
+                                <h2>{perfectCount}</h2>
+                                <h2>Perfect</h2>    
                             </div>
                             <div>
-                                <p>{okayCount}</p>
-                                <p>Okay</p>    
+                                <h2>{okayCount}</h2>
+                                <h2>Okay</h2>    
                             </div>
                             <div>
-                                <p>{missCount}</p>
-                                <p>Miss</p>    
+                                <h2>{missCount}</h2>
+                                <h2>Miss</h2>    
                             </div>
                         </div>
                         <div>
-                            <p>{maxCombo}</p>
-                            <p>Max Combo</p>    
+                            <h2>{maxCombo}</h2>
+                            <h2>Max Combo</h2>    
                         </div>
                     </div>
-                    <div id='menu_div'>
-                        <button onClick={restartMap} className='gameBtns'>Retry</button>
-                        <button onClick={() => {gameMapProp(null)}} className='gameBtns'>Main Menu</button>
-                    </div>
+                    <div id='scoreUpload_menu'>
+                        <div id='menu_div'>
+                            <button onClick={restartMap} className='gameBtns'>Retry</button>
+                            <button onClick={() => {gameMapProp(null)}} className='gameBtns'>Main Menu</button>
+                        </div>
+                        <h2>{scoreUploading? "Checking server..." : leaderboardText}</h2>
+                    </div>                    
                 </div>
             }
         </div>
-        
-        <audio src={audioURL ?? ""} controls={false} ref={audioRef} loop={false} />
     </div>
   )
 }
