@@ -231,7 +231,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
                 }
             }
     
-            if (event.key === buttonMappings.rightTurn[0] || event.key === buttonMappings.rightTurn[1]) {
+            else if (event.key === buttonMappings.rightTurn[0] || event.key === buttonMappings.rightTurn[1]) {
                 if (direction === "Right") return
                 moveRight();
                 if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
@@ -239,51 +239,73 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
                 }
             }
     
-            if (event.key === buttonMappings.leftLane[0] || event.key === buttonMappings.leftLane[1]) {
+            else if (event.key === buttonMappings.leftLane[0] || event.key === buttonMappings.leftLane[1]) {
                 if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
-                    if (leftTiming.current[leftTimingIndex][0] <= time + 150) {
+                    if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 150) {
                         handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "FL")
+                        return;
                     }
-                    else if (leftTiming.current[leftTimingIndex][0] <= time + 250){
+                    if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 250){
                         setComboCount(0);
                         setMode("base");
                         earlyAnimation("cOne")
                     }
+                    else {
+                        defaultAnimation("cOne")
+                    }
                 }
                 else if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
-                    if (leftTiming.current[leftTimingIndex][0] <= time + 150) {
+                    if (leftTiming.current[leftTimingIndex][1] === "SL" && leftTiming.current[leftTimingIndex][0] <= time + 150) {
                         handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "SL")
+                        return
                     }
-                    else if (leftTiming.current[leftTimingIndex][0] <= time + 250) {
+                    if (leftTiming.current[leftTimingIndex][1] === "SL" && leftTiming.current[leftTimingIndex][0] <= time + 250) {
                         setComboCount(0);
                         setMode("base");
                         earlyAnimation("cThree")   
                     }
+                    else {
+                        defaultAnimation("cThree")
+                    }
                 }
+                hitsoundsRef.current[hitsoundIndex].play();
+                setHitsoundIndex((index) => (index + 1) % 12);       
+                return;
             }
     
-            if (event.key === buttonMappings.rightLane[0]|| event.key === buttonMappings.rightLane[1]) {
+            else if (event.key === buttonMappings.rightLane[0]|| event.key === buttonMappings.rightLane[1]) {
                 if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
-                    if (rightTiming.current[rightTimingIndex][0] <= time + 150) {
+                    if (rightTiming.current[rightTimingIndex][1] === "FR" && rightTiming.current[rightTimingIndex][0] <= time + 150) {
                         handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "FR")
+                        return
                     }
-                    else if (rightTiming.current[rightTimingIndex][0] <= time + 250) {
+                    if (rightTiming.current[rightTimingIndex][1] === "FR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
                         setComboCount(0);
                         setMode("base");  
                         earlyAnimation("cTwo")
                     }
+                    else {
+                        defaultAnimation("cTwo")
+                    }                    
                 }
         
                 else if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
-                    if (rightTiming.current[rightTimingIndex][0] <= time + 150){
+                    if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 150){
                         handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "SR")
+                        return
                     }
-                    else if (rightTiming.current[rightTimingIndex][0] <= time + 250) {
+                    if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
                         setComboCount(0);
                         setMode("base");
                         earlyAnimation("cFour")
                     }
+                    else {
+                        defaultAnimation("cFour")
+                    }    
                 }
+                hitsoundsRef.current[hitsoundIndex].play();
+                setHitsoundIndex((index) => (index + 1) % 12); 
+                return
             } 
     
             if (event.key === buttonMappings.restart[0]|| event.key === buttonMappings.restart[1]) {
@@ -391,19 +413,40 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
         leftNotes.current = lNotes;
         rightNotes.current = rNotes;
         turnNotes.current = tNotes;
-
-        setTimeout(() => {
-            setStopwatchActive(true);
-            setStPaused(false);
-        }, scrollSpeed + offset + 3000)
+        
+        if (offset >= 0) {
+            setTimeout(() => {
+                if (audioProp.current) {
+                    audioProp.current.currentTime = 0;
+                    audioProp.current.volume = settings.gpVolume
+                    audioProp.current.play();
+                }
+            }, ((scrollSpeed * 2) + 3000 + offset))
     
-        setTimeout(() => {
-            if (audioProp.current) {
-                audioProp.current.volume = settings.gpVolume
-                audioProp.current.play();
+            setTimeout(() => {
+                setStopwatchActive(true);
+                setStPaused(false);
                 setGameState("Running")
-            } 
-        }, (scrollSpeed * 2) + offset + 3000)
+            }, scrollSpeed + 3000)
+        }
+        else {
+            setTimeout(() => {
+                if (audioProp.current) {
+                    audioProp.current.currentTime = 0;
+                    audioProp.current.volume = settings.gpVolume
+                    audioProp.current.play();
+                }
+            }, ((scrollSpeed * 2) + 3000))
+    
+            setTimeout(() => {
+                setStopwatchActive(true);
+                setStPaused(false);
+            }, scrollSpeed + 3000 - offset)
+            
+            setTimeout(() => {
+                setGameState("Running")
+            }, scrollSpeed + 3000)
+        }
     }, [])
 
     // Restart Map
@@ -412,9 +455,10 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
             audioProp.current.pause();
             audioProp.current.currentTime = 0;
         }
-        setTime(0);
+
         setStopwatchActive(false);
         setStPaused(true);
+        setTime(0);
         setScore(0);
         setMissCount(0);
         setPerfectCount(0);
@@ -435,17 +479,39 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
 
         setGameState("Waiting")
 
-        setTimeout(() => {
-            setStopwatchActive(true);
-            setStPaused(false);
-          }, scrollSpeed + offset + 3000)
+        if (offset >= 0) {
+            setTimeout(() => {
+                if (audioProp.current) {
+                    audioProp.current.currentTime = 0;
+                    audioProp.current.volume = settings.gpVolume
+                    audioProp.current.play();
+                }
+            }, ((scrollSpeed * 2) + 3000 + offset))
     
-          setTimeout(() => {
-            if (audioProp.current) {
-                audioProp.current.play();
+            setTimeout(() => {
+                setStopwatchActive(true);
+                setStPaused(false);
                 setGameState("Running")
-            } 
-          }, (scrollSpeed * 2) + offset + 3000)
+            }, scrollSpeed + 3000)
+        }
+        else {
+            setTimeout(() => {
+                if (audioProp.current) {
+                    audioProp.current.currentTime = 0;
+                    audioProp.current.volume = settings.gpVolume
+                    audioProp.current.play();
+                }
+            }, ((scrollSpeed * 2) + 3000))
+    
+            setTimeout(() => {
+                setStopwatchActive(true);
+                setStPaused(false);
+            }, scrollSpeed + 3000 - offset)
+            
+            setTimeout(() => {
+                setGameState("Running")
+            }, scrollSpeed + 3000)
+        }
 
         gsap.to("#lane-container", {
             opacity: 1,
@@ -461,19 +527,44 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
         const newBar = document.createElement('div');
         newBar.classList.add("bar")
         if (turnNote) {
-            if (lane === lane_one) newBar.classList.add("left");
-            else newBar.classList.add("right")            
+            const laneClass = (lane === lane_one)? "left" : "right";
+            newBar.classList.add(laneClass);
+            newBar.style.animation = `barAnime ${scrollSpeed}ms linear 1, ${laneClass}Animation ${scrollSpeed}ms linear 1`
         }
-        lane.current?.appendChild(newBar);
-        newBar.style.animation = `barAnime ${scrollSpeed}ms linear`
+        else {
+            newBar.style.animation = `barAnime ${scrollSpeed}ms linear 1`
+        }
+        if (lane.current) {
+            lane.current.appendChild(newBar);
+        }
         const cleanup = () => {
-            lane.current?.removeChild(newBar);
+            if (lane.current && lane.current.contains(newBar)) {
+                lane.current.removeChild(newBar);
+            }
         }
         newBar.addEventListener("animationend", cleanup)
         return () => {
             newBar.removeEventListener("animationend", cleanup)
         }
     }
+
+    // const createBar = (lane: RefObject<HTMLDivElement>, turnNote : boolean) => {
+    //     const newBar = document.createElement('div');
+    //     newBar.classList.add("bar")
+    //     if (turnNote) {
+    //         if (lane === lane_one) newBar.classList.add("left");
+    //         else newBar.classList.add("right")            
+    //     }
+    //     lane.current?.appendChild(newBar);
+    //     newBar.style.animation = `barAnime ${scrollSpeed}ms linear`
+    //     const cleanup = () => {
+    //         lane.current?.removeChild(newBar);
+    //     }
+    //     newBar.addEventListener("animationend", cleanup)
+    //     return () => {
+    //         newBar.removeEventListener("animationend", cleanup)
+    //     }
+    // }
 
     // Handle Curve Creation
     // Left Notes
@@ -572,16 +663,22 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
         .to(`#${circle}`, {transform: "translateX(0px)", duration: "0.1"})
     })
 
+    const defaultAnimation = contextSafe((circle : string) => {
+        gsap.timeline()
+        .to(`#${circle}`, {transform: "scale(1.2)", borderColor: "red", duration: "0.1"})
+        .to(`#${circle}`, {transform: "scale(1)", borderColor: "#eaeaea", duration: "0.1"})
+    })
+
     const earlyAnimation = contextSafe((circle : string) => {
         if (circle === "cOne" || circle == "cThree") {
             gsap.timeline()
-            .to(`#${circle}`, {transform: "rotate(-40deg) scale(0.8)", duration: "0.1"})
-            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(-40deg) scale(0.8)", borderColor: "yellow", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", borderColor: "#eaeaea", duration: "0.1"})
         }
         else {
             gsap.timeline()
-            .to(`#${circle}`, {transform: "rotate(40deg) scale(0.8)", duration: "0.1"})
-            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(40deg) scale(0.8)", borderColor: "yellow", duration: "0.1"})
+            .to(`#${circle}`, {transform: "rotate(0deg) scale(1)", borderColor: "#eaeaea", duration: "0.1"})
         }
     })
 

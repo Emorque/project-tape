@@ -444,7 +444,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             <div className="settings_div">
                 <h1>Universal Offset</h1>
                 <div className="setting_tooltip_text">
-                    Positive Offset for late timing / Negative Offest for early timing (ms)
+                    Positive Offset for music to start later / Negative Offest for music to start earlier (ms)
                 </div>
                 <div id="offset_div">
                     <div>

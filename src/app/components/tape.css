@@ -93,21 +93,39 @@
 }
 
 .left {
-    background: repeating-linear-gradient(135deg, #eaeaea 0%, #eaeaea 20%, black 20%, black 40%), 
-        repeating-linear-gradient(225deg, #eaeaea 0%, #eaeaea 20%, black 20%, black 40%);
-    background-size: 100% 50%;
-    background-position: top, bottom;
+    background: repeating-linear-gradient(135deg, #eaeaea 0%, #eaeaea 10%, black 10%, black 20%), 
+        repeating-linear-gradient(225deg, black 0%, black 10%, #eaeaea 10%, #eaeaea 20%);
+    background-size: 150% 50%, 150% 50%;
+    background-position: 0% 0%, 0% 100%;
     background-repeat: no-repeat; 
     width: 200%;
 }
 
+@keyframes leftAnimation {
+  0% {
+        background-position: 0% 0%, 0% 100%;
+  }
+  100% {
+        background-position: 60% 0%, 60% 100%;
+    }
+}
+
 .right {
-    background: repeating-linear-gradient(45deg, #eaeaea 0%, #eaeaea 20%, black 20%, black 40%), 
-        repeating-linear-gradient(315deg, #eaeaea 0%, #eaeaea 20%, black 20%, black 40%);
-    background-size: 100% 50%;
-    background-position: top, bottom;
+    background: repeating-linear-gradient(45deg, #eaeaea 0%, #eaeaea 10%, black 10%, black 20%), 
+        repeating-linear-gradient(315deg, black 0%, black 10%, #eaeaea 10%, #eaeaea 20%);
+    background-size: 150% 50%, 150% 50%;
+    background-position: 0% 0%, 0% 100%;
     background-repeat: no-repeat; 
     width: 200%;
+}
+
+@keyframes rightAnimation {
+    0% {
+        background-position: 130% 0%, 130% 100%;
+  }
+  100% {
+        background-position: 70% 0%, 70% 100%;
+  }
 }
 
 #end_screen_wrapper {
@@ -549,10 +567,10 @@
 
 @keyframes barAnime {
     0% {
-        top: 0%
+        bottom: 100%
     }
     100% {
-        top: 99%
+        bottom: 0%
     }
 }
 
