@@ -530,6 +530,10 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
             const laneClass = (lane === lane_one)? "left" : "right";
             newBar.classList.add(laneClass);
             newBar.style.animation = `barAnime ${scrollSpeed}ms linear 1, ${laneClass}Animation ${scrollSpeed}ms linear 1`
+            // const spike = document.createElement('div');
+            // spike.classList.add(`${laneClass}Spike`)
+            // spike.style.animation = `${laneClass}SpikeAnimation ${scrollSpeed}ms linear 1`
+            // newBar.appendChild(spike);
         }
         else {
             newBar.style.animation = `barAnime ${scrollSpeed}ms linear 1`

@@ -103,10 +103,15 @@
 
 @keyframes leftAnimation {
   0% {
+        left: 200%;
         background-position: 0% 0%, 0% 100%;
   }
+  20% {
+    left: 0;
+  }
   100% {
-        background-position: 60% 0%, 60% 100%;
+        /* left: 100%; */
+        background-position: 90% 0%, 90% 100%;
     }
 }
 
@@ -114,18 +119,69 @@
     background: repeating-linear-gradient(45deg, #eaeaea 0%, #eaeaea 10%, black 10%, black 20%), 
         repeating-linear-gradient(315deg, black 0%, black 10%, #eaeaea 10%, #eaeaea 20%);
     background-size: 150% 50%, 150% 50%;
-    background-position: 0% 0%, 0% 100%;
+    /* background-position: 0% 0%, 0% 100%; */
+    background-position: 130% 0%, 130% 100%;
+
     background-repeat: no-repeat; 
     width: 200%;
 }
 
 @keyframes rightAnimation {
     0% {
-        background-position: 130% 0%, 130% 100%;
-  }
+        left: -200%;
+         background-position: 130% 0%, 130% 100%;
+    }
+    20% {
+        left: 0;   
+    }
+    100% {
+        background-position: 40% 0%, 40% 100%;
+    }
+}
+
+.rightSpike {
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    left: 0;
+    content: "";
+    height: 5px;
+    background: repeating-linear-gradient(45deg, transparent 0%, transparent 9%, rgb(255, 255, 255) 9%, rgb(255, 255, 255) 11%, transparent 11%, transparent 20%),
+        repeating-linear-gradient(135deg, transparent 0%, transparent 9%, rgb(255, 255, 255) 9%, rgb(255, 255, 255) 11%, transparent 11%, transparent 20%);
+    background-size: 150% 100%, 150% 100%;
+    background-repeat: no-repeat; 
+    background-position: 148% 0%, 146% 100%;
+}
+
+.leftSpike {
+    position: absolute;
+    top: 100%;
+    width: 100%;
+    left: 0;
+    content: "";
+    height: 5px;
+    background: repeating-linear-gradient(45deg, transparent 0%, transparent 10%, rgb(255, 255, 255) 10%, rgb(255, 255, 255) 11%, transparent 11%, transparent 20%),
+        repeating-linear-gradient(135deg, transparent 0%, transparent 10%, rgb(255, 255, 255) 10%, rgb(255, 255, 255) 11%, transparent 11%, transparent 20%);
+    background-size: 150% 100%, 150% 100%;
+    background-repeat: no-repeat; 
+    background-position: 17% 0%, 15% 100%;
+}
+
+@keyframes rightSpikeAnimation {
+    0% {
+        background-position: 148% 0%, 146% 100%;
+    }
   100% {
-        background-position: 70% 0%, 70% 100%;
+    background-position: 88% 0%, 86% 100%;
   }
+}
+@keyframes leftSpikeAnimation {
+    0% {
+    background-position: 17% 0%, 15% 100%;
+    }
+    100% {
+    background-position: 77% 0%, 75% 100%;
+    }
 }
 
 #end_screen_wrapper {

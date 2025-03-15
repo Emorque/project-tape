@@ -1,4 +1,4 @@
-import { login, signup } from './actions'
+// import { login, signup } from './actions'
 import './login.css'
 
 export default function LoginPage() {
@@ -13,8 +13,10 @@ export default function LoginPage() {
         <input id="password" name="password" type="password" required />  
       </div>
       <div>
-        <button formAction={login}>Log in</button>
-        <button formAction={signup}>Sign up</button>
+        {/* <button formAction={login}>Log in</button>
+        <button formAction={signup}>Sign up</button> */}
+        {/* <button >Log in</button>
+        <button >Sign up</button> */}
       </div>
     </form>
   )

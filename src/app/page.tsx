@@ -27,6 +27,8 @@ export default function Home() {
   const[userSettings, setUserSettings] = useState<settingsType | null>(null);
   const[settingsView, setSettingsView] = useState<boolean>(false);
 
+  const [howtoView, setHowToView] = useState<boolean>(false);
+
   const [audioURL, setAudioURL] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioReady, setAudioReady] = useState<boolean>(false);
@@ -130,6 +132,12 @@ export default function Home() {
   const settingsStyle = {
     visibility: (menu === "settings_menu")? "visible" : "hidden",
     left: (menu === "settings_menu")? "0%" : "-100%",
+    transition: 'left 1s ease, visibility 1s'
+  } as React.CSSProperties
+
+  const how_toStyle = {
+    visibility: (menu === "how_to_menu")? "visible" : "hidden",
+    left: (menu === "how_to_menu")? "0%" : "-100%",
     transition: 'left 1s ease, visibility 1s'
   } as React.CSSProperties
 
@@ -311,6 +319,7 @@ export default function Home() {
         </button>
 
 
+        {/* Once a formal tutorial stage is made, remove this button and associated states/styles */}
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
           // updateCamera([4,8,34.5,   -1,7,34.5]);
           // setPlayerView(true);
@@ -333,6 +342,28 @@ export default function Home() {
             </div>
           </div>
         </button>
+
+        <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
+          if (howtoView) return; //If not checked and settigns btn is clicked too soon, settings div doesn't load.
+          setMenu("how_to_menu")
+          setHowToView(true);
+          }}><h1>How To Play</h1>
+          <div className="cas_bottom">
+          </div>
+          <div className="cas_bar">
+            <div className="cas_circle">
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+            </div>
+            <div className="cas_circle">
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+              <span className="cas_teeth"></span>
+            </div>
+          </div>
+        </button>
+
       </div>
 
 
@@ -350,6 +381,59 @@ export default function Home() {
             </svg>
           </button>
           <Settings saveSettings={handleNewSettings}/>      
+        </>
+          }
+      </div>
+
+      <div id="how_to_wrapper" style={how_toStyle}>
+        {(howtoView) && 
+        <>
+          <button id="setting_back_btn" onClick={() => {
+            setMenu("main_menu")
+            setTimeout(() => {
+              setHowToView(false)
+            }, 1000)
+            }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
+              <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+            </svg>
+          </button>
+          <div>
+            <h1>View Settings to Refernece Keybinds</h1>
+            <br/>
+            <h1>A stage consists of 4 lanes</h1>
+            <h2>Lanes 1-2 are in the Left Section <br/> Lanes 3-4 are in the Right Section.</h2>
+
+            <h2>Press the Turn Key to set your side (Left or Right).</h2>
+            <br/>
+
+            <h2>Press the corresponding Left/Right button to hit the approaching note on that side.</h2>
+            <h3>Ex: If a note is approaching Lane 3, set your side to Right and press the Left button.</h3>
+
+            <br/>
+            <br/>
+            <h1>There is one more note called a &quot;Turn Note&quot;</h1>
+            <h2>A Turn Note can only be hit with the Turn Key and when approaching from the opposite side.</h2>
+            <h2>Ex: If a Turn Note is approaching the Left Side, set your side to Right, then hit the Left Turn Key when it approaches.</h2>
+            <h2>All notes have the same timing window.</h2>
+
+            <br/>
+            <br/>
+
+            <h1>There is a combo bar that fills near the bottom</h1>
+            <h2>A combo bar fills at the bottom after each successful hit.</h2>
+            <h2>After 20 hits, you enter Flow State, where points are doubled.</h2>
+            <h2>You exit Flow State by missing a note or hitting too early.</h2>
+
+            <br/>
+            <br/>
+
+            <h1>Green feedback is a Perfect Hit</h1>
+            <h1>Blue feedback is a Normal Hit</h1>
+            <h1>Yellow feedback is an Early Hit</h1>
+            <h1>Shake feedback is a Missed Note</h1>
+            <h1>Red feedback means Nothing</h1>
+          </div>
         </>
           }
       </div>

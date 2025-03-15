@@ -12,7 +12,7 @@
 
 #main_menu {
     position: absolute;
-    top:30%;
+    top:0%;
     z-index: 200;
     width: 20%;
     max-width: 250px;
@@ -21,6 +21,21 @@
     flex-direction: column;
     gap: 0px;
     transition: left 1s ease;
+}
+
+@media screen and (min-height: 450px) {
+    #main_menu {
+        position: absolute;
+        top:20%;
+        z-index: 200;
+        width: 20%;
+        max-width: 250px;
+        min-width: 175px;
+        display: flex;
+        flex-direction: column;
+        gap: 0px;
+        transition: left 1s ease;
+    }
 }
 
 .cas_btn {
@@ -144,6 +159,26 @@
     scrollbar-color: var(--white) transparent; 
     /* transition: left 1s ease; */
     overflow: auto;
+}
+
+#how_to_wrapper{
+    position: absolute;
+    z-index: 200;
+    top: 0;
+    width: 40%;
+    max-width: 1000px;
+    height: 80%;
+    top: 10%;
+    background-color: var(--grey);   
+    scrollbar-width: thin;
+    scrollbar-color: var(--white) transparent; 
+    /* transition: left 1s ease; */
+    overflow: auto;
+    div {
+        width: 90%;
+        margin: 0 auto;
+        color: var(--white)
+    }
 }
 
 #setting_back_btn {
