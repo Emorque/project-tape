@@ -4,6 +4,12 @@ import { ChangeEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useSt
 import { useWavesurfer } from '@wavesurfer/react'
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from "react-virtualized-auto-sizer";
+// import { gsap } from "gsap";
+    
+// import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+
+
+// gsap.registerPlugin(ScrollToPlugin);
 
 import "./editor.css";
 // import Link from "next/link";
@@ -60,27 +66,29 @@ export default function Editor() {
 
   useEffect(() => {
     if (wavesurfer) {
-      // const duration = wavesurfer.getDuration()
       const onScroll = () => {
         const scroll = wavesurfer.getScroll();
         if (vListRef.current) {
-          vListRef.current.scrollToItem(scroll/16, 'start')
-        }
-        if (listRef.current) {
-          console.log(currentTime)
-          listRef.current.scrollToItem(currentTime/16, 'start')
+          vListRef.current.scrollTo(scroll)
         }
       };
 
-      wavesurfer.on('timeupdate', onScroll); // Update on playback
+      // wavesurfer.on('timeupdate', onScroll); // Update on playback
       wavesurfer.on('scroll', onScroll); // Update on manual scroll
 
       return () => {
-        wavesurfer.un('timeupdate', onScroll);
+        // wavesurfer.un('timeupdate', onScroll);
         wavesurfer.un('scroll', onScroll);
       };
     }
-  }, [wavesurfer, currentTime]);
+  }, [wavesurfer]);
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTo(currentTime * 16 * 16)
+    }
+  }, [currentTime])
+  
 
   const listRef = useRef<List>(null);
   const vListRef = useRef<List>(null);
@@ -92,15 +100,12 @@ export default function Editor() {
       setSongNotes(Array.from({ length: 4 }, () => new Array(Math.floor(((duration) * 16) + 1)).fill("")));
       }
   }, [isReady])
-  
+
   const itemIndex = useMemo(() => {
     return Math.floor(currentTime * 16);
   }, [currentTime]);
 
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollToItem(itemIndex, 'start');
-    }
     if (itemIndex){
       const offset : number = (itemIndex % 3)
       if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T") {
@@ -120,6 +125,7 @@ export default function Editor() {
 
   useEffect(() => {
     const handleKeyDown = (event: { key: string; }) => {
+      console.log(event.key)
       if (event.key === 'q' || event.key === 'Q') {
         if (playBtnHold) return
         setPlayBtnHold(true)
@@ -158,53 +164,14 @@ export default function Editor() {
     };
   }, []);
 
-  // const changeNoteHor = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
-  //   const mousePlacement = event.clientY - (document.getElementById('vBars-Container')?.getBoundingClientRect().top as number)
-  //   if (0 < mousePlacement && mousePlacement <= 30) { // First Bar
-  //     if (songNotes[2][index] === "S" || songNotes[2][index] === "T" || songNotes[3][index] === "S") {
-  //       return
-  //     }
-  //     if (btn === "Turn Note") {
-  //       setDoubleNote(0, 1, index)
-  //     }
-  //     else {
-  //       setNewNote(0, 1, index, "S");
-  //     }
-  //   }
-  //   else if (0 < mousePlacement && mousePlacement <= 60) { // Second Bar
-  //     if (songNotes[2][index] === "S" || songNotes[2][index] === "T" || songNotes[3][index] === "S") {
-  //       return
-  //     }
-  //     if (btn === "Turn Note") {
-  //       setDoubleNote(0, 1, index)
-  //     }
-  //     else {
-  //       setNewNote(1, 0, index, "S");
-  //     }
-  //   }
-  //   else if (0 < mousePlacement && mousePlacement <= 90) { // Third Bar
-  //     if (songNotes[0][index] === "S" || songNotes[0][index] === "T" || songNotes[1][index] === "S") {
-  //       return
-  //     }
-  //     if (btn === "Turn Note") {
-  //       setDoubleNote(2, 3, index)
-  //     }
-  //     else {
-  //       setNewNote(2, 3, index, "S");
-  //     }
-  //   }
-  //   else if (0 < mousePlacement && mousePlacement <= 120) { // Fourth Bar
-  //     if (songNotes[0][index] === "S" || songNotes[0][index] === "T" || songNotes[1][index] === "S") {
-  //       return
-  //     }
-  //     if (btn === "Turn Note") {
-  //       setDoubleNote(2, 3, index)
-  //     }
-  //     else {
-  //       setNewNote(3, 2, index, "S");
-  //     }
-  //   }
-  // }
+  function scrollWindow(index : number)  {
+    setTimeout(() => {
+      if (wavesurfer) {
+        wavesurfer.setTime(index / 16)
+      }
+      listRef.current?.scrollTo(index * 16)
+    }, 125)
+  }
 
   const changeNoteVer = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
     const hero_list_info = document.getElementById('hero_list')?.getBoundingClientRect();
@@ -214,20 +181,16 @@ export default function Editor() {
       mousePlacement = event.clientX - hero_list_info.left
       hero_width = hero_list_info.right - hero_list_info.left
     }
-    const temp = event.clientX - (document.getElementById('hero_list')?.getBoundingClientRect().left as number)
-    // const hero_width = document.getElementById('hero_list')?.getBoundingClientRect();
+    // const temp = event.clientX - (document.getElementById('hero_list')?.getBoundingClientRect().left as number)
+    // console.log(mousePlacement);
+    // console.log(temp)
     // console.log(hero_width)
-
-    console.log(mousePlacement);
-    console.log(temp)
-    console.log(hero_width)
-
-
 
     if (!mousePlacement || !hero_width) return;
     const oneFourth = hero_width * (1/4)
     const twoFourths = hero_width * (2/4)
     const threeFourths = hero_width * (3/4)
+    scrollWindow(index)
 
     if (0 < mousePlacement && mousePlacement <= oneFourth) { // First Bar
       console.log("First Bar")
@@ -389,7 +352,6 @@ export default function Editor() {
     return (
       <p
         className="i-bar"
-        // onClick={(event) => changeNoteHor(index, event)}
         style={{ ...style, ...barStyle(index) }} 
       >
       </p>
@@ -402,9 +364,9 @@ export default function Editor() {
     }
   }
 
-  const roundNote = (note: number) => {
-    return Math.round(note / 10) * 10
-  }
+  // const roundNote = (note: number) => {
+  //   return Math.round(note / 10) * 10
+  // }
 
   // const exportMap = () => {
   //   const exportedMap = []
@@ -433,6 +395,15 @@ export default function Editor() {
   //     alert("Map saved locally")
   //   }
   // }
+
+  const updateTime = (event: {scrollOffset: number}) => {
+    if (isPlaying) return;
+    console.log(event.scrollOffset)
+    if (wavesurfer) {
+      wavesurfer.setTime(event.scrollOffset / 256)
+    }
+    
+  }
   
   return (
     <div id="editor_page">
@@ -472,7 +443,7 @@ export default function Editor() {
           </div>
           <button>Return</button>
         </div>
-        <div id="hero_list">
+        <div id="hero_list" >
           <AutoSizer disableHeight>
             {({width}) => (
               <List
@@ -480,6 +451,7 @@ export default function Editor() {
               className="scrollbar"
               height={500}
               itemCount={songLength}
+              onScroll={updateTime}
               itemSize={16} 
               width={width} 
               >
@@ -517,47 +489,7 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* <div id="gameContainer" >
-        <List
-          ref={listRef}
-          className="scrollbar"
-          height={500}
-          itemCount={songLength}
-          itemSize={16} 
-          width={400} 
-        >
-          {HRows}
-        </List>
-      </div> */}
-{/* 
-      <div id="divWrapper">
-        <div className="divContainer">
-          <p>Current time:</p>
-
-          <p>&quot;Q&quot; to Toggle</p>
-        </div>
-
-        <div className="divContainer">
-          <p>Current Button:</p>
-          <p>{btn}</p>
-          <p>&quot;S&quot; for a Single Note</p>
-          <p>&quot;K&quot; for a Turn Note</p>
-        </div>
-
-        <div className="divContainer">
-          <p>Set Playrate</p>
-          
-        </div>
-      </div> */}
-
       <br/>
-      
-      {/* {isReady &&
-      <div id="exportDiv">
-        <button onClick={exportMap}>Export Map</button>
-        <Link href="./">Go Back</Link>
-      </div>
-      } */}
       <div style={{display: 'flex', gap: 20, flexDirection: 'column', alignItems: 'center', padding: 20}}>
           <input type="file" accept='audio/*' onChange={audioChange}/>
       </div>
