@@ -25,6 +25,23 @@ export type mapMetadata = {
 }
 
 export type sMap = [number,string][]
+
+// Conisder a "last edited key, to help with ordering and it may be a useful bit of info for users"
+export type editorMap = {
+  song_metadata : editorMetadata,
+  song_notes: string[][]
+}
+
+type editorMetadata = {
+  song_name: string,
+  song_artist: string,
+  song_mapper: string,
+  bpm: number,
+  genre: string,
+  language: string,
+  note_count: number,
+  description: string
+}
   
 export type ranking = {
   user_id: string,
@@ -54,12 +71,9 @@ export type settingsType = {
 export type keybindsType = {
   sNote: string,
   tNote: string,
-  oneFourthSpeed: string,
-  oneHalfSpeed: string,
-  threeFourthSpeed: string,
-  fullSpeed: string,
+  decreaseSpd: string,
+  increaseSpd: string,
 
   snap: string,
-  toggleMusic: string,
-  save: string,
+  toggleMusic: string
 }

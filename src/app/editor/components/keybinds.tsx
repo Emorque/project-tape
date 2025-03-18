@@ -1,26 +1,130 @@
 import { keybindsType } from "@/utils/helperTypes"
+import gsap from 'gsap';
+import { useGSAP } from "@gsap/react";
 import { useEffect, useState } from "react"
 
-export const Keybinds = () => {   
+interface keybindsInterface {
+  saveKeybinds : (newKeybinds : keybindsType | null) => void;
+}
+
+export const Keybinds = ({saveKeybinds} : keybindsInterface) => {   
 
   // Settings metadata
   const [singleNoteBtn, setSingleNoteBtn] = useState<string>("S")
   const [turnNoteBtn, setTurnNoteBtn] = useState<string>("K")
 
-  const [oneFourthSpeedBtn, setOneFourthSpeedBtn] = useState<string>("1")
-  const [oneHalfSpeedBtn, setOneHalfSpeedBtn] = useState<string>("2")
-  const [threeFourthSpeedBtn, setThreeFourthSpeedBtn] = useState<string>("3")
-  const [fullSpeedBtn, setFullSpeedBtn] = useState<string>("4")
+  const [decreaseSpdBtn, setDecreaseSpdBtn] = useState<string>("1")
+  const [increaseSpdBtn, setIncreaseSpdBtn] = useState<string>("2")
 
   const [snapBtn, setSnapBtn] = useState<string>("Q")
   const [toggleMusicBtn, setToggleMusicBtn] = useState<string>("P")
   // Have a div pop up at the top with something like "Map saved locally". It goes away after 2 seconds, and during that two seconds, disable the save command
-  const [saveBtn, setSaveBtn] = useState<string>("U");
-
+ 
   const [disableMapping, setDisabedMapping] = useState<boolean>(false)
   const [disabledSave, setDisabedSave] = useState<boolean>(false)
   const [actionKey, setActionKey] = useState<string>("");
 
+
+  const { contextSafe } = useGSAP();
+
+  const keyError = contextSafe((btnRef: string) => {
+    gsap.to(btnRef, {backgroundColor: "#c70000 ", yoyo: true, repeat: 1, duration:0.75})
+    gsap.to("#mapping_error", {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
+})
+
+// const bottomAnimation = contextSafe((btn : string) => {
+//     gsap.to(btn, {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
+// })
+
+  // Keybind Assignment 
+  useEffect(() => {
+    const handleKeyDown = (event: {key: string; repeat: boolean}) => {
+      if (event.repeat) return;
+      if (actionKey === "") return;
+      if (disableMapping) return;
+      
+      const key = (event.key === " ") ? "Spacebar" : event.key.charAt(0).toUpperCase() + event.key.slice(1);
+
+      if (actionKey === "Single") {
+          if (key === turnNoteBtn || key === decreaseSpdBtn || key === increaseSpdBtn || key === snapBtn || key === toggleMusicBtn) {
+              keyError("#singleNoteBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setSingleNoteBtn(key)
+      }
+
+      if (actionKey === "Turn") {
+        if (key === singleNoteBtn || key === decreaseSpdBtn || key === increaseSpdBtn || key === snapBtn || key === toggleMusicBtn) {
+          keyError("#turnNoteBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setTurnNoteBtn(key)
+      }
+
+      if (actionKey === "Decrease Spd") {
+        if (key === singleNoteBtn || key === turnNoteBtn || key === increaseSpdBtn || key === snapBtn || key === toggleMusicBtn) {
+          keyError("#decreaseSpdBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setDecreaseSpdBtn(key)
+      }
+
+      if (actionKey === "Increase Spd") {
+        if (key === singleNoteBtn || key === turnNoteBtn || key === decreaseSpdBtn || key === snapBtn || key === toggleMusicBtn) {
+          keyError("#increaseSpdBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setIncreaseSpdBtn(key)
+      }
+
+      if (actionKey === "Snap") {
+        if (key === singleNoteBtn || key === turnNoteBtn || key === decreaseSpdBtn || key === increaseSpdBtn || key === toggleMusicBtn) {
+          keyError("#snapBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setSnapBtn(key)
+      }
+
+      if (actionKey === "Music") {
+        if (key === singleNoteBtn || key === turnNoteBtn || key === decreaseSpdBtn || key === increaseSpdBtn || key === snapBtn) {
+          keyError("#toggleMusicBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setToggleMusicBtn(key)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup the event listener on unmount
+    return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [singleNoteBtn, turnNoteBtn, decreaseSpdBtn, increaseSpdBtn, snapBtn, toggleMusicBtn, actionKey, disableMapping])
 
   // Grabbing local
   useEffect(() => {
@@ -29,16 +133,13 @@ export const Keybinds = () => {
     if (!localKeybinds) {
       console.log("No Local Keybinds")
       updatedKeybinds = {
-        sNote: "S",
-        tNote: "T",
-        oneFourthSpeed: "1",
-        oneHalfSpeed: "2",
-        threeFourthSpeed: "3",
-        fullSpeed: "4",
+        sNote: "Q",
+        tNote: "W",
+        decreaseSpd: "1",
+        increaseSpd: "2",
 
-        snap: "W",
+        snap: "A",
         toggleMusic: "P",
-        save: "Y"
       }
     }
     else {
@@ -47,14 +148,11 @@ export const Keybinds = () => {
 
     setSingleNoteBtn(updatedKeybinds.sNote)
     setTurnNoteBtn(updatedKeybinds.tNote)
-    setOneFourthSpeedBtn(updatedKeybinds.oneFourthSpeed)
-    setOneHalfSpeedBtn(updatedKeybinds.oneHalfSpeed)
-    setThreeFourthSpeedBtn(updatedKeybinds.threeFourthSpeed)
-    setFullSpeedBtn(updatedKeybinds.fullSpeed)
+    setDecreaseSpdBtn(updatedKeybinds.decreaseSpd)
+    setIncreaseSpdBtn(updatedKeybinds.increaseSpd)
 
     setSnapBtn(updatedKeybinds.snap)
     setToggleMusicBtn(updatedKeybinds.toggleMusic)
-    setSaveBtn(updatedKeybinds.save)
 
     localStorage.setItem("keybinds", JSON.stringify(updatedKeybinds))
   }, [])
@@ -64,14 +162,11 @@ export const Keybinds = () => {
     const newKeybinds : keybindsType = {
       sNote: singleNoteBtn,
       tNote: turnNoteBtn,
-      oneFourthSpeed: oneFourthSpeedBtn,
-      oneHalfSpeed: oneHalfSpeedBtn,
-      threeFourthSpeed: threeFourthSpeedBtn,
-      fullSpeed: fullSpeedBtn,
+      decreaseSpd: decreaseSpdBtn,
+      increaseSpd: increaseSpdBtn,
     
       snap: snapBtn,
       toggleMusic: toggleMusicBtn,
-      save: saveBtn,
     }
 
     // Animation + Temporarily disable saving keybinds 
@@ -80,39 +175,28 @@ export const Keybinds = () => {
       setDisabedSave(false)
     }, 1500)
 
-
-
+    saveKeybinds(newKeybinds)
     localStorage.setItem("keybinds", JSON.stringify(newKeybinds))
-    // TO DO:
-    // Params function to set keyinds to outer component
-   // saveSettings(updateSettings)
-
   }
 
   // resetKeybinds
   const resetKeybinds = () => {
     const defaultKeybinds : keybindsType = {
-      sNote: "S",
-      tNote: "T",
-      oneFourthSpeed: "1",
-      oneHalfSpeed: "2",
-      threeFourthSpeed: "3",
-      fullSpeed: "4",
+      sNote: "Q",
+      tNote: "W",
+      decreaseSpd: "1",
+      increaseSpd: "2",
 
-      snap: "W",
+      snap: "A",
       toggleMusic: "P",
-      save: "Y"
     }
     setSingleNoteBtn(defaultKeybinds.sNote)
     setTurnNoteBtn(defaultKeybinds.tNote)
-    setOneFourthSpeedBtn(defaultKeybinds.oneFourthSpeed)
-    setOneHalfSpeedBtn(defaultKeybinds.oneHalfSpeed)
-    setThreeFourthSpeedBtn(defaultKeybinds.threeFourthSpeed)
-    setFullSpeedBtn(defaultKeybinds.fullSpeed)
+    setDecreaseSpdBtn(defaultKeybinds.decreaseSpd)
+    setIncreaseSpdBtn(defaultKeybinds.increaseSpd)
 
     setSnapBtn(defaultKeybinds.snap)
     setToggleMusicBtn(defaultKeybinds.toggleMusic)
-    setSaveBtn(defaultKeybinds.save)
 
     // TODO: ANIMATION
 
@@ -155,34 +239,30 @@ export const Keybinds = () => {
     
     <div>
     <h2>Single Note Button</h2>
-    <button onClick={() => {newActionKey("Single")}}>{singleNoteBtn}</button>
+    <button id="singleNoteBtn" onClick={() => {newActionKey("Single")}}>{singleNoteBtn}</button>
 
     <h2>Turn Note Button</h2>
-    <button onClick={() => {newActionKey("Turn")}}>{turnNoteBtn}</button>
+    <button id="turnNoteBtn" onClick={() => {newActionKey("Turn")}}>{turnNoteBtn}</button>
 
-    <h2>0.25 Speed Button</h2>
-    <button onClick={() => {newActionKey("0.25 Speed")}}>{oneFourthSpeedBtn}</button>
+    <h2>Decrease Speed Button</h2>
+    <button id="decreaseSpdBtn" onClick={() => {newActionKey("Decrease Spd")}}>{decreaseSpdBtn}</button>
 
-    <h2>0.50 Speed Button</h2>
-    <button onClick={() => {newActionKey("0.50 Speed")}}>{oneHalfSpeedBtn}</button>
-
-    <h2>0.75 Speed Button</h2>
-    <button onClick={() => {newActionKey("0.75 Speed")}}>{threeFourthSpeedBtn}</button>
-
-    <h2>1 Speed Button</h2>
-    <button onClick={() => {newActionKey("FullSpeed")}}>{fullSpeedBtn}</button>
+    <h2>Increase Speed Button</h2>
+    <button id="increaseSpdBtn" onClick={() => {newActionKey("Increase Spd")}}>{increaseSpdBtn}</button>
 
     <h2>Toggle Snapping Button</h2>
-    <button onClick={() => {newActionKey("Snap")}}>{snapBtn}</button>
+    <button id="snapBtn" onClick={() => {newActionKey("Snap")}}>{snapBtn}</button>
     
     <h2>Toggle Music Button</h2>
-    <button onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}</button>
+    <button id="toggleMusicBtn" onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}</button>
     
-    <h2>Save Map Button</h2>
-    <button onClick={() => {newActionKey("Save")}}>{saveBtn}</button>
+    {/* <h2>Save Map Button</h2> */}
+    {/* Be sure to have a prompt, maybe users don't want to save when they click the key to save */}
+    {/* <button id="saveMusicBtn" onClick={() => {newActionKey("Save")}}>{saveBtn}</button> */}
   
-    <button disabled={disabledSave} onClick={() => {uploadKeybinds()}}>Save Keybinds</button>
-    <button disabled={disabledSave} onClick={() => {resetKeybinds()}}>Reset Keybinds</button>
+  {/* TODO do the same setActionKey("") for gameplay Settings. Without it, you can still edit keybinds after saving. Not good UX */}
+    <button disabled={disabledSave} onClick={() => {setActionKey(""); uploadKeybinds()}}>Save Keybinds</button>
+    <button disabled={disabledSave} onClick={() => {setActionKey("");resetKeybinds()}}>Reset Keybinds</button>
   </div>
   )
 
