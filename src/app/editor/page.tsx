@@ -4,20 +4,20 @@ import { ChangeEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useSt
 import { useWavesurfer } from '@wavesurfer/react'
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from "react-virtualized-auto-sizer";
-// import { gsap } from "gsap";
-    
-// import { ScrollToPlugin } from "gsap/ScrollToPlugin";
-
-
-// gsap.registerPlugin(ScrollToPlugin);
 
 import "./editor.css";
+import { Keybinds } from "./components/keybinds";
 // import Link from "next/link";
 
-const barGradient = "linear-gradient(rgba(0, 0, 0, 0) 0px, rgba(0, 0, 0, 0) 29px, rgba(255, 255, 255, 0.50) 30px, rgba(255, 255, 255, 0.50) 30px, rgba(0, 0, 0, 0) 30px, rgba(0, 0, 0, 0) 59px, rgba(255, 255, 255, 0.50) 60px, rgba(255, 255, 255, 0.50) 60px, rgba(0, 0, 0, 0) 60px, rgba(0, 0, 0, 0) 89px, rgba(255, 255, 255, 0.50) 90px, rgba(255, 255, 255, 0.50) 90px, rgba(0, 0, 0, 0) 90px, rgba(0, 0, 0, 0) 119px) no-repeat scroll 0px 0px / 100% 100% padding-box border-box"
+const barGradient = "linear-gradient(rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.50) 25%, rgba(255, 255, 255, 0.50) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.50%, rgba(255, 255, 255, 0.50) 50%, rgba(255, 255, 255, 0.50) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.50) 75%, rgba(255, 255, 255, 0.50) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box"
 const gameGradient = "linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.25) 25%, rgba(255, 255, 255, 0.25) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.25) 75%, rgba(255, 255, 255, 0.25) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box";
 const formatTime = (seconds: number) => [seconds / 60, seconds % 60, (seconds % 1) * 100].map((v) => `0${Math.floor(v)}`.slice(-2)).join(':')
 
+// Call this when settings are saved 
+const getKeyMapping = (key : string) => {
+  const res = [(key === "Spacebar") ? " " : key.charAt(0).toUpperCase() + key.slice(1), (key === "Spacebar") ? " " : key.charAt(0).toLowerCase() + key.slice(1)]
+  return res
+}
 
 export default function Editor() {
   const [audioURL, setAudioURL] = useState<string>("")
@@ -25,6 +25,18 @@ export default function Editor() {
   const [btn, setBtn] = useState<string>("Single Note");
   const [songNotes, setSongNotes] = useState<string[][]>([]);
   const [playBtnHold, setPlayBtnHold] = useState<boolean>(false);
+  const [snapOn, setSnap] = useState<boolean>(true);
+
+  // All of the metadata
+  // When setting metadata, like description, disable the other buttons being activiated. Like when pressing "P" for the description, don't play the song 
+  const [songName, setSongName] = useState<string>("")
+  const [songArtist, setSongArtist] = useState<string>("")
+  const [songMapper, setSongMapper] = useState<string>("")
+  const [bpm, setBPM] = useState<number>(0)
+  const [genre, setGenre] = useState<string>("")
+  const [language, setLanguage] = useState<string>("")
+  const [noteCount, setNoteCount] = useState<number>(0)
+  const [description, setDescription] = useState<string>("");
 
   const waveformRef = useRef<HTMLDivElement>(null);
   const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
@@ -38,7 +50,8 @@ export default function Editor() {
     autoCenter: true,
     autoScroll: true,
     minPxPerSec: 256,
-    height: 120,
+    height: 'auto', // reminder that this is not responsive. Height gets filled to div height only on intiailizing
+    fillParent: true, // sets width to the width of the div
     hideScrollbar: false,
     dragToSeek: true,
   })
@@ -50,8 +63,7 @@ export default function Editor() {
     setAudioURL(URL.createObjectURL(file));    
     const tempHitsounds: { play: () => void; }[] = []
     for (let i = 0; i < 12; i++) {
-    //   const hitsound  = new Audio('/testing_meyda/hitsound.mp3'); // Needed for github pages
-      const hitsound  = new Audio('/hitsound.mp3'); // Needed for local 
+      const hitsound  = new Audio('/hitsound.mp3');
       hitsound.volume = 1
       tempHitsounds.push(hitsound);
     } 
@@ -84,10 +96,10 @@ export default function Editor() {
   }, [wavesurfer]);
 
   useEffect(() => {
-    if (listRef.current) {
+    if (listRef.current && snapOn) {
       listRef.current.scrollTo(currentTime * 16 * 16)
     }
-  }, [currentTime])
+  }, [currentTime, snapOn])
   
 
   const listRef = useRef<List>(null);
@@ -106,7 +118,7 @@ export default function Editor() {
   }, [currentTime]);
 
   useEffect(() => {
-    if (itemIndex){
+    if (itemIndex && isPlaying){
       const offset : number = (itemIndex % 3)
       if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T") {
         hitsoundsRef.current[0 + 3*offset].play();
@@ -121,11 +133,20 @@ export default function Editor() {
         hitsoundsRef.current[3 + 3*offset].play();
       }
     }
-  }, [itemIndex]);
+  }, [itemIndex, isPlaying]);
+
+  const saveSettings = () => {
+
+  }
 
   useEffect(() => {
-    const handleKeyDown = (event: { key: string; }) => {
+    const handleKeyDown = (event: { key: string; repeat: boolean}) => {
+      if (event.repeat) return;
+      // This comes after what buttons are allowed in the editor
       console.log(event.key)
+      if (event.key === 'n' || event.key === 'N') {
+        console.log(songNotes)
+      }
       if (event.key === 'q' || event.key === 'Q') {
         if (playBtnHold) return
         setPlayBtnHold(true)
@@ -147,7 +168,7 @@ export default function Editor() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isPlaying, playBtnHold]);
+  }, [isPlaying, playBtnHold, songNotes]);
 
 
   useEffect(() => {
@@ -169,7 +190,6 @@ export default function Editor() {
       if (wavesurfer) {
         wavesurfer.setTime(index / 16)
       }
-      listRef.current?.scrollTo(index * 16)
     }, 125)
   }
 
@@ -190,7 +210,6 @@ export default function Editor() {
     const oneFourth = hero_width * (1/4)
     const twoFourths = hero_width * (2/4)
     const threeFourths = hero_width * (3/4)
-    scrollWindow(index)
 
     if (0 < mousePlacement && mousePlacement <= oneFourth) { // First Bar
       console.log("First Bar")
@@ -240,15 +259,23 @@ export default function Editor() {
         setNewNote(3, 2, index, "S");
       }
     }
+    scrollWindow(index) //This should now only shift if a note can be validly placed 
   };
 
   const setDoubleNote = (firstBar: number, secondBar: number, index: number) => {
+    let difference = 0
+    let selfDeletion = false
     const newNotes = songNotes.map((songBar, barIndex) => {
       if (barIndex === firstBar || barIndex === secondBar) {
         return songBar.map((n, nIndex) => {
           if (nIndex === index) {
             if (n === "T") {
+              selfDeletion = true
               return ""
+            }
+            else if (n === "S") {
+              difference -= 1
+              return "T"
             }
             else {
               return "T"
@@ -263,18 +290,30 @@ export default function Editor() {
         return songBar
       }
     })
+    if (selfDeletion) {
+      setNoteCount(prevCount => prevCount - 1)
+    }
+    else {
+      setNoteCount(prevCount => prevCount + difference + 1)
+    }
     setSongNotes(newNotes)
   }  
 
   const setNewNote = (bar : number, otherBar: number, index:number, note:string) => {
+    let difference = 0
     const newNotes = songNotes.map((songBar, barIndex) => {
       if (barIndex === bar) {
         return songBar.map((n, nIndex) => {
           if (nIndex === index) {
             if (n === note) {
+              difference -= 1
               return ""
             }
+            else if (n === "T") {
+              return note
+            }
             else {
+              difference += 1
               return note
             }
           }
@@ -303,6 +342,7 @@ export default function Editor() {
       }
     })
     setSongNotes(newNotes)
+    setNoteCount(prevCount => prevCount + difference)
   }
 
   const HRows = ({ index, style }: { index: number, style: React.CSSProperties }) => {
@@ -323,12 +363,12 @@ export default function Editor() {
   }
   
     return (
-      <p
+      <div
         className="v-bar"
         onClick={(event) => changeNoteVer(index, event)}
         style={{ ...style, ...gameBarStyle(index) }} 
       >
-      </p>
+      </div>
     );
   };
 
@@ -336,10 +376,10 @@ export default function Editor() {
     const barStyle = (index: number) => {
       
       const horizontalGradients = [
-        songNotes[0][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 0px / 100% 29px padding-box border-box" : songNotes[0][index] === 'S' ? "linear-gradient(to right, rgb(25, 87, 128) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 0px / 100% 29px padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 0px / 100% 29px padding-box border-box",
-        songNotes[1][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 30px / 100% 29px padding-box border-box" : songNotes[1][index] === 'S' ? "linear-gradient(to right, rgb(182, 34, 34) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 30px / 100% 29px padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 30px / 100% 29px padding-box border-box",
-        songNotes[2][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 60px / 100% 29px padding-box border-box" : songNotes[2][index] === 'S' ? "linear-gradient(to right, rgb(25, 87, 128) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 60px / 100% 29px padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 60px / 100% 29px padding-box border-box",
-        songNotes[3][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 90px / 100% 29px padding-box border-box" : songNotes[3][index] === 'S' ? "linear-gradient(to right, rgb(182, 34, 34) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 90px / 100% 29px padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0px 90px / 100% 29px padding-box border-box",
+        songNotes[0][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 100% 25% padding-box border-box" : songNotes[0][index] === 'S' ? "linear-gradient(to right, rgb(25, 87, 128) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 100% 25% padding-box border-box",
+        songNotes[1][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 33.3% / 100% 25% padding-box border-box" : songNotes[1][index] === 'S' ? "linear-gradient(to right, rgb(182, 34, 34) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 33.3% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 33.3% / 100% 25% padding-box border-box",
+        songNotes[2][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 66.6% / 100% 25% padding-box border-box" : songNotes[2][index] === 'S' ? "linear-gradient(to right, rgb(25, 87, 128) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 66.6% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 66.6% / 100% 25% padding-box border-box",
+        songNotes[3][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 99.9% / 100% 25% padding-box border-box" : songNotes[3][index] === 'S' ? "linear-gradient(to right, rgb(182, 34, 34) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 99.9% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 99.9% / 100% 25% padding-box border-box",
       ];
     
       const updatedBG = `${barGradient}, ${horizontalGradients.join(", ")}`;
@@ -350,11 +390,11 @@ export default function Editor() {
     };
   
     return (
-      <p
+      <div
         className="i-bar"
         style={{ ...style, ...barStyle(index) }} 
       >
-      </p>
+      </div>
     );
   };
 
@@ -396,29 +436,44 @@ export default function Editor() {
   //   }
   // }
 
+  // const handleTimeChange = (event : React.ChangeEvent<HTMLInputElement>) => {
+  //   console.log("hi", event);
+  //   if (wavesurfer) {
+  //     wavesurfer.setTime(parseFloat(event.target.value) / 16)
+  //   }
+  // }
+
   const updateTime = (event: {scrollOffset: number}) => {
     if (isPlaying) return;
-    console.log(event.scrollOffset)
+    console.log("updateTime", event.scrollOffset)
     if (wavesurfer) {
       wavesurfer.setTime(event.scrollOffset / 256)
-    }
-    
+    } 
+  }
+
+  const singleBtnStyle = {
+    backgroundColor: (btn === "Single Note")? "green" : "red" 
   }
   
+  const turnBtnStyle = {
+    backgroundColor: (btn === "Turn Note")? "green" : "red" 
+  }
+
+
+
   return (
     <div id="editor_page">
-      <br/>
       <div id="wave_bars">
         <div id="waveform-Container" ref={waveformRef}>
         </div>
 
         <div id="vBars-Container">
-          <AutoSizer disableHeight>
-            {({width}) => (
+          <AutoSizer>
+            {({height, width}) => (
               <List
               ref={vListRef}
               className="hideScrollbar2"
-              height={120} 
+              height={height} 
               itemCount={songLength} 
               itemSize={16} 
               layout="horizontal"
@@ -431,48 +486,39 @@ export default function Editor() {
         </div>
       </div>
 
-      
-      <br/>
-      <br/>
-      
       <div id="hero_section">
         <div id="left_hero">
+        <p>{formatTime(currentTime)}</p>
+        <p>Note Count: {noteCount}</p>
+        <input type="file" accept='audio/*' onChange={audioChange}/>
           <div>
-            <button>Single Note</button>
-            <button>Turn Note</button>
+            <button style={singleBtnStyle} onClick={() => {setBtn("Single Note")}}>Single Note</button>
+            <button style={turnBtnStyle} onClick={() => {setBtn("Turn Note")}}>Turn Note</button>
           </div>
           <button>Return</button>
         </div>
-        <div id="hero_list" >
-          <AutoSizer disableHeight>
-            {({width}) => (
-              <List
-              ref={listRef}
-              className="scrollbar"
-              height={500}
-              itemCount={songLength}
-              onScroll={updateTime}
-              itemSize={16} 
-              width={width} 
-              >
-                {HRows}
-              </List>
-            )}
-          </AutoSizer>
+
+        <div id="hero_list">
+          <div id="list_wrapper">
+            <AutoSizer>
+              {({height, width}) => (
+                <List
+                ref={listRef}
+                className="scrollbar"
+                height={height}
+                itemCount={songLength}
+                onScroll={updateTime}
+                itemSize={16} 
+                width={width} 
+                >
+                  {HRows}
+                </List>
+              )}
+            </AutoSizer>
+          </div>
         </div>
         
         <div id="right_hero">
-          <button>Settings</button>
-          <div>
-            <button>Deploy</button>
-            <button>Metadata</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="song_controls">
-        <p>{formatTime(currentTime)}</p>
-        <div id="timeline"></div>
         <div id="play_speed">
           <button onClick={onPlayPause} style={{ minWidth: '5em' }}>
             {isPlaying ? 'Pause' : 'Play'}
@@ -487,12 +533,102 @@ export default function Editor() {
             </div>
           </div>
         </div>
+          <button>Settings</button>
+          <div>
+            <button>Deploy</button>
+            <button>Metadata</button>
+          </div>
+          <button>Save Locally</button>
+          <button onClick={() => {setSnap(true)}}>Enable Snapping</button>
+          <button onClick={() => {setSnap(false)}}>Disable Snapping</button>
+        </div>
       </div>
 
-      <br/>
-      <div style={{display: 'flex', gap: 20, flexDirection: 'column', alignItems: 'center', padding: 20}}>
-          <input type="file" accept='audio/*' onChange={audioChange}/>
+      <div id="song_controls">
+        {/* <div id="timeline">
+          <input 
+            className="slider"
+            type="range"
+            min={0}
+            max={songLength}
+            value={itemIndex}
+            onChange={handleTimeChange}
+            step={1}
+        ></input>
+        </div> */}
       </div>
+
+      <div id="all_metadata">
+        <label htmlFor="songName">Song Name</label>
+        <input 
+          name="songName" 
+          id="songName"
+          type="text" 
+          value={songName}
+          onChange={(e) => setSongName(e.target.value)}
+        ></input>
+        
+        <label htmlFor="songArtist">Song Artist</label>
+        <input 
+          name="songArtist" 
+          id="songArtist"
+          type="text" 
+          value={songArtist}
+          onChange={(e) => setSongArtist(e.target.value)}
+        ></input>
+        
+        <label htmlFor="songMapper">Song Mapper</label>
+        <input 
+          name="songMapper" 
+          id="songMapper"
+          type="text" 
+          value={songMapper}
+          onChange={(e) => setSongMapper(e.target.value)}
+        ></input>
+        
+        <label htmlFor="songBPM">Song BPM</label>
+        <input 
+          name="songBPM" 
+          id="songBPM"
+          type="number" 
+          value={bpm}
+          onChange={(e) => setBPM(parseInt(e.target.value))}
+        ></input>
+        
+        <label htmlFor="songGenre">Song Genre</label>
+        <input 
+          name="songGenre" 
+          id="songGenre"
+          type="text" 
+          value={genre}
+          onChange={(e) => setGenre(e.target.value)}
+        ></input>
+        
+        <label htmlFor="songLanguage">Song Language</label>
+        <input 
+          name="songLanguage" 
+          id="songLanguage"
+          type="text" 
+          value={language}
+          onChange={(e) => setLanguage(e.target.value)}
+        ></input>
+        
+        <label htmlFor="songDescription">Song Description</label>
+        <input 
+          name="songDescription" 
+          id="songDescription"
+          type="text" 
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        ></input>
+
+        <p>Song Length: {formatTime((songLength- 1) / 16)}</p>
+        
+        <Keybinds/>
+        {/* Change song_mapper to user when I pass into this component. If not logged in, have a note that says "Only registered accounts can upload maps to the internet" */}
+      </div>
+
+
     </div>
     
   );

@@ -8,8 +8,8 @@
     height: 100%;
     background-color: black; 
     color: white;
-    scrollbar-width: thin;
-    scrollbar-color: var(--grey) transparent;
+    /* scrollbar-width: thin; */
+    /* scrollbar-color: var(--grey) transparent; */
     button {
         background-color: rgb(250, 238, 223);
         border: 0;
@@ -22,24 +22,21 @@
 #wave_bars {
     position: relative;
     width: 90%;
-    height: 120px;
-    /* background-color: red; */
-    margin: 0 auto;
+    height: 20%;
+    margin: 15px auto;
 }
 
 
 #waveform-Container {
     scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
     scrollbar-width: thin;
-    position: absolute;
+    /* position: absolute;
     top: 0;
-    left: 0;
+    left: 0; */
     width: 100%;
-    height: 120px;
+    height: 100%;
     z-index: 10;
 }
-
-
 
 #vBars-Container{
     position: absolute;
@@ -48,7 +45,7 @@
     z-index: 20;
     pointer-events: none;
     width: 100%;
-    height: 120px;
+    height: 100%;
     background-color: transparent;
     content: "";
     border-left: 0.01px solid grey;
@@ -61,37 +58,44 @@
 
 #hero_section {
     width: 90%;
-    margin: 0 auto;
-    /* background-color: purple; */
-    /* display: grid;
-    grid-template-columns: 1fr 2fr 1fr; */
+    height: calc(80% - 45px);
+    margin: 0 auto 15px auto;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
 }
 
 #hero_list {
-    /* max-width: 400px; */
-    width: 400px;
+    width: 80%;
     transform: scaleY(-1);
-    /* margin: 0 auto; */
-    /* background-color: red; */
+    /* display: flex; */
+    /* flex-direction: row; */
+    /* justify-content: center; */
+
+}
+
+#list_wrapper {
+    max-width: 400px;
+    margin: 0 auto;
+    height: 100%;
 }
 
 #left_hero {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    width: 20%;
+    height: 100%;
+    overflow-y: auto;   
 }
 
-#gameContainer {
-    width: 400px;
-    height: 500px;
-    background-color: transparent;
-    content: "";
-    transform: scaleY(-1);
-    margin: 0 auto;
-    /* border-top: 10px solid rgb(57, 0, 65); */
+#right_hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 20%;
+    height: 100%;
+    overflow-y: auto;   
 }
   
 .v-bar {
@@ -171,5 +175,41 @@
     }
 }
 
+#timeline {
+    width: 100%;
+}
 
 
+.slider {
+    appearance: none;
+    width: 100%;
+    /* max-width: 900px; */
+    border-radius: 10px;
+    height: 15px;
+    background: var(--green);
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+  
+.slider:hover {
+    opacity: 1;
+}
+  
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    border-radius: 5px;
+    aspect-ratio: 1;
+    background: var(--white);
+    cursor: pointer;
+}
+  
+.slider::-moz-range-thumb {
+    width: 15px;
+    aspect-ratio: 1;
+    background: var(--grey);
+    cursor: pointer;
+}

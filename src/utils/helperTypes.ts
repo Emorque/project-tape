@@ -50,3 +50,16 @@ export type settingsType = {
 
     offset: number
 }
+
+export type keybindsType = {
+  sNote: string,
+  tNote: string,
+  oneFourthSpeed: string,
+  oneHalfSpeed: string,
+  threeFourthSpeed: string,
+  fullSpeed: string,
+
+  snap: string,
+  toggleMusic: string,
+  save: string,
+}
