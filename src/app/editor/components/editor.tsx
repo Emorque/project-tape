@@ -1,10 +1,10 @@
 
-import { ChangeEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWavesurfer } from '@wavesurfer/react'
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from "react-virtualized-auto-sizer";
 
-import { keybindsType } from "@/utils/helperTypes";
+import { keybindsType, editorMap } from "@/utils/helperTypes";
 
 const barGradient = "linear-gradient(rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.50) 25%, rgba(255, 255, 255, 0.50) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.50%, rgba(255, 255, 255, 0.50) 50%, rgba(255, 255, 255, 0.50) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.50) 75%, rgba(255, 255, 255, 0.50) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box"
 const gameGradient = "linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.25) 25%, rgba(255, 255, 255, 0.25) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.50%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.25) 75%, rgba(255, 255, 255, 0.25) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box";
@@ -19,30 +19,41 @@ const getKeyMapping = (key : string) => {
 // import Link from "next/link";
 
 interface editorInterface {
-  keybinds : keybindsType
+  metadata : editorMap | null, //if null, that means a fresh map has to be made
+  map_id: string,
+  keybinds : keybindsType,
+  songAudio: string,
+  hitsoundsRef: {play : () => void;}[];
+  clearMap : () => void;
+  updateLocalMaps: () => void;
 }
 
-export const Editor = ({keybinds} : editorInterface) => {   
-const [audioURL, setAudioURL] = useState<string>("")
+export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
+  const [songNotes, setSongNotes] = useState<string[][]>([])
   const [songLength, setSongLength] = useState<number>(0);    
   const [btn, setBtn] = useState<string>("Single Note");
-  const [songNotes, setSongNotes] = useState<string[][]>([]);
   const [playBtnHold, setPlayBtnHold] = useState<boolean>(false);
   const [snapOn, setSnap] = useState<boolean>(true);
 
+
   // All of the metadata
   // When setting metadata, like description, disable the other buttons being activiated. Like when pressing "P" for the description, don't play the song 
-  const [songName, setSongName] = useState<string>("")
-  const [songArtist, setSongArtist] = useState<string>("")
-  const [songMapper, setSongMapper] = useState<string>("")
-  const [bpm, setBPM] = useState<number>(0)
-  const [genre, setGenre] = useState<string>("")
-  const [language, setLanguage] = useState<string>("")
-  const [noteCount, setNoteCount] = useState<number>(0)
-  const [description, setDescription] = useState<string>("");
+  const [songName, setSongName] = useState<string>(metadata?.song_metadata.song_name || "")
+  const [songArtist, setSongArtist] = useState<string>(metadata?.song_metadata.song_artist || "")
+  const [songMapper, setSongMapper] = useState<string>(metadata?.song_metadata.song_mapper || "")
+  const [bpm, setBPM] = useState<number>(metadata?.song_metadata.bpm || 0)
+  const [genre, setGenre] = useState<string>(metadata?.song_metadata.genre || "")
+  const [language, setLanguage] = useState<string>(metadata?.song_metadata.language || "")
+  const [noteCount, setNoteCount] = useState<number>(metadata?.song_metadata.note_count || 0)
+  const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
+
+  // Multiple Prompt states
+  const [menu, setMenu] = useState<string>("")
+  const [returnPromptVisible, setReturnPrompt] = useState<boolean>(false);
+  const [mapSaved, setMapSaved] = useState<boolean>(true) 
+
 
   const waveformRef = useRef<HTMLDivElement>(null);
-  const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
 
   const keybindMappings = {
     sNote: getKeyMapping(keybinds.sNote),
@@ -53,6 +64,46 @@ const [audioURL, setAudioURL] = useState<string>("")
     snap: getKeyMapping(keybinds.snap),
     toggleMusic: getKeyMapping(keybinds.toggleMusic)
   }
+
+  const { wavesurfer, isReady, isPlaying, currentTime } = useWavesurfer({
+    container: waveformRef,
+    url: songAudio,
+    waveColor: 'rgba(138, 138, 19, 0.37)',
+    progressColor: 'rgb(58, 49, 49)',
+    cursorColor: 'rgb(250, 93, 93)',
+    autoCenter: true,
+    autoScroll: true,
+    minPxPerSec: 256,
+    height: 'auto', // reminder that this is not responsive. Height gets filled to div height only on intiailizing
+    fillParent: true, // sets width to the width of the div
+    hideScrollbar: false,
+    dragToSeek: true,
+  })
+
+  // Set Stage depending on if a map was passed or if this is new
+  useEffect(() => {
+    if (isReady) {
+      if (wavesurfer) {
+        const duration = wavesurfer.getDuration()
+        const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((duration) * 16) + 1)).fill(""));
+        console.log(metadata)
+        if (metadata) {
+          for (let i = 0; i < metadata.song_notes[0].length; i++) {
+            tempNotes[0][i] = metadata.song_notes[0][i]
+            tempNotes[1][i] = metadata.song_notes[1][i]
+            tempNotes[2][i] = metadata.song_notes[2][i]
+            tempNotes[3][i] = metadata.song_notes[3][i]
+          }
+          setSongNotes(tempNotes)
+          setSongLength((duration * 16) + 1);
+        }
+        else {
+          setSongLength((duration * 16) + 1);
+          setSongNotes(tempNotes);    
+        }
+      }
+    }
+  }, [isReady])
 
   useEffect(() => {
     const handleKeyDown = (event: {key: string; repeat: boolean}) => {
@@ -85,36 +136,6 @@ const [audioURL, setAudioURL] = useState<string>("")
     };
   }, [])
 
-
-  const { wavesurfer, isReady, isPlaying, currentTime } = useWavesurfer({
-    container: waveformRef,
-    url: audioURL,
-    waveColor: 'rgba(138, 138, 19, 0.37)',
-    progressColor: 'rgb(58, 49, 49)',
-    cursorColor: 'rgb(250, 93, 93)',
-    autoCenter: true,
-    autoScroll: true,
-    minPxPerSec: 256,
-    height: 'auto', // reminder that this is not responsive. Height gets filled to div height only on intiailizing
-    fillParent: true, // sets width to the width of the div
-    hideScrollbar: false,
-    dragToSeek: true,
-  })
-
-  // This must be done in a "main menu" page
-  const audioChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAudioURL(URL.createObjectURL(file));    
-    const tempHitsounds: { play: () => void; }[] = []
-    for (let i = 0; i < 12; i++) {
-      const hitsound  = new Audio('/hitsound.mp3');
-      hitsound.volume = 1
-      tempHitsounds.push(hitsound);
-    } 
-    hitsoundsRef.current = tempHitsounds;
-  }, []);
-
   const onPlayPause = useCallback(() => {
     if (wavesurfer) {
       wavesurfer.playPause()
@@ -129,12 +150,9 @@ const [audioURL, setAudioURL] = useState<string>("")
           vListRef.current.scrollTo(scroll)
         }
       };
-
-      // wavesurfer.on('timeupdate', onScroll); // Update on playback
       wavesurfer.on('scroll', onScroll); // Update on manual scroll
 
       return () => {
-        // wavesurfer.un('timeupdate', onScroll);
         wavesurfer.un('scroll', onScroll);
       };
     }
@@ -150,14 +168,6 @@ const [audioURL, setAudioURL] = useState<string>("")
   const listRef = useRef<List>(null);
   const vListRef = useRef<List>(null);
 
-  useEffect(() => {
-    if (wavesurfer){
-      const duration = wavesurfer.getDuration()
-      setSongLength((duration * 16) + 1);
-      setSongNotes(Array.from({ length: 4 }, () => new Array(Math.floor(((duration) * 16) + 1)).fill("")));
-      }
-  }, [isReady])
-
   const itemIndex = useMemo(() => {
     return Math.floor(currentTime * 16);
   }, [currentTime]);
@@ -166,23 +176,23 @@ const [audioURL, setAudioURL] = useState<string>("")
     if (itemIndex && isPlaying){
       const offset : number = (itemIndex % 3)
       if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T") {
-        hitsoundsRef.current[0 + 3*offset].play();
+        hitsoundsRef[0 + 3*offset].play();
       }
       if (songNotes[1][itemIndex] === "S") {
-        hitsoundsRef.current[1 + 3*offset].play();
+        hitsoundsRef[1 + 3*offset].play();
       }
       if (songNotes[2][itemIndex] === "S" || songNotes[2][itemIndex] === "T") {
-        hitsoundsRef.current[2 + 3*offset].play();
+        hitsoundsRef[2 + 3*offset].play();
       }
       if (songNotes[3][itemIndex] === "S") {
-        hitsoundsRef.current[3 + 3*offset].play();
+        hitsoundsRef[3 + 3*offset].play();
       }
     }
   }, [itemIndex, isPlaying]);
 
-  // const saveSettings = () => {
+  const saveSettings = () => {
 
-  // }
+  }
 
   useEffect(() => {
     const handleKeyDown = (event: { key: string; repeat: boolean}) => {
@@ -239,17 +249,17 @@ const [audioURL, setAudioURL] = useState<string>("")
   }
 
   const changeNoteVer = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
-    const hero_list_info = document.getElementById('hero_list')?.getBoundingClientRect();
+    const hero_list_info = document.getElementById('list_wrapper')?.getBoundingClientRect();
     let mousePlacement;
     let hero_width;
     if (hero_list_info) {
       mousePlacement = event.clientX - hero_list_info.left
       hero_width = hero_list_info.right - hero_list_info.left
     }
-    // const temp = event.clientX - (document.getElementById('hero_list')?.getBoundingClientRect().left as number)
-    // console.log(mousePlacement);
-    // console.log(temp)
-    // console.log(hero_width)
+    const temp = event.clientX - (document.getElementById('list_wrapper')?.getBoundingClientRect().left as number)
+    console.log(mousePlacement);
+    console.log(temp)
+    console.log(hero_width)
 
     if (!mousePlacement || !hero_width) return;
     const oneFourth = hero_width * (1/4)
@@ -449,10 +459,31 @@ const [audioURL, setAudioURL] = useState<string>("")
     }
   }
 
+  const saveMap = () => {
+    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+
+    localMaps[map_id] = {
+      song_metadata : {
+        song_name: songName,
+        song_artist: songArtist,
+        song_mapper: songMapper,
+        bpm: bpm,
+        genre: genre,
+        language: language,
+        note_count: noteCount,
+        description: description
+      },
+      song_notes : songNotes
+    }
+    localStorage.setItem("localMaps", JSON.stringify(localMaps));
+    updateLocalMaps();
+    console.log("Updated Map")
+  }
+
   // const roundNote = (note: number) => {
   //   return Math.round(note / 10) * 10
   // }
-
+  
   // const exportMap = () => {
   //   const exportedMap = []
   //   for (let i = 0; i < songNotes[0].length; i++) {
@@ -481,19 +512,46 @@ const [audioURL, setAudioURL] = useState<string>("")
   //   }
   // }
 
-  // const handleTimeChange = (event : React.ChangeEvent<HTMLInputElement>) => {
-  //   console.log("hi", event);
-  //   if (wavesurfer) {
-  //     wavesurfer.setTime(parseFloat(event.target.value) / 16)
-  //   }
-  // }
-
   const updateTime = (event: {scrollOffset: number}) => {
     if (isPlaying) return;
-    console.log("updateTime", event.scrollOffset)
+    // console.log("updateTime", event.scrollOffset)
     if (wavesurfer) {
       wavesurfer.setTime(event.scrollOffset / 256)
     } 
+  }
+
+  const closeEditor = () => {
+    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+
+    const currentMap = {
+      song_metadata : {
+        song_name: songName,
+        song_artist: songArtist,
+        song_mapper: songMapper,
+        bpm: bpm,
+        genre: genre,
+        language: language,
+        note_count: noteCount,
+        description: description
+      },
+      song_notes : songNotes
+    }
+
+    if (map_id in localMaps) {
+      console.log(localMaps[map_id])
+      console.log(currentMap)
+      const isEqual = JSON.stringify(currentMap) === JSON.stringify(localMaps[map_id]);
+      console.log(isEqual)
+      // if (!isEqual) {
+      setMapSaved(isEqual)
+      setReturnPrompt(true)
+      setMenu("Return")
+        // alert("You have Unsaved Changes")
+      // }
+    }
+
+    // localStorage.setItem("localMaps", JSON.stringify(localMaps));
+    console.log("Closed Editor")
   }
 
   const singleBtnStyle = {
@@ -503,8 +561,11 @@ const [audioURL, setAudioURL] = useState<string>("")
   const turnBtnStyle = {
     backgroundColor: (btn === "Turn Note")? "green" : "red" 
   }
-
-
+  const returnStyle = {
+    visibility: (menu === "Return")? "visible" : "hidden",
+    left: (menu === "Return")? "0%" : "-100%",
+    transition: 'left 1s ease, visibility 1s'
+  } as React.CSSProperties
 
   return (
     <div id="editor_page">
@@ -535,12 +596,12 @@ const [audioURL, setAudioURL] = useState<string>("")
         <div id="left_hero">
         <p>{formatTime(currentTime)}</p>
         <p>Note Count: {noteCount}</p>
-        <input type="file" accept='audio/*' onChange={audioChange}/>
+        {/* <input type="file" accept='audio/*' onChange={audioChange}/> */}
           <div>
             <button style={singleBtnStyle} onClick={() => {setBtn("Single Note")}}>Single Note</button>
             <button style={turnBtnStyle} onClick={() => {setBtn("Turn Note")}}>Turn Note</button>
           </div>
-          <button>Return</button>
+          <button onClick={() => {closeEditor()}}>Return</button>
         </div>
 
         <div id="hero_list">
@@ -583,7 +644,7 @@ const [audioURL, setAudioURL] = useState<string>("")
             <button>Deploy</button>
             <button>Metadata</button>
           </div>
-          <button>Save Locally</button>
+          <button onClick={() => {saveMap()}}>Save Locally</button>
           <button onClick={() => {setSnap(true)}}>Enable Snapping</button>
           <button onClick={() => {setSnap(false)}}>Disable Snapping</button>
         </div>
@@ -658,8 +719,25 @@ const [audioURL, setAudioURL] = useState<string>("")
         ></input>
 
         <p>Song Length: {formatTime((songLength- 1) / 16)}</p>
-        
         {/* Change song_mapper to user when I pass into this component. If not logged in, have a note that says "Only registered accounts can upload maps to the internet" */}
+      </div>
+      <div id="return_wrapper" style={returnStyle}>
+        {(returnPromptVisible) && 
+        <div>
+        
+          <h2>Are you sure you want to return?</h2>
+          <h3>{mapSaved? "Beatmap is Saved" : "You have Unsaved Changes"}</h3>
+          <button onClick={() => {
+            clearMap()
+            }}>Yes</button>
+          <button onClick={() => {
+            setMenu("")
+            setTimeout(() => {
+              setReturnPrompt(false)
+            }, 1000)
+          }}>No</button>
+        </div>
+        }
       </div>
     </div>
   );

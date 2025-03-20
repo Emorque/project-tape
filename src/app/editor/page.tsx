@@ -3,40 +3,37 @@
 import "./editor.css";
 import { Keybinds } from "./components/keybinds";
 import { Editor } from "./components/editor";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 
-import { editorMap, keybindsType } from "@/utils/helperTypes";
+import { editorMap, keybindsType, localStorageMaps } from "@/utils/helperTypes";
 
 export default function EditorPage() {
-  const [localMaps, setLocalMaps] = useState<editorMap[]>([])
+  const [localMaps, setLocalMaps] = useState<localStorageMaps>({})
   const [editorActive, setEditorActive] = useState<boolean>(false);
+  const [selectedMap, setSelectedMap] = useState<editorMap | null>(null)
   const [userKeybinds, setUserKeybinds] = useState<keybindsType | null>(null)
   const [menu, setMenu] = useState<string>("")
+  const [selectedMapID, setMapID] = useState<string | null>(null)
   const [keybindsView, setKeybindsView] = useState<boolean>(false)
+
+  // Multiple Prompt states
+  const [deletePromptVisible, setDeleteVisible] = useState<boolean>(false)
 
   // Get all maps from Local Storage
 
   useEffect(() => {
-    const localMaps = localStorage.getItem("localMaps");
-    let updatedMaps : editorMap[]
-    if (!localMaps) {
-      console.log("No Local Maps")
-      updatedMaps = []
-    }
-    else {
-      updatedMaps = []
-    }
-    
-    setLocalMaps(updatedMaps)
-  })
+    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+    setLocalMaps(localMaps)
+    localStorage.setItem("localMaps", JSON.stringify(localMaps));
+  }, [])
 
   // Get Keybinds from local Storage
   useEffect(() => {
     const localKeybinds = localStorage.getItem("keybinds");
-    let updatedKeybinds: keybindsType
+    let defaultKeybinds: keybindsType
     if (!localKeybinds) {
       console.log("No Local Keybinds")
-      updatedKeybinds = {
+      defaultKeybinds = {
         sNote: "Q",
         tNote: "W",
         decreaseSpd: "1",
@@ -47,11 +44,11 @@ export default function EditorPage() {
       }
     }
     else {
-      updatedKeybinds = JSON.parse(localKeybinds)
+      defaultKeybinds = JSON.parse(localKeybinds)
     }
 
-    setUserKeybinds(updatedKeybinds)
-    localStorage.setItem("keybinds", JSON.stringify(updatedKeybinds))
+    setUserKeybinds(defaultKeybinds)
+    localStorage.setItem("keybinds", JSON.stringify(defaultKeybinds))
   }, [])
 
   
@@ -65,11 +62,78 @@ export default function EditorPage() {
     transition: 'left 1s ease, visibility 1s'
   } as React.CSSProperties
 
+
+  // TODO, may need to update visibility for these two styles to left like above style
   const editorStyle = {
     opacity: editorActive ? 1 : 0, 
     visibility: editorActive ? "visible" : "hidden",
     transition: 'opacity 1s ease, visibility 1s'
   } as React.CSSProperties;
+
+  const deleteStyle = {
+    opacity: deletePromptVisible ? 1 : 0, 
+    visibility: deletePromptVisible ? "visible" : "hidden",
+    transition: 'opacity 1s ease, visibility 1s'
+  } as React.CSSProperties;
+
+  const [audioURL, setAudioURL] = useState<string>("");
+  const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
+
+  useEffect(() => {
+    const tempHitsounds: { play: () => void; }[] = []
+    for (let i = 0; i < 12; i++) {
+      const hitsound  = new Audio('/hitsound.mp3');
+      hitsound.volume = 1
+      tempHitsounds.push(hitsound);
+    } 
+    hitsoundsRef.current = tempHitsounds;
+  }, [])
+
+  const audioChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAudioURL(URL.createObjectURL(file));    
+  }, []);
+
+  const clearEditor = () => {
+    setEditorActive(false)
+    setSelectedMap(null)
+    setMapID("")
+  }
+
+  const updateMaps = () => {
+    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+    setLocalMaps(localMaps)
+    localStorage.setItem("localMaps", JSON.stringify(localMaps));
+  }
+
+  const newMap = () => {
+    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+    let highestMapId = 1
+    for (const map_id in localMaps) {
+      const id = parseInt(map_id)
+      if (id > highestMapId) {
+        highestMapId = id
+      }
+    }
+    setMapID((highestMapId + 1).toString());
+    setEditorActive(true)
+  }
+
+  const deleteMap = () => {
+    console.log(selectedMapID)
+    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+
+    if (selectedMapID && selectedMapID in localMaps) {
+      delete localMaps[selectedMapID]
+      localStorage.setItem("localMaps", JSON.stringify(localMaps))
+      console.log("Deleted", selectedMapID)
+      setLocalMaps(localMaps)
+    }
+    else {
+      console.log("Map not found")
+    }
+  }
 
   return (
     <div id="editor_wrapper">
@@ -80,14 +144,28 @@ export default function EditorPage() {
       }}> 
       Keybinds
       </button>
+      <h3>Select your Audio File</h3>
+      <input type="file" accept='audio/*' onChange={audioChange}/>
+      <button onClick={() => {newMap()}}>Create a new Map</button>
 
       <div>
-        {localMaps.map((mapItem, index) => {
-          const { song_metadata, song_notes } = mapItem;
+        {Object.entries(localMaps).map(([map_id, mapItem]) => {
+          const editorMap = mapItem;
+          
+          if (!editorMap) {
+            console.log(mapItem)
+            return (
+              <div key={map_id}>
+                {/* TODO: someone may mess with local storage and mess up a map. In that case, allow for them to fix the error by removing the entry. Like removing a bookmarked song */}
+                Error Loading This Map. Please Remove
+              </div>
+            )
+          }
 
+          const { song_metadata, song_notes } = editorMap;
           return (
-            <div key={index}>
-              <h2>{song_metadata.song_name}</h2>
+            <div key={map_id}>
+              <h2>{song_metadata.song_name || 'Untitled Song'}</h2>
               <p>Artist: {song_metadata.song_artist}</p>
               <p>BPM: {song_metadata.bpm}</p>
               <p>Genre: {song_metadata.genre}</p>
@@ -97,13 +175,37 @@ export default function EditorPage() {
             
               <button onClick={() => {
                 console.log(song_notes)
+                setSelectedMap(editorMap)
+                setMapID(map_id)
                 setEditorActive(true)
-                }}></button>
+                }}>Song {parseInt(map_id)}</button>
+              <button onClick={() => {
+                setMenu("Delete")
+                setDeleteVisible(true)
+                setMapID(map_id)
+              }}>Delete Beatmap</button>
             </div>
           )
         })
         }
 
+      </div>
+      
+      <div id="delete_wrapper" style={deleteStyle}>
+        {(deletePromptVisible) &&
+          <div>
+            <h2>Are you sure you to delete this map?</h2>
+            <button onClick={() => {
+              deleteMap()
+              }}>Yes</button>
+            <button onClick={() => {
+              setMenu("")
+              setTimeout(() => {
+                setDeleteVisible(false)
+              }, 1000)
+            }}>No</button>
+          </div>
+        }
       </div>
       
       <div id="keybinds_wrapper" style={keybindsStyle}>
@@ -125,8 +227,8 @@ export default function EditorPage() {
       </div>
       
       <div id="editorScreen" style={editorStyle}>
-        {userKeybinds && editorActive && 
-        <Editor keybinds={userKeybinds}/>  
+        {userKeybinds && editorActive && audioURL && hitsoundsRef.current && selectedMapID && 
+        <Editor metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
         }
       </div>
       

@@ -2,6 +2,11 @@
     box-sizing: border-box; /* Ensure borders don't add extra size */
 }
 
+#editorScreen {
+    width: 100%;
+    height: 100%;
+}
+
 #editor_wrapper {
     overflow: auto;
     width: 100%;
