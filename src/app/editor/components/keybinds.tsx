@@ -5,9 +5,10 @@ import { useEffect, useState } from "react"
 
 interface keybindsInterface {
   saveKeybinds : (newKeybinds : keybindsType | null) => void;
+  clearKeybinds: () => void;
 }
 
-export const Keybinds = ({saveKeybinds} : keybindsInterface) => {   
+export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {   
 
   // Settings metadata
   const [singleNoteBtn, setSingleNoteBtn] = useState<string>("S")
@@ -236,34 +237,58 @@ export const Keybinds = ({saveKeybinds} : keybindsInterface) => {
   }
 
   return (
-    
-    <div>
-    <h2>Single Note Button</h2>
-    <button id="singleNoteBtn" onClick={() => {newActionKey("Single")}}>{singleNoteBtn}</button>
+    <div id="keybinds_page">
+      <button id="keybinds_back_btn" onClick={() => {
+        clearKeybinds()
+        // setMenu("")
+        // setTimeout(() => {
+        //   setKeybindsView(false)
+        // }, 1000)
+        }}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
+          <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+        </svg>
+      </button>
+      <div id="keybinds_container">
+        <h1>Editor Keybinds</h1>
+        
+        <div className="horizontal_div">
+          <h2>Single Note</h2>
+          <button id="singleNoteBtn" className="action_btn" onClick={() => {newActionKey("Single")}}>{singleNoteBtn}</button>
+        </div>
 
-    <h2>Turn Note Button</h2>
-    <button id="turnNoteBtn" onClick={() => {newActionKey("Turn")}}>{turnNoteBtn}</button>
+        <div className="horizontal_div">
+          <h2>Turn Note</h2>
+          <button id="turnNoteBtn" className="action_btn" onClick={() => {newActionKey("Turn")}}>{turnNoteBtn}</button>
+        </div>      
+        
+        <div className="horizontal_div">
+          <h2>Lower Speed</h2>
+          <button id="decreaseSpdBtn" className="action_btn" onClick={() => {newActionKey("Decrease Spd")}}>{decreaseSpdBtn}</button>
+        </div>
+        
+        <div className="horizontal_div">
+          <h2>Raise Speed</h2>
+          <button id="increaseSpdBtn" className="action_btn" onClick={() => {newActionKey("Increase Spd")}}>{increaseSpdBtn}</button>
+        </div>
+        
+        <div className="horizontal_div">  
+          <h2>Toggle Snap</h2>
+          <button id="snapBtn" className="action_btn" onClick={() => {newActionKey("Snap")}}>{snapBtn}</button>
+        </div>
 
-    <h2>Decrease Speed Button</h2>
-    <button id="decreaseSpdBtn" onClick={() => {newActionKey("Decrease Spd")}}>{decreaseSpdBtn}</button>
+        <div className="horizontal_div">
+          <h2>Toggle Music</h2>
+          <button id="toggleMusicBtn" className="action_btn" onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}</button>  
+        </div>
 
-    <h2>Increase Speed Button</h2>
-    <button id="increaseSpdBtn" onClick={() => {newActionKey("Increase Spd")}}>{increaseSpdBtn}</button>
-
-    <h2>Toggle Snapping Button</h2>
-    <button id="snapBtn" onClick={() => {newActionKey("Snap")}}>{snapBtn}</button>
-    
-    <h2>Toggle Music Button</h2>
-    <button id="toggleMusicBtn" onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}</button>
-    
-    {/* <h2>Save Map Button</h2> */}
-    {/* Be sure to have a prompt, maybe users don't want to save when they click the key to save */}
-    {/* <button id="saveMusicBtn" onClick={() => {newActionKey("Save")}}>{saveBtn}</button> */}
-  
-  {/* TODO do the same setActionKey("") for gameplay Settings. Without it, you can still edit keybinds after saving. Not good UX */}
-    <button disabled={disabledSave} onClick={() => {setActionKey(""); uploadKeybinds()}}>Save Keybinds</button>
-    <button disabled={disabledSave} onClick={() => {setActionKey("");resetKeybinds()}}>Reset Keybinds</button>
-  </div>
+      {/* TODO do the same setActionKey("") for gameplay Settings. Without it, you can still edit keybinds after saving. Not good UX */}
+        <div id="save_reset_btns">
+          <button className="bottom_btns" disabled={disabledSave} onClick={() => {setActionKey(""); uploadKeybinds()}}>Save Keybinds</button>
+          <button className="bottom_btns" disabled={disabledSave} onClick={() => {setActionKey("");resetKeybinds()}}>Reset Keybinds</button>
+        </div>
+      </div>
+    </div>
   )
 
 }

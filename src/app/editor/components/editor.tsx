@@ -38,6 +38,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
 
   // All of the metadata
   // When setting metadata, like description, disable the other buttons being activiated. Like when pressing "P" for the description, don't play the song 
+  // const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "")
   const [songName, setSongName] = useState<string>(metadata?.song_metadata.song_name || "")
   const [songArtist, setSongArtist] = useState<string>(metadata?.song_metadata.song_artist || "")
   const [songMapper, setSongMapper] = useState<string>(metadata?.song_metadata.song_mapper || "")
@@ -48,7 +49,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
 
   // Multiple Prompt states
-  const [menu, setMenu] = useState<string>("")
+  const [menu, setMenu] = useState<string>("") // Used for 
   const [returnPromptVisible, setReturnPrompt] = useState<boolean>(false);
   const [mapSaved, setMapSaved] = useState<boolean>(true) 
 
@@ -190,9 +191,9 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     }
   }, [itemIndex, isPlaying]);
 
-  const saveSettings = () => {
+  // const saveSettings = () => {
 
-  }
+  // }
 
   useEffect(() => {
     const handleKeyDown = (event: { key: string; repeat: boolean}) => {
@@ -249,14 +250,14 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   }
 
   const changeNoteVer = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
-    const hero_list_info = document.getElementById('list_wrapper')?.getBoundingClientRect();
+    const hero_list_info = document.getElementById('hero_editor')?.getBoundingClientRect();
     let mousePlacement;
     let hero_width;
     if (hero_list_info) {
       mousePlacement = event.clientX - hero_list_info.left
       hero_width = hero_list_info.right - hero_list_info.left
     }
-    const temp = event.clientX - (document.getElementById('list_wrapper')?.getBoundingClientRect().left as number)
+    const temp = event.clientX - (document.getElementById('hero_editor')?.getBoundingClientRect().left as number)
     console.log(mousePlacement);
     console.log(temp)
     console.log(hero_width)
@@ -419,7 +420,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   
     return (
       <div
-        className="v-bar"
+        className="hero_bar"
         onClick={(event) => changeNoteVer(index, event)}
         style={{ ...style, ...gameBarStyle(index) }} 
       >
@@ -446,7 +447,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   
     return (
       <div
-        className="i-bar"
+        className="waveform_bar"
         style={{ ...style, ...barStyle(index) }} 
       >
       </div>
@@ -461,8 +462,14 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
 
   const saveMap = () => {
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+    
+    if (!map_id) {
+      console.error("Map ID is not defined");
+      return;
+    }
 
     localMaps[map_id] = {
+      timestamp : Date.now(),
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
@@ -521,9 +528,16 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   }
 
   const closeEditor = () => {
+    if (menu === "Return") {
+      setMapSaved(false)
+      setReturnPrompt(false)
+      setMenu("")
+      return
+    };
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
 
     const currentMap = {
+      timestamp: metadata?.timestamp || "",
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
@@ -540,14 +554,23 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     if (map_id in localMaps) {
       console.log(localMaps[map_id])
       console.log(currentMap)
-      const isEqual = JSON.stringify(currentMap) === JSON.stringify(localMaps[map_id]);
+      const isEqual = JSON.stringify({
+        song_metadata: currentMap.song_metadata,
+        song_notes: currentMap.song_notes
+      }) === JSON.stringify({
+        song_metadata: localMaps[map_id].song_metadata,
+        song_notes: localMaps[map_id].song_notes
+      });
+      
       console.log(isEqual)
-      // if (!isEqual) {
       setMapSaved(isEqual)
       setReturnPrompt(true)
       setMenu("Return")
-        // alert("You have Unsaved Changes")
-      // }
+    }
+    else {
+      setMapSaved(false)
+      setReturnPrompt(true)
+      setMenu("Return")
     }
 
     // localStorage.setItem("localMaps", JSON.stringify(localMaps));
@@ -555,30 +578,36 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   }
 
   const singleBtnStyle = {
-    backgroundColor: (btn === "Single Note")? "green" : "red" 
+    backgroundColor: (btn === "Single Note")? "rgba(128, 128, 128, 1)" : "rgba(128, 128, 128, 0.60)" 
   }
   
   const turnBtnStyle = {
-    backgroundColor: (btn === "Turn Note")? "green" : "red" 
+    backgroundColor: (btn === "Turn Note")? "rgba(128, 128, 128, 1)" : "rgba(128, 128, 128, 0.60)" 
   }
   const returnStyle = {
     visibility: (menu === "Return")? "visible" : "hidden",
-    left: (menu === "Return")? "0%" : "-100%",
-    transition: 'left 1s ease, visibility 1s'
+    opacity: (menu === "Return")? 1 : 0,
+    transition: 'opacity 500ms ease, visibility 500ms'
   } as React.CSSProperties
+
+  // const metadataStyle = {
+  //   visibility: (menu === "Metadata")? "visible" : "hidden",
+  //   left: (menu === "Metadata")? "0%" : "-100%",
+  //   transition: 'left 1s ease, visibility 1s'
+  // } as React.CSSProperties
 
   return (
     <div id="editor_page">
       <div id="wave_bars">
-        <div id="waveform-Container" ref={waveformRef}>
+        <div id="waveform_container" ref={waveformRef}>
         </div>
 
-        <div id="vBars-Container">
+        <div id="waveform_bars">
           <AutoSizer>
             {({height, width}) => (
               <List
               ref={vListRef}
-              className="hideScrollbar2"
+              className="no_scrollbar"
               height={height} 
               itemCount={songLength} 
               itemSize={16} 
@@ -594,18 +623,84 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
 
       <div id="hero_section">
         <div id="left_hero">
-        <p>{formatTime(currentTime)}</p>
-        <p>Note Count: {noteCount}</p>
-        {/* <input type="file" accept='audio/*' onChange={audioChange}/> */}
-          <div>
-            <button style={singleBtnStyle} onClick={() => {setBtn("Single Note")}}>Single Note</button>
-            <button style={turnBtnStyle} onClick={() => {setBtn("Turn Note")}}>Turn Note</button>
+          <p>{formatTime(currentTime)}</p>
+          <p>Note Count: {noteCount}</p>
+          <div id="metadata_wrapper">
+            <p>Metadata</p>
+            {/* <button onClick={() => {setMenu("")}}>Go back</button> */}
+            <label htmlFor="songName">Song Name</label>
+            <input 
+              name="songName" 
+              id="songName"
+              type="text" 
+              value={songName}
+              onChange={(e) => setSongName(e.target.value)}
+            ></input>
+            
+            <label htmlFor="songArtist">Song Artist</label>
+            <input 
+              name="songArtist" 
+              id="songArtist"
+              type="text" 
+              value={songArtist}
+              onChange={(e) => setSongArtist(e.target.value)}
+            ></input>
+            
+            <label htmlFor="songMapper">Song Mapper</label>
+            <input 
+              name="songMapper" 
+              id="songMapper"
+              type="text" 
+              value={songMapper}
+              onChange={(e) => setSongMapper(e.target.value)}
+            ></input>
+            
+            <label htmlFor="songBPM">Song BPM</label>
+            <input 
+              name="songBPM" 
+              id="songBPM"
+              type="number" 
+              value={bpm}
+              onChange={(e) => setBPM(parseInt(e.target.value))}
+            ></input>
+            
+            <label htmlFor="songGenre">Song Genre</label>
+            <input 
+              name="songGenre" 
+              id="songGenre"
+              type="text" 
+              value={genre}
+              onChange={(e) => setGenre(e.target.value)}
+            ></input>
+            
+            <label htmlFor="songLanguage">Song Language</label>
+            <input 
+              name="songLanguage" 
+              id="songLanguage"
+              type="text" 
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            ></input>
+            
+            <label htmlFor="songDescription">Song Description</label>
+            <input 
+              name="songDescription" 
+              id="songDescription"
+              type="text" 
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            ></input>
+
+            <p>Song Length: {formatTime((songLength- 1) / 16)}</p>
           </div>
+          <button onClick={() => {saveMap()}}>Save Locally</button>
+
           <button onClick={() => {closeEditor()}}>Return</button>
         </div>
 
         <div id="hero_list">
-          <div id="list_wrapper">
+          <div id="hero_editor">
+            <div id="current_bar"></div>
             <AutoSizer>
               {({height, width}) => (
                 <List
@@ -625,117 +720,63 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
         </div>
         
         <div id="right_hero">
-        <div id="play_speed">
-          <button onClick={onPlayPause} style={{ minWidth: '5em' }}>
-            {isPlaying ? 'Pause' : 'Play'}
-          </button>
-          <div>
-            <p>Playback Rate</p>
+          <div id="play_speed">
+            <button onClick={onPlayPause}>
+              {isPlaying? 
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z"/>
+              </svg>
+              :<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-play-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445"/>
+              </svg>
+              }
+              {/* {isPlaying ? 'Pause' : 'Play'} */}
+            </button>
             <div>
-              <button onClick={() => {updatePBRate(0.25)}}>0.25</button>
-              <button onClick={() => {updatePBRate(0.50)}}>0.50</button>
-              <button onClick={() => {updatePBRate(0.75)}}>0.75</button>
-              <button onClick={() => {updatePBRate(1)}}>1</button>
+                <p>Playback Rate</p>
+              <div>
+                <button onClick={() => {updatePBRate(0.25)}}>0.25</button>
+                <button onClick={() => {updatePBRate(0.50)}}>0.50</button>
+                <button onClick={() => {updatePBRate(0.75)}}>0.75</button>
+                <button onClick={() => {updatePBRate(1)}}>1</button>
+              </div>
             </div>
           </div>
-        </div>
-          <button>Settings</button>
+          
+
+          <button onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap {snapOn? "On" : "Off"}</button>
+          <div id="notes">
+            <button style={singleBtnStyle} onClick={() => {setBtn("Single Note")}}>Single Note</button>
+            <button style={turnBtnStyle} onClick={() => {setBtn("Turn Note")}}>Turn Note</button>
+          </div>
           <div>
             <button>Deploy</button>
-            <button>Metadata</button>
           </div>
-          <button onClick={() => {saveMap()}}>Save Locally</button>
-          <button onClick={() => {setSnap(true)}}>Enable Snapping</button>
-          <button onClick={() => {setSnap(false)}}>Disable Snapping</button>
         </div>
+      
       </div>
+      {/* Change song_mapper to user when I pass into this component. If not logged in, have a note that says "Only registered accounts can upload maps to the internet" */}
 
-      <div id="song_controls">
-
-      </div>
-
-      <div id="all_metadata">
-        <label htmlFor="songName">Song Name</label>
-        <input 
-          name="songName" 
-          id="songName"
-          type="text" 
-          value={songName}
-          onChange={(e) => setSongName(e.target.value)}
-        ></input>
-        
-        <label htmlFor="songArtist">Song Artist</label>
-        <input 
-          name="songArtist" 
-          id="songArtist"
-          type="text" 
-          value={songArtist}
-          onChange={(e) => setSongArtist(e.target.value)}
-        ></input>
-        
-        <label htmlFor="songMapper">Song Mapper</label>
-        <input 
-          name="songMapper" 
-          id="songMapper"
-          type="text" 
-          value={songMapper}
-          onChange={(e) => setSongMapper(e.target.value)}
-        ></input>
-        
-        <label htmlFor="songBPM">Song BPM</label>
-        <input 
-          name="songBPM" 
-          id="songBPM"
-          type="number" 
-          value={bpm}
-          onChange={(e) => setBPM(parseInt(e.target.value))}
-        ></input>
-        
-        <label htmlFor="songGenre">Song Genre</label>
-        <input 
-          name="songGenre" 
-          id="songGenre"
-          type="text" 
-          value={genre}
-          onChange={(e) => setGenre(e.target.value)}
-        ></input>
-        
-        <label htmlFor="songLanguage">Song Language</label>
-        <input 
-          name="songLanguage" 
-          id="songLanguage"
-          type="text" 
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-        ></input>
-        
-        <label htmlFor="songDescription">Song Description</label>
-        <input 
-          name="songDescription" 
-          id="songDescription"
-          type="text" 
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        ></input>
-
-        <p>Song Length: {formatTime((songLength- 1) / 16)}</p>
-        {/* Change song_mapper to user when I pass into this component. If not logged in, have a note that says "Only registered accounts can upload maps to the internet" */}
-      </div>
       <div id="return_wrapper" style={returnStyle}>
         {(returnPromptVisible) && 
-        <div>
+        <div id="return_div">
         
-          <h2>Are you sure you want to return?</h2>
-          <h3>{mapSaved? "Beatmap is Saved" : "You have Unsaved Changes"}</h3>
-          <button onClick={() => {
-            clearMap()
-            }}>Yes</button>
-          <button onClick={() => {
-            setMenu("")
-            setTimeout(() => {
-              setReturnPrompt(false)
-            }, 1000)
-          }}>No</button>
+          <h2>You are about to exit the editor. Are you sure?</h2>
+          <h3>{mapSaved? "All changes are Saved" : "You have Unsaved Changes"}</h3>
+          <div>
+            <button onClick={() => {
+              setMenu("")
+              setTimeout(() => {
+                setReturnPrompt(false)
+              }, 500)
+            }}>No, Return to Editor</button>
+            <button onClick={() => {
+              clearMap()
+            }}>Yes, Exit the Editor</button>
+          </div>  
+          
         </div>
         }
       </div>

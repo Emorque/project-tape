@@ -2,33 +2,106 @@
     box-sizing: border-box; /* Ensure borders don't add extra size */
 }
 
-#editorScreen {
-    width: 100%;
-    height: 100%;
-}
-
-#editor_wrapper {
+#editor {
     overflow: auto;
     width: 100%;
     height: 100%;
-    background-color: black; 
+    background-color: grey; 
     color: white;
     scrollbar-width: thin;
     scrollbar-color: var(--grey) transparent;
-    button {
-        background-color: rgb(250, 238, 223);
-        border: 0;
-        padding: 5px;
-        color: black;
-        cursor: pointer;
-    }
+}
+
+#audio_input {
+    width: 100%;
+    background-color: rgb(53, 53, 53);
+    cursor: pointer;
+}
+
+input::file-selector-button {
+    cursor: pointer;
+    font-weight: bold;
+    color: rgb(0, 0, 0);
+    padding: 0.5em;
+    border: thin solid grey;
+    border-radius: 3px;
+}
+
+#beatmap_wrapper {
+    height: 100%;
+    width: 50%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+#audio_select {
+    margin-top: 50px;
+    width: 100%;
+}
+
+#create_settings {
+    display: flex;
+    width: 100%;
+}
+
+#create_btn {
+    /* height: 100%; */
+    width: 100%;
+    text-align: left;
+    padding-left: 10px;
+    background-color: rgb(53, 53, 53);
+}
+
+#keybinds_btn {
+    padding: 7.5px 5px 2.5px 5px;
 }
 
 
+#beatmap_container {
+    overflow: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 50px;
+}
+
+.beatmap {
+    /* border: 1px solid red; */
+    width: 100%;
+    display: flex;
+    padding: 0px 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* #delete_wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.192);
+    z-index: 10;
+    height: 100%;
+    width: 100%;
+} */
+
+#editor_wrapper {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(59, 59, 59, 1); 
+    position: absolute;
+    top:0
+}
+
+/* Editor */
 #editor_page {
     width: 100%;
     height: 100%;
-    background-color: black; 
     color: white;
     button {
         background-color: rgb(250, 238, 223);
@@ -47,18 +120,15 @@
 }
 
 
-#waveform-Container {
+#waveform_container {
     scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
     scrollbar-width: thin;
-    /* position: absolute;
-    top: 0;
-    left: 0; */
     width: 100%;
     height: 100%;
     z-index: 10;
 }
 
-#vBars-Container{
+#waveform_bars{
     position: absolute;
     top: 0;
     left: 0;
@@ -72,7 +142,7 @@
     border-right: 0.01px solid grey;
 }
 
-.i-bar {
+.waveform_bar {
     border-right: 0.01px solid rgba(255, 255, 255, 0.25);
 }
 
@@ -88,16 +158,28 @@
 #hero_list {
     width: 80%;
     transform: scaleY(-1);
-    /* display: flex; */
-    /* flex-direction: row; */
-    /* justify-content: center; */
-
 }
 
-#list_wrapper {
+#hero_editor {
+    position: relative;
     max-width: 400px;
     margin: 0 auto;
     height: 100%;
+}
+
+#current_bar {
+    background-color: rgba(26, 0, 0, 0.384);
+    z-index: 10;
+    position: absolute;
+    width: calc(100% - 10px);
+    height: 4px;
+    content: "";
+    top:0;
+    left: 0;
+}
+
+.hero_bar {
+    border-top: 0.01px solid rgba(255, 255, 255, 0.25); 
 }
 
 #left_hero {
@@ -117,50 +199,39 @@
     height: 100%;
     overflow-y: auto;   
 }
-  
-.v-bar {
-    border-top: 0.01px solid rgba(255, 255, 255, 0.25); 
-}
 
-#gameContainer:after {
+#return_wrapper, #delete_wrapper {
     position: absolute;
-    left: 0;
     top: 0;
-    content: "";
-    width: 390px;
-    height: 10px;
-    background-color: transparent;
-    content: "";
-    transform: scaleY(-1);
-    background-color: rgba(138, 138, 19, 0.13);
-    margin: 0 auto;
-    /* border-top: 10px solid rgb(57, 0, 65); */
-  }
-
-.hideScrollbar {
-    scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
-    scrollbar-width:thin;
-    /* margin-bottom: 100px; */
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.781);
+    z-index: 20;
+    height: 100%;
+    width: 100%;
 }
 
-.hideScrollbar2 {
-    /* scrollbar-color: rgba(128, 128, 128, 0.50) transparent; */
+#return_div, #delete_div {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+    gap: 10px;
+}
+
+#notes {
+    display: flex;
+    flex-direction: column;
+}
+  
+.no_scrollbar {
     scrollbar-width: none;
-    /* margin-bottom: 100px; */
 }
-
 
 .scrollbar {
     scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
     scrollbar-width: thin;
-}
-
-#song_controls {
-    width: 90%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
 }
 
 #play_speed {
@@ -168,13 +239,66 @@
     flex-direction: row;
 }
 
+/* Keybinds Component */
+#keybinds_wrapper {
+    background-color: rgba(128, 128, 128, 0.60);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top:0;
+    left: 0;
+}
+
+#keybinds_style {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top:0
+}
+
+#keybinds_page {
+    background-color: rgba(59, 59, 59, 1);
+    width: 50%;
+    height: 100%;
+}
+
+#keybinds_container {
+    width: 90%;
+    height: 100%;
+    margin: 0 auto;
+    overflow: auto;
+
+    /* background-color: var(--grey); */
+    /* color: white; */
+    letter-spacing: 1px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    h1 {
+        width: fit-content;
+    }
+}
+
+.horizontal_div {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    width: 90%;
+    margin: 0 auto;
+    button {
+        background-color: var(--black);
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    h2 {
+        margin: auto 0;
+    }
+}
 
 #divWrapper {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    /* align-items: center; */
-    /* justify-content: center; */
     gap: 100px;
     padding: 20px;
     padding-top: 60px;
@@ -185,6 +309,28 @@
     flex-direction: column;
     gap: 10px;
 }
+
+#save_reset_btns {
+    display: flex;
+    flex-direction: row;
+    margin: 20px auto 0 auto;
+    gap: 10px;
+}
+.action_btn {
+    font-size: 2rem;
+    /* Background Color handled in TSX */
+}
+
+.bottom_btns {
+    width: fit-content;
+    padding: 5px;
+    font-size: 1.4rem;
+    background-color: var(--black);
+    color: var(--white);
+    position: relative;
+    border-radius: 6px;
+}
+
 
 #exportDiv {
     display: flex;
@@ -199,7 +345,7 @@
     width: 100%;
 }
 
-
+/* This is affecting the waveform slider?? Why is the scroll bar green  */
 .slider {
     appearance: none;
     width: 100%;

@@ -7,6 +7,19 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { editorMap, keybindsType, localStorageMaps } from "@/utils/helperTypes";
 
+function formatDateFromMillis(milliseconds : string) {
+  const date = new Date(milliseconds);
+
+  const month = date.getMonth() + 1;  // getMonth() is zero-based, so add 1
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');  // ensures 2-digit format
+  const minutes = date.getMinutes().toString().padStart(2, '0');  // ensures 2-digit format
+
+  return `${month}/${day}/${year} ${hours}:${minutes}`;
+}
+
+
 export default function EditorPage() {
   const [localMaps, setLocalMaps] = useState<localStorageMaps>({})
   const [editorActive, setEditorActive] = useState<boolean>(false);
@@ -20,7 +33,6 @@ export default function EditorPage() {
   const [deletePromptVisible, setDeleteVisible] = useState<boolean>(false)
 
   // Get all maps from Local Storage
-
   useEffect(() => {
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
     setLocalMaps(localMaps)
@@ -56,24 +68,28 @@ export default function EditorPage() {
     setUserKeybinds(newKeybinds)
   }
 
-  const keybindsStyle = {
+  const keybindsWrapperStyle = {
     visibility: (menu === "keybinds")? "visible" : "hidden",
+    transition: 'visibility 1s'
+  } as React.CSSProperties
+
+  const keybindsStyle = {
     left: (menu === "keybinds")? "0%" : "-100%",
-    transition: 'left 1s ease, visibility 1s'
+    transition: 'left 1s'
   } as React.CSSProperties
 
 
   // TODO, may need to update visibility for these two styles to left like above style
   const editorStyle = {
-    opacity: editorActive ? 1 : 0, 
-    visibility: editorActive ? "visible" : "hidden",
-    transition: 'opacity 1s ease, visibility 1s'
+    right: (menu === "Editor")? "0%" : "-100%",
+    visibility: (menu === "Editor") ? "visible" : "hidden",
+    transition: 'right 1s ease, visibility 1s'
   } as React.CSSProperties;
 
   const deleteStyle = {
-    opacity: deletePromptVisible ? 1 : 0, 
-    visibility: deletePromptVisible ? "visible" : "hidden",
-    transition: 'opacity 1s ease, visibility 1s'
+    visibility: (menu === "Delete")? "visible" : "hidden",
+    opacity: (menu === "Delete")? 1 : 0,
+    transition: 'opacity 500ms ease, visibility 500ms'
   } as React.CSSProperties;
 
   const [audioURL, setAudioURL] = useState<string>("");
@@ -96,9 +112,12 @@ export default function EditorPage() {
   }, []);
 
   const clearEditor = () => {
-    setEditorActive(false)
-    setSelectedMap(null)
-    setMapID("")
+    setMenu("")
+    setTimeout(() => {
+      setEditorActive(false)
+      setSelectedMap(null)
+      setMapID("")
+    }, 1000)
   }
 
   const updateMaps = () => {
@@ -108,6 +127,10 @@ export default function EditorPage() {
   }
 
   const newMap = () => {
+    if (audioURL == "") {
+      console.log("Audio must be set first")
+      return;
+    }
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
     let highestMapId = 1
     for (const map_id in localMaps) {
@@ -118,6 +141,9 @@ export default function EditorPage() {
     }
     setMapID((highestMapId + 1).toString());
     setEditorActive(true)
+    setTimeout(() => {
+      setMenu("Editor")
+    }, 500)
   }
 
   const deleteMap = () => {
@@ -135,98 +161,121 @@ export default function EditorPage() {
     }
   }
 
-  return (
-    <div id="editor_wrapper">
-      <button disabled={(menu == "keybinds")} onClick={() => {
-        if (keybindsView) return;
-        setMenu("keybinds")
-        setKeybindsView(true);
-      }}> 
-      Keybinds
-      </button>
-      <h3>Select your Audio File</h3>
-      <input type="file" accept='audio/*' onChange={audioChange}/>
-      <button onClick={() => {newMap()}}>Create a new Map</button>
+  const closeKeybinds = () => {
+    setMenu("")
+    setTimeout(() => {
+      setKeybindsView(false)
+    }, 1000)
+  }
 
-      <div>
-        {Object.entries(localMaps).map(([map_id, mapItem]) => {
-          const editorMap = mapItem;
+  return (
+    <div id="editor">
+      <div id="beatmap_wrapper">
+        <div id="audio_select">
+          <h3>Select your Audio File</h3>
+          <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>  
+        </div>
+
+        <div id="create_settings">
+          <button id="create_btn" onClick={() => {newMap()}}>Create</button>
+          <button id="keybinds_btn" disabled={(menu == "keybinds")} onClick={() => {
+            if (keybindsView) return;
+            setMenu("keybinds")
+            setKeybindsView(true);
+            }}> 
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-gear-fill" viewBox="0 0 16 16">
+              <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/>
+            </svg>
+          </button>
+        </div>
           
-          if (!editorMap) {
-            console.log(mapItem)
+        <div id="beatmap_container">
+          {Object.entries(localMaps).map(([map_id, mapItem]) => {
+            const editorMap = mapItem;
+            
+            if (!editorMap) {
+              console.log(mapItem)
+              return (
+                <div key={map_id}>
+                  {/* TODO: someone may mess with local storage and mess up a map. In that case, allow for them to fix the error by removing the entry. Like removing a bookmarked song */}
+                  Error Loading This Map. Please Remove
+                </div>
+              )
+            }
+
+            const { timestamp, song_metadata, song_notes } = editorMap;
             return (
-              <div key={map_id}>
-                {/* TODO: someone may mess with local storage and mess up a map. In that case, allow for them to fix the error by removing the entry. Like removing a bookmarked song */}
-                Error Loading This Map. Please Remove
+              <div key={map_id} className="beatmap">
+                <div>
+                  <h2>{song_metadata.song_name || 'Untitled Song'}</h2>
+                  <h2>Artist: {song_metadata.song_artist || "Untitled Artist"}</h2>  
+                  <h4>Last Edited: {formatDateFromMillis(timestamp)}</h4>
+                </div>
+                
+                <div>
+                  <button onClick={() => {
+                    if (audioURL == "") {
+                      console.log("Audio must be set first")
+                      return;
+                    }
+                    console.log(song_notes)
+                    setSelectedMap(editorMap)
+                    setMapID(map_id)
+                    setEditorActive(true)
+                    setTimeout(() => {
+                      setMenu("Editor")
+                    }, 500)
+                    setTimeout(() => {
+                      setKeybindsView(false)
+                    }, 1500)
+                    }}>Edit</button>
+                  <button onClick={() => {
+                    setMenu("Delete")
+                    setDeleteVisible(true)
+                    setMapID(map_id)
+                    setSelectedMap(editorMap)
+                  }}>Delete Beatmap
+                  </button>
+                </div>
+                
               </div>
             )
+          })
           }
-
-          const { song_metadata, song_notes } = editorMap;
-          return (
-            <div key={map_id}>
-              <h2>{song_metadata.song_name || 'Untitled Song'}</h2>
-              <p>Artist: {song_metadata.song_artist}</p>
-              <p>BPM: {song_metadata.bpm}</p>
-              <p>Genre: {song_metadata.genre}</p>
-              <p>Language: {song_metadata.language}</p>
-              <p>Note Count: {song_metadata.note_count}</p>
-              <p>Description: {song_metadata.description}</p>
-            
-              <button onClick={() => {
-                console.log(song_notes)
-                setSelectedMap(editorMap)
-                setMapID(map_id)
-                setEditorActive(true)
-                }}>Song {parseInt(map_id)}</button>
-              <button onClick={() => {
-                setMenu("Delete")
-                setDeleteVisible(true)
-                setMapID(map_id)
-              }}>Delete Beatmap</button>
-            </div>
-          )
-        })
-        }
-
+        </div>
       </div>
       
       <div id="delete_wrapper" style={deleteStyle}>
         {(deletePromptVisible) &&
-          <div>
-            <h2>Are you sure you to delete this map?</h2>
-            <button onClick={() => {
-              deleteMap()
-              }}>Yes</button>
+          <div id="delete_div">
+            <h2>You are going to delete the &quot;{selectedMap?.song_metadata.song_name}&quot; beatmap. Are you sure?</h2>
             <button onClick={() => {
               setMenu("")
               setTimeout(() => {
                 setDeleteVisible(false)
-              }, 1000)
-            }}>No</button>
+              }, 500)
+            }}>No, Keep It</button>
+
+            <button onClick={() => {
+              deleteMap()
+              setMenu("")
+              setDeleteVisible(false)
+            }}>Yes, Delete It</button>
           </div>
         }
       </div>
       
-      <div id="keybinds_wrapper" style={keybindsStyle}>
-        {(keybindsView) && 
-          <>
-            <button id="keybinds_back_btn" onClick={() => {
-              setMenu("")
-              setTimeout(() => {
-                setKeybindsView(false)
-              }, 1000)
-              }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
-                <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-              </svg>
-            </button>
-            <Keybinds saveKeybinds={handleNewKeybinds}/>
-          </>
-        }
+      <div id="keybinds_wrapper" style={keybindsWrapperStyle}>
+        <div id="keybinds_style" style={keybindsStyle}>
+          {(keybindsView) && 
+            <>
+              <Keybinds saveKeybinds={handleNewKeybinds} clearKeybinds={closeKeybinds}/>
+            </>
+          }
+        </div>
       </div>
       
-      <div id="editorScreen" style={editorStyle}>
+      <div id="editor_wrapper" style={editorStyle}>
         {userKeybinds && editorActive && audioURL && hitsoundsRef.current && selectedMapID && 
         <Editor metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
         }

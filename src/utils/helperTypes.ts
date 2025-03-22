@@ -27,11 +27,12 @@ export type mapMetadata = {
 export type sMap = [number,string][]
 
 export type localStorageMaps = {
-  [map_id: string] : {song_metadata : editorMetadata, song_notes: string[][]}
+  [map_id: string] : {timestamp: string, song_metadata : editorMetadata, song_notes: string[][]}
 }
 
 // Conisder a "last edited key, to help with ordering and it may be a useful bit of info for users"
 export type editorMap = {
+  timestamp: string
   song_metadata : editorMetadata,
   song_notes: string[][]
 }
