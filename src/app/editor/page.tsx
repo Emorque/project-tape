@@ -4,10 +4,12 @@ import "./editor.css";
 import { Keybinds } from "./components/keybinds";
 import { Editor } from "./components/editor";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import gsap from 'gsap';
+import { useGSAP } from "@gsap/react";
 
 import { editorMap, keybindsType, localStorageMaps } from "@/utils/helperTypes";
 
-function formatDateFromMillis(milliseconds : string) {
+const formatDateFromMillis = (milliseconds : string) => {
   const date = new Date(milliseconds);
 
   const month = date.getMonth() + 1;  // getMonth() is zero-based, so add 1
@@ -68,6 +70,18 @@ export default function EditorPage() {
     setUserKeybinds(newKeybinds)
   }
 
+
+  const { contextSafe } = useGSAP();
+
+  // const keyError = contextSafe((btnRef: string) => {
+  //   gsap.to(btnRef, {backgroundColor: "#c70000 ", yoyo: true, repeat: 1, duration:0.75})
+  //   gsap.to("#mapping_error", {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
+  // })
+  const audioNeeded = contextSafe(() => {
+    gsap.to("#audio_input", {backgroundColor: "#c70000 ", yoyo: true, repeat: 1, duration:0.75})
+    gsap.to("#audio_tooltip_text", {color: "#740000", textContent: "Audio File Needed", yoyo: true, repeat: 1, duration:0.75})
+  })
+
   const keybindsWrapperStyle = {
     visibility: (menu === "keybinds")? "visible" : "hidden",
     transition: 'visibility 1s'
@@ -81,9 +95,9 @@ export default function EditorPage() {
 
   // TODO, may need to update visibility for these two styles to left like above style
   const editorStyle = {
-    right: (menu === "Editor")? "0%" : "-100%",
+    left: (menu === "Editor")? "0%" : "-100%",
     visibility: (menu === "Editor") ? "visible" : "hidden",
-    transition: 'right 1s ease, visibility 1s'
+    transition: 'left 1s ease, visibility 1s'
   } as React.CSSProperties;
 
   const deleteStyle = {
@@ -144,6 +158,10 @@ export default function EditorPage() {
     setTimeout(() => {
       setMenu("Editor")
     }, 500)
+    setTimeout(() => {
+      setKeybindsView(false)
+    }, 1500)
+    console.log("Map made")
   }
 
   const deleteMap = () => {
@@ -172,8 +190,11 @@ export default function EditorPage() {
     <div id="editor">
       <div id="beatmap_wrapper">
         <div id="audio_select">
-          <h3>Select your Audio File</h3>
-          <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>  
+          <h3 id="audio_tooltip_text">Select your Audio File</h3>
+          <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>
+          {/* <div id="audio_tooltip_text" className="bottom_tooltip_text">
+            Audio Entry Needed
+          </div> */}
         </div>
 
         <div id="create_settings">
@@ -198,7 +219,7 @@ export default function EditorPage() {
               return (
                 <div key={map_id}>
                   {/* TODO: someone may mess with local storage and mess up a map. In that case, allow for them to fix the error by removing the entry. Like removing a bookmarked song */}
-                  Error Loading This Map. Please Remove
+                  Error Loading This Map. Please Reload Page.
                 </div>
               )
             }
@@ -216,6 +237,7 @@ export default function EditorPage() {
                   <button onClick={() => {
                     if (audioURL == "") {
                       console.log("Audio must be set first")
+                      audioNeeded();
                       return;
                     }
                     console.log(song_notes)

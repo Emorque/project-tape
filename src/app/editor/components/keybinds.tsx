@@ -31,7 +31,11 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
   const keyError = contextSafe((btnRef: string) => {
     gsap.to(btnRef, {backgroundColor: "#c70000 ", yoyo: true, repeat: 1, duration:0.75})
     gsap.to("#mapping_error", {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
-})
+  })
+
+  const bottomAnimation = contextSafe((btn : string) => {
+    gsap.to(btn, {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
+  })
 
 // const bottomAnimation = contextSafe((btn : string) => {
 //     gsap.to(btn, {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
@@ -172,6 +176,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
 
     // Animation + Temporarily disable saving keybinds 
     setDisabedSave(true)
+    bottomAnimation("#save_tooltip_text")
     setTimeout(() => {
       setDisabedSave(false)
     }, 1500)
@@ -200,6 +205,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
     setToggleMusicBtn(defaultKeybinds.toggleMusic)
 
     // TODO: ANIMATION
+    bottomAnimation("#reset_tooltip_text")
 
     setDisabedSave(true)
     setTimeout(() => {
@@ -279,13 +285,28 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
 
         <div className="horizontal_div">
           <h2>Toggle Music</h2>
-          <button id="toggleMusicBtn" className="action_btn" onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}</button>  
+          <button id="toggleMusicBtn" className="action_btn" onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}
+            
+            <h2 id="mapping_error">Keybind Conflict</h2>
+  
+          </button>  
         </div>
 
       {/* TODO do the same setActionKey("") for gameplay Settings. Without it, you can still edit keybinds after saving. Not good UX */}
         <div id="save_reset_btns">
-          <button className="bottom_btns" disabled={disabledSave} onClick={() => {setActionKey(""); uploadKeybinds()}}>Save Keybinds</button>
-          <button className="bottom_btns" disabled={disabledSave} onClick={() => {setActionKey("");resetKeybinds()}}>Reset Keybinds</button>
+          <button className="bottom_btns" disabled={disabledSave} onClick={() => {setActionKey(""); uploadKeybinds()}}>
+            Save Keybinds
+            <div id="save_tooltip_text" className="bottom_tooltip_text">
+              Keybinds Saved
+            </div>
+          </button>
+          
+          <button className="bottom_btns" disabled={disabledSave} onClick={() => {setActionKey("");resetKeybinds()}}>
+            Reset Keybinds
+            <div id="reset_tooltip_text" className="bottom_tooltip_text">
+              Bindings Reset
+            </div>
+          </button>
         </div>
       </div>
     </div>

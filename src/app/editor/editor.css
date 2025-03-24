@@ -3,13 +3,14 @@
 }
 
 #editor {
-    overflow: auto;
+    /* overflow: auto; */
     width: 100%;
     height: 100%;
     background-color: grey; 
     color: white;
     scrollbar-width: thin;
     scrollbar-color: var(--grey) transparent;
+    position: relative;
 }
 
 #audio_input {
@@ -39,8 +40,9 @@ input::file-selector-button {
 }
 
 #audio_select {
-    margin-top: 50px;
+    padding-top: 50px;
     width: 100%;
+    position: relative;
 }
 
 #create_settings {
@@ -67,7 +69,7 @@ input::file-selector-button {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-bottom: 50px;
+    margin-bottom: 25px;
 }
 
 .beatmap {
@@ -95,11 +97,13 @@ input::file-selector-button {
     height: 100%;
     background-color: rgba(59, 59, 59, 1); 
     position: absolute;
-    top:0
+    top:0;
+    /* z-index: 30; */
 }
 
 /* Editor */
 #editor_page {
+    padding-top: 15px;
     width: 100%;
     height: 100%;
     color: white;
@@ -116,7 +120,8 @@ input::file-selector-button {
     position: relative;
     width: 90%;
     height: 20%;
-    margin: 15px auto;
+    margin: 0 auto;
+    padding: 0px 0px;
 }
 
 
@@ -147,9 +152,10 @@ input::file-selector-button {
 }
 
 #hero_section {
+    padding-top: 25px;
     width: 90%;
-    height: calc(80% - 45px);
-    margin: 0 auto 15px auto;
+    height: calc(80% - 20px);
+    margin: 0 auto;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
@@ -216,7 +222,7 @@ input::file-selector-button {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 50px;
+    padding-top: 50px;
     gap: 10px;
 }
 
@@ -241,7 +247,7 @@ input::file-selector-button {
 
 /* Keybinds Component */
 #keybinds_wrapper {
-    background-color: rgba(128, 128, 128, 0.60);
+    background-color: rgba(59, 59, 59, 0.6);
     width: 100%;
     height: 100%;
     position: absolute;
@@ -279,6 +285,47 @@ input::file-selector-button {
     }
 }
 
+#toggleMusicBtn {
+    position: relative;
+}
+
+#mapping_error {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    visibility: hidden;
+    opacity: 0;
+    font-size: 1.75rem;
+    color: #c70000  ;
+}
+/* 
+#audio_tooltip_text {
+    position: absolute;
+    height: fit-content;
+    top: 110%;
+    left: 0;
+    visibility: visible;
+    background-color: var(--black);
+    opacity: 1;
+    font-size: 1rem;
+    color: #c70000  ;
+} */
+
+.bottom_tooltip_text{
+    visibility: hidden;
+    opacity: 0;
+    width: fit-content;
+    background-color: var(--black);
+    color: #eaeaea;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    bottom: 110%;
+    left: 4px;
+    font-size: 1.2rem;
+}
+
 .horizontal_div {
     display: grid;
     grid-auto-flow: column;
@@ -313,7 +360,8 @@ input::file-selector-button {
 #save_reset_btns {
     display: flex;
     flex-direction: row;
-    margin: 20px auto 0 auto;
+    margin: 0 auto;
+    padding-top: 20px;
     gap: 10px;
 }
 .action_btn {
