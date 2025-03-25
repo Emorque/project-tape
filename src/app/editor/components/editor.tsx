@@ -17,6 +17,19 @@ const getKeyMapping = (key : string) => {
   return res
 }
 
+const formatDateFromMillis = (milliseconds : string) => {
+  if (milliseconds === "0") return "Not Yet Saved";
+  const date = new Date(milliseconds);
+
+  const month = date.getMonth() + 1;  // getMonth() is zero-based, so add 1
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');  // ensures 2-digit format
+  const minutes = date.getMinutes().toString().padStart(2, '0');  // ensures 2-digit format
+
+  return `${month}/${day}/${year} ${hours}:${minutes}`;
+}
+
 // import Link from "next/link";
 
 interface editorInterface {
@@ -33,9 +46,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   const [songNotes, setSongNotes] = useState<string[][]>([])
   const [songLength, setSongLength] = useState<number>(0);    
   const [btn, setBtn] = useState<string>("Single Note");
-  const [playBtnHold, setPlayBtnHold] = useState<boolean>(false);
   const [snapOn, setSnap] = useState<boolean>(true);
-
 
   // All of the metadata
   // When setting metadata, like description, disable the other buttons being activiated. Like when pressing "P" for the description, don't play the song 
@@ -48,6 +59,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   const [language, setLanguage] = useState<string>(metadata?.song_metadata.language || "")
   const [noteCount, setNoteCount] = useState<number>(metadata?.song_metadata.note_count || 0)
   const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
+  const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
 
   // Multiple Prompt states
   const [menu, setMenu] = useState<string>("") // Used for 
@@ -72,8 +84,8 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   const { wavesurfer, isReady, isPlaying, currentTime} = useWavesurfer({
     container: waveformRef,
     url: songAudio,
-    waveColor: 'rgba(63, 66, 221, 0.57)',
-    progressColor: 'rgb(112, 62, 158)',
+    waveColor: '#0b7033',
+    progressColor: 'rgb(87, 77, 97)',
     cursorColor: 'rgb(223, 0, 0)',
     autoCenter: true,
     autoScroll: true,
@@ -105,7 +117,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
           setSongLength((duration * 16) + 1);
           setSongNotes(tempNotes);    
         }
-        console.log("Please exit Inspect Mode. Performance degrades if music plays within inspector is open")
+        console.log("Please exit Inspect Mode. Project Tape is likely to creash if you edit with it open. Be sure to save your map often.")
       }
     }
   }, [isReady])
@@ -115,21 +127,29 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
       if (event.repeat) return;
 
       if (event.key === keybindMappings.sNote[0] || event.key === keybindMappings.sNote[1]) {
+        setBtn("Single Note")
       }
 
       else if (event.key === keybindMappings.tNote[0] || event.key === keybindMappings.tNote[1]) {
+        setBtn("Turn Note")
       }
       
       else if (event.key === keybindMappings.decreaseSpd[0] || event.key === keybindMappings.decreaseSpd[1]) {
+        // setPbRate(prevRate => Math.max(0.25, prevRate - 0.25))
+        updatePBRate(Math.max(0.25, pbRate - 0.25))
       }
 
       else if (event.key === keybindMappings.increaseSpd[0] || event.key === keybindMappings.increaseSpd[1]) {
+        // setPbRate(prevRate => Math.min(1, prevRate + 0.25))
+        updatePBRate(Math.min(1, pbRate + 0.25))
       }
 
       else if (event.key === keybindMappings.snap[0] || event.key === keybindMappings.snap[1]) {
+        setSnap(prevSnap => !prevSnap)
       }
 
       else if (event.key === keybindMappings.toggleMusic[0] || event.key === keybindMappings.toggleMusic[1]) {
+        onPlayPause();
       }
     }
 
@@ -139,18 +159,12 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     return () => {
         document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [])
+  }, [btn, pbRate, snapOn, ])
 
-  // const onPlayPause = useCallback(() => {
-  //   if (wavesurfer) {
-  //     wavesurfer.playPause()
-  //   }
-  // }, [wavesurfer])
   const onPlayPause = () => {
     if (wavesurfer) {
       wavesurfer.playPause()
     }
-    // wavesurfer && wavesurfer.playPause()
   }
 
   const listRef = useRef<List>(null);
@@ -178,53 +192,11 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     }
   }, [itemIndex, isPlaying]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: { key: string; repeat: boolean}) => {
-      if (event.repeat) return;
-      // This comes after what buttons are allowed in the editor
-      console.log(event.key)
-      if (event.key === 'n' || event.key === 'N') {
-        console.log(songNotes)
-      }
-      if (event.key === 'q' || event.key === 'Q') {
-        if (playBtnHold) return
-        setPlayBtnHold(true)
-        onPlayPause();
-      }
-      if (isPlaying) return; // If spamming keys while play, big lag spike as the rerenders hurt transformations
-      if (event.key === 's' || event.key === 'S') {
-        setBtn("Single Note")
-      }      
-      // Used for helping to map songs
-      if (event.key === 'k' || event.key === 'K') {
-        // console.log(songNotes);
-        setBtn("Turn Note");
-      }      
-    }
-    document.addEventListener('keydown', handleKeyDown);
-
-    // Cleanup the event listener on unmount
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isPlaying, playBtnHold, songNotes]);
-
-
-  useEffect(() => {
-    const handleKeyUp = (event: { key: string; }) => {
-      if (event.key === 'q' || event.key === 'Q') {
-        setPlayBtnHold(false)
-      }
-    }
-    document.addEventListener('keyup', handleKeyUp);
-
-    // Cleanup the event listener on unmount
-    return () => {
-      document.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
   const changeNoteVer = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
+    if (isPlaying){ 
+      console.log("Invalid")
+      return;
+    }
     const hero_list_info = document.getElementById('hero_editor')?.getBoundingClientRect();
     let mousePlacement;
     let hero_width;
@@ -376,10 +348,10 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     const gameBarStyle =(index: number) => {
 
     const verticalGradients = [
-      songNotes[0][index] === 'T' ? "linear-gradient(to bottom, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 25% 100% padding-box border-box" : songNotes[0][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 25% 100% padding-box border-box",
-      songNotes[1][index] === 'T' ? "linear-gradient(to bottom, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 33.3% 0% / 25% 100% padding-box border-box" : songNotes[1][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 33.3% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 33.3% 0% / 25% 100% padding-box border-box",
-      songNotes[2][index] === 'T' ? "linear-gradient(to bottom, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 66.6% 0% / 25% 100% padding-box border-box" : songNotes[2][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 66.6% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 66.6% 0% / 25% 100% padding-box border-box",
-      songNotes[3][index] === 'T' ? "linear-gradient(to bottom, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 99.9% 0% / 25% 100% padding-box border-box" : songNotes[3][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184)50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 99.9% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 99.9% 0% / 25% 100% padding-box border-box",
+      songNotes[0][index] === 'T' ? "linear-gradient(135deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 0% 0% / 25% 25% padding-box border-box, linear-gradient(225deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 35%, rgb(0, 0, 0) 35%, rgb(0, 0, 0) 67%, rgb(184, 184, 184) 67%) no-repeat scroll 0% 25% / 25% 25% padding-box border-box" : songNotes[0][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 25% 100% padding-box border-box",
+      songNotes[1][index] === 'T' ? "linear-gradient(135deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 33% 0% / 25% 25% padding-box border-box, linear-gradient(225deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 35%, rgb(0, 0, 0) 35%, rgb(0, 0, 0) 67%, rgb(184, 184, 184) 67%) no-repeat scroll 33% 25% / 25% 25% padding-box border-box" : songNotes[1][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 33.3% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 33.3% 0% / 25% 100% padding-box border-box",
+      songNotes[2][index] === 'T' ? "linear-gradient(45deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 66% 0% / 25% 25% padding-box border-box, linear-gradient(315deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 67%, rgb(184, 184, 184) 67%) no-repeat scroll 66% 25% / 25% 25% padding-box border-box" : songNotes[2][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 66.6% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 66.6% 0% / 25% 100% padding-box border-box",
+      songNotes[3][index] === 'T' ? "linear-gradient(45deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 99% 0% / 25% 25% padding-box border-box, linear-gradient(315deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 67%, rgb(184, 184, 184) 67%) no-repeat scroll 99% 25% / 25% 25% padding-box border-box" : songNotes[3][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184)50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 99.9% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 99.9% 0% / 25% 100% padding-box border-box",
     ];
   
     const updatedBG = `${gameGradient}, ${verticalGradients.join(", ")}`;
@@ -401,12 +373,12 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
 
   const VRow = ({ index, style }: { index: number, style: React.CSSProperties }) => {
     const barStyle = (index: number) => {
-      
+
       const horizontalGradients = [
-        songNotes[0][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 100% 25% padding-box border-box" : songNotes[0][index] === 'S' ? "linear-gradient(to right, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 100% 25% padding-box border-box",
-        songNotes[1][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 33.3% / 100% 25% padding-box border-box" : songNotes[1][index] === 'S' ? "linear-gradient(to right, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 33.3% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 33.3% / 100% 25% padding-box border-box",
-        songNotes[2][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 66.6% / 100% 25% padding-box border-box" : songNotes[2][index] === 'S' ? "linear-gradient(to right, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 66.6% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 66.6% / 100% 25% padding-box border-box",
-        songNotes[3][index] === 'T' ? "linear-gradient(to right, rgb(104, 61, 81) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 99.9% / 100% 25% padding-box border-box" : songNotes[3][index] === 'S' ? "linear-gradient(to right, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 99.9% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 99.9% / 100% 25% padding-box border-box",
+        songNotes[0][index] === 'T' ? "linear-gradient(135deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 0% 0% / 25% 25% padding-box border-box, linear-gradient(225deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 25% 0% / 25% 25% padding-box border-box" : songNotes[0][index] === 'S' ? "linear-gradient(to right, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 100% 25% padding-box border-box",
+        songNotes[1][index] === 'T' ? "linear-gradient(135deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 0% 33% / 25% 25% padding-box border-box, linear-gradient(225deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 25% 33% / 25% 25% padding-box border-box" : songNotes[1][index] === 'S' ? "linear-gradient(to right, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 33.3% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 33.3% / 100% 25% padding-box border-box",
+        songNotes[2][index] === 'T' ? "linear-gradient(45deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 0% 66% / 25% 25% padding-box border-box, linear-gradient(315deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 25% 66% / 25% 25% padding-box border-box" : songNotes[2][index] === 'S' ? "linear-gradient(to right, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 66.6% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 66.6% / 100% 25% padding-box border-box",
+        songNotes[3][index] === 'T' ? "linear-gradient(45deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 0% 99% / 25% 25% padding-box border-box, linear-gradient(315deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 25% 99% / 25% 25% padding-box border-box" : songNotes[3][index] === 'S' ? "linear-gradient(to right, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 99.9% / 100% 25% padding-box border-box" : "linear-gradient(to right, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 99.9% / 100% 25% padding-box border-box",
       ];
     
       const updatedBG = `${barGradient}, ${horizontalGradients.join(", ")}`;
@@ -451,6 +423,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     updateLocalMaps();
     console.log("Updated Map")
     setDisabledSave(true)
+    setTimestamp(localMaps[map_id].timestamp)
     saveAnimation();
     setTimeout(()=> {
       setDisabledSave(false)
@@ -507,56 +480,6 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     console.log("Closed Editor")
   }
 
-  // Scrolling Work:
-  // useEffect(() => {
-  //   if (wavesurfer) {
-  //     const onScroll = () => {
-  //       const scroll = wavesurfer.getScroll();
-  //       // if (vListRef.current && scroll !== vListRef.current.state.scrollOffest) {
-        
-  //       if (vListRef.current) {
-  //         vListRef.current.scrollTo(scroll)
-  //         console.log("vList", scroll, vListRef.current)
-  //         // console.log(scroll, vListRef.current.state.scrollOffest)
-  //       }
-  //     };
-  //     wavesurfer.on('scroll', onScroll); // Update on manual scroll
-  //     // wavesurfer.on('timeupdate', onScroll); // Update on playback
-
-  //     return () => {
-  //       wavesurfer.un('scroll', onScroll);
-  //       // wavesurfer.un('timeupdate', onScroll); // Update on playback
-  //     };
-  //   }
-  // }, [wavesurfer]);
-
-  // const scrollPositionRef = useRef<number>(0);
-
-
-  // useEffect(() => {
-  //   if (wavesurfer) {
-  //     const onScroll = () => {
-  //       const scroll = wavesurfer.getScroll();
-  
-  //       // Prevent unnecessary updates if the scroll position hasn't changed
-  //       if (vListRef.current && vListRef.current.state) {
-  //         const state = vListRef.current.state as ListState;
-  //         if (scroll !== state.scrollOffset) {
-  //           vListRef.current.scrollTo(scroll);
-  //           console.log("vList", scroll, state);
-  //         }
-  //       }
-  //     };
-  
-  //     wavesurfer.on('scroll', onScroll); // Update on manual scroll
-  //     // wavesurfer.on('timeupdate', onScroll); // Update on playback
-  
-  //     return () => {
-  //       wavesurfer.un('scroll', onScroll);
-  //       // wavesurfer.un('timeupdate', onScroll); // Update on playback
-  //     };
-  //   }
-  // }, [wavesurfer]);
   const { contextSafe } = useGSAP();
 
   const saveAnimation = contextSafe(() => {
@@ -589,17 +512,19 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   }, [wavesurfer]);  // Only re-run the effect if `wavesurfer` changes
 
   useEffect(() => {
-    if (listRef.current && isPlaying) {
-      listRef.current.scrollTo(currentTime * 16 * 16)
-      // console.log("snap,useEffect", currentTime)
+    // if (listRef.current && isPlaying) {
+    if (listRef.current) {
+      listRef.current.scrollTo(currentTime * 256)
+      console.log("snap,useEffect", currentTime)
     }
-  }, [currentTime, isPlaying])
+  }, [currentTime])
 
   function scrollWindow(index : number)  {
+    if (isPlaying) return;
     setTimeout(() => {
-      if (wavesurfer) {
+      if (wavesurfer && snapOn && listRef.current) {
         wavesurfer.setTime(index / 16)
-        if (listRef.current && snapOn) listRef.current.scrollTo(index * 16)
+        listRef.current.scrollTo(index * 16)
         // console.log("scrollWindow")
       }
     }, 125)
@@ -614,33 +539,38 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   }
 
   const updateTime = (event: {scrollOffset: number}) => {
-    // if (isPlaying) return;
-    // if (wavesurfer) {
-    //   wavesurfer.setTime(event.scrollOffset / 256)
-    // } 
+    console.log(event)
     if (isPlaying) return; // Prevent updates while playing
     if (wavesurfer) {
       const newTime = event.scrollOffset / 256;
+      console.log("newTime", newTime)
       // Only update if the time has actually changed
-      if (wavesurfer.getCurrentTime() !== newTime) {
+      if (Math.abs(currentTime - newTime) > 0.03) {
         wavesurfer.setTime(newTime);
-        // console.log("updateTime", event.scrollOffset)
+        console.log("updateTime", event.scrollOffset)
       }
     }
   }
 
   const singleBtnStyle = {
-    backgroundColor: (btn === "Single Note")? "rgb(145, 168, 154)" : "#3a4447" 
+    backgroundColor: (btn === "Single Note")? "rgb(145, 168, 154)" : "#3a4447",
+    color: (btn === "Single Note")? "#1a1a1a" : "rgb(145, 168, 154)"
   }
   
   const turnBtnStyle = {
-    backgroundColor: (btn === "Turn Note")? "rgb(145, 168, 154)" : "#3a4447" 
+    backgroundColor: (btn === "Turn Note")? "rgb(145, 168, 154)" : "#3a4447", 
+    color: (btn === "Turn Note")? "#1a1a1a" : "rgb(145, 168, 154)"
   }
   const returnStyle = {
     visibility: (menu === "Return")? "visible" : "hidden",
     opacity: (menu === "Return")? 1 : 0,
     transition: 'opacity 500ms ease, visibility 500ms'
   } as React.CSSProperties
+
+  const snapStyle= {
+    backgroundColor: (snapOn)? "rgb(145, 168, 154)" : "#3a4447",
+    color: (snapOn)? "#1a1a1a" : "rgb(145, 168, 154)"
+  }
 
   return (
     <div id="editor_page">
@@ -672,82 +602,93 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
           <h2>{formatTime(currentTime)} <br/> Song Length: {formatTime((songLength- 1) / 16)}</h2>
           <div id="metadata_wrapper">
             <h1>Metadata: </h1>
-            <label htmlFor="songName">Song Name:</label>
-            <input 
-              className="metadata_input"
-              name="songName" 
-              id="songName"
-              type="text" 
-              value={songName}
-              onChange={(e) => setSongName(e.target.value)}
-            ></input>
+            <div>
+              <label htmlFor="songName">Song Name:</label>
+              <input 
+                className="metadata_input"
+                name="songName" 
+                id="songName"
+                type="text" 
+                value={songName}
+                onChange={(e) => setSongName(e.target.value)}
+              ></input>
+            </div>
             
-            <label htmlFor="songArtist">Song Artist:</label>
-            <input 
-              className="metadata_input"
-              name="songArtist" 
-              id="songArtist"
-              type="text" 
-              value={songArtist}
-              onChange={(e) => setSongArtist(e.target.value)}
-            ></input>
+            <div>
+              <label htmlFor="songArtist">Song Artist:</label>
+              <input 
+                className="metadata_input"
+                name="songArtist" 
+                id="songArtist"
+                type="text" 
+                value={songArtist}
+                onChange={(e) => setSongArtist(e.target.value)}
+              ></input>
+            </div>
             
-            <label htmlFor="songMapper">Song Mapper:</label>
-            <input 
-              className="metadata_input"
-              name="songMapper" 
-              id="songMapper"
-              type="text" 
-              value={songMapper}
-              onChange={(e) => setSongMapper(e.target.value)}
-            ></input>
+            <div>
+              <label htmlFor="songMapper">Song Mapper:</label>
+              <input 
+                className="metadata_input"
+                name="songMapper" 
+                id="songMapper"
+                type="text" 
+                value={songMapper}
+                onChange={(e) => setSongMapper(e.target.value)}
+              ></input>
+            </div>
+           
+            <div>
+              <label htmlFor="songBPM">BPM:</label>
+              <input 
+                className="metadata_input"
+                name="songBPM" 
+                id="songBPM"
+                type="number" 
+                value={bpm}
+                onChange={(e) => setBPM(parseInt(e.target.value))}
+              ></input>
+            </div>
+           
+            <div>
+              <label htmlFor="songGenre">Genre:</label>
+              <input 
+                className="metadata_input"
+                name="songGenre" 
+                id="songGenre"
+                type="text" 
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+              ></input>
+            </div>
             
-            <label htmlFor="songBPM">BPM:</label>
-            <input 
-              className="metadata_input"
-              name="songBPM" 
-              id="songBPM"
-              type="number" 
-              value={bpm}
-              onChange={(e) => setBPM(parseInt(e.target.value))}
-            ></input>
+            <div>
+              <label htmlFor="songLanguage">Language:</label>
+              <input
+                className="metadata_input" 
+                name="songLanguage" 
+                id="songLanguage"
+                type="text" 
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              ></input>
+            </div>
             
-            <label htmlFor="songGenre">Genre:</label>
-            <input 
-              className="metadata_input"
-              name="songGenre" 
-              id="songGenre"
-              type="text" 
-              value={genre}
-              onChange={(e) => setGenre(e.target.value)}
-            ></input>
+            <div>
+              <label htmlFor="songDescription">Description:</label>
+              <input 
+                className="metadata_input"
+                name="songDescription" 
+                id="songDescription"
+                type="text" 
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              ></input>
+            </div>
             
-            <label htmlFor="songLanguage">Language:</label>
-            <input
-              className="metadata_input" 
-              name="songLanguage" 
-              id="songLanguage"
-              type="text" 
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-            ></input>
-            
-            <label htmlFor="songDescription">Description:</label>
-            <input 
-              className="metadata_input"
-              name="songDescription" 
-              id="songDescription"
-              type="text" 
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            ></input>
-            <h2>Note Count: <br/>{noteCount}</h2>
+            <label>Note Count: <br/>{noteCount}</label>
+            <label>Last Updated: <br/>{formatDateFromMillis(timestamp)}</label>
           </div>
-          <button disabled={disabledSave} id="beatmap_save_btn" onClick={() => {saveMap()}}>Save Locally
-            <h2 id="beatmap_save_tooltip">Beatmap Saved</h2>
-          </button>
-
-          <button onClick={() => {closeEditor()}}>Return</button>
         </div>
 
         <div id="hero_list">
@@ -760,7 +701,9 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
                 className="scrollbar"
                 height={height}
                 itemCount={songLength}
-                onScroll={updateTime}
+                onScroll={
+                  isPlaying? undefined : updateTime
+                }
                 itemSize={16} 
                 width={width} 
                 >
@@ -791,16 +734,23 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
                 <button style={{color: (pbRate === 0.25)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(0.25)}}>0.25</button>
                 <button style={{color: (pbRate === 0.50)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(0.50)}}>0.50</button>
                 <button style={{color: (pbRate === 0.75)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(0.75)}}>0.75</button>
-                <button style={{color: (pbRate === 1)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(1)}}>1</button>
+                <button style={{color: (pbRate === 1)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(1)}}>1.00</button>
               </div>
             </div>
           </div>
           
 
-          <button className="styledBtns" onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap {snapOn? "On" : "Off"}</button>
+          <button style={snapStyle} className="styledBtns" onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap {snapOn? "On" : "Off"}</button>
           <div id="notes">
             <button className="styledBtns" style={singleBtnStyle} onClick={() => {setBtn("Single Note")}}>Single Note</button>
             <button className="styledBtns" style={turnBtnStyle} onClick={() => {setBtn("Turn Note")}}>Turn Note</button>
+          </div>
+          <div id="save_return">
+            <button disabled={disabledSave} className="styledBtns" id="beatmap_save_btn" onClick={() => {saveMap()}}>Save Locally
+              <h2 id="beatmap_save_tooltip">Beatmap Saved</h2>
+            </button>
+
+            <button className="styledBtns" onClick={() => {closeEditor()}}>Return</button>
           </div>
           <button disabled={true} className="styledBtns">Deploy</button>
         </div>

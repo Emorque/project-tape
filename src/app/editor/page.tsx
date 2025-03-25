@@ -33,7 +33,7 @@ export default function EditorPage() {
 
   // Multiple Prompt states
   const [deletePromptVisible, setDeleteVisible] = useState<boolean>(false)
-  const [disabledEditButton, setDisabledEditButton] = useState<boolean>(false) 
+  // const [disabledEditButton, setDisabledEditButton] = useState<boolean>(false) 
   const [disabledCreateButton, setDisabledCreateButton] = useState<boolean>(false) 
 
 
@@ -247,12 +247,12 @@ export default function EditorPage() {
                 </div>
                 
                 <div className="beatmap_icons">
-                  <button disabled={disabledEditButton} onClick={() => {
+                  <button disabled={disabledCreateButton} onClick={() => {
                     if (audioURL == "") {
                       console.log("Audio must be set first")
-                      setDisabledEditButton(true)
+                      setDisabledCreateButton(true)
                       setTimeout(() => {
-                        setDisabledEditButton(false)
+                        setDisabledCreateButton(false)
                       }, 1500)
                       audioNeeded();
                       return;

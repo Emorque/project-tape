@@ -36,11 +36,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
   const bottomAnimation = contextSafe((btn : string) => {
     gsap.to(btn, {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
   })
-
-// const bottomAnimation = contextSafe((btn : string) => {
-//     gsap.to(btn, {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
-// })
-
+  
   // Keybind Assignment 
   useEffect(() => {
     const handleKeyDown = (event: {key: string; repeat: boolean}) => {

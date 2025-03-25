@@ -84,11 +84,6 @@ input::file-selector-button {
     margin-bottom: 25px;
 }
 
-#beatmap_container span {
-    /* background-color: red; */
-    /* font-weight: bolder; */
-}
-
 .beatmap_icons{
     display: flex;
     gap: 5px;
@@ -111,7 +106,6 @@ input::file-selector-button {
 }
 
 .beatmap {
-    /* border: 1px solid red; */
     width: 100%;
     display: flex;
     padding: 0px 10px;
@@ -120,23 +114,12 @@ input::file-selector-button {
     justify-content: space-between;
 }
 
-/* #delete_wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.192);
-    z-index: 10;
-    height: 100%;
-    width: 100%;
-} */
-
 #editor_wrapper {
     width: 100%;
     height: 100%;
     background-color: rgba(59, 59, 59, 1); 
     position: absolute;
     top:0;
-    /* z-index: 30; */
 }
 
 /* Editor */
@@ -157,7 +140,6 @@ input::file-selector-button {
 }
 
 label {
-    /* background-color: red; */
     font-size: 1.5rem;
 }
 
@@ -218,7 +200,7 @@ label {
 }
 
 #current_bar {
-    background-color: rgba(26, 0, 0, 0.384);
+    background-color: rgba(119, 114, 114, 0.384);
     z-index: 10;
     position: absolute;
     width: calc(100% - 10px);
@@ -230,12 +212,24 @@ label {
 
 .hero_bar {
     border-top: 0.01px solid rgba(255, 255, 255, 0.25); 
+    /* width: 100%; */
+    /* height: 100%; */
+}
+
+#metadata_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    div {
+        display: flex;
+        flex-direction: column;
+    }
 }
 
 #left_hero {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    gap: 10px;
     width: 20%;
     height: 100%;
     overflow-y: auto;   
@@ -255,6 +249,12 @@ label {
     width: 20%;
     height: 100%;
     overflow-y: auto;   
+}
+
+#save_return {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 #return_wrapper, #delete_wrapper {
