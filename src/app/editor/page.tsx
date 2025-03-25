@@ -33,6 +33,9 @@ export default function EditorPage() {
 
   // Multiple Prompt states
   const [deletePromptVisible, setDeleteVisible] = useState<boolean>(false)
+  const [disabledEditButton, setDisabledEditButton] = useState<boolean>(false) 
+  const [disabledCreateButton, setDisabledCreateButton] = useState<boolean>(false) 
+
 
   // Get all maps from Local Storage
   useEffect(() => {
@@ -70,16 +73,11 @@ export default function EditorPage() {
     setUserKeybinds(newKeybinds)
   }
 
-
   const { contextSafe } = useGSAP();
 
-  // const keyError = contextSafe((btnRef: string) => {
-  //   gsap.to(btnRef, {backgroundColor: "#c70000 ", yoyo: true, repeat: 1, duration:0.75})
-  //   gsap.to("#mapping_error", {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
-  // })
   const audioNeeded = contextSafe(() => {
-    gsap.to("#audio_input", {backgroundColor: "#c70000 ", yoyo: true, repeat: 1, duration:0.75})
-    gsap.to("#audio_tooltip_text", {color: "#740000", textContent: "Audio File Needed", yoyo: true, repeat: 1, duration:0.75})
+    gsap.to("#audio_input", {backgroundColor: "#df0000 ", yoyo: true, repeat: 1, duration:0.75})
+    gsap.to("#audio_tooltip_text", {color: "#df0000", yoyo: true, repeat: 1, duration:0.75})
   })
 
   const keybindsWrapperStyle = {
@@ -190,15 +188,30 @@ export default function EditorPage() {
     <div id="editor">
       <div id="beatmap_wrapper">
         <div id="audio_select">
-          <h3 id="audio_tooltip_text">Select your Audio File</h3>
+          <h2 id="audio_tooltip_text">Enter Your Audio File</h2>
           <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>
-          {/* <div id="audio_tooltip_text" className="bottom_tooltip_text">
-            Audio Entry Needed
-          </div> */}
         </div>
 
         <div id="create_settings">
-          <button id="create_btn" onClick={() => {newMap()}}>Create</button>
+          <button id="create_btn" disabled={disabledCreateButton} onClick={() => {
+            if (audioURL == "") {
+              console.log("Audio must be set first")
+              setDisabledCreateButton(true)
+              setTimeout(() => {
+                setDisabledCreateButton(false)
+              }, 1500)
+              audioNeeded();
+              return;
+            }
+            newMap()          
+            }}>
+            <div id="create_div">
+              Create 
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-plus-lg" viewBox="0 0 16 16">
+                <path fillRule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+              </svg>
+            </div>            
+          </button>
           <button id="keybinds_btn" disabled={(menu == "keybinds")} onClick={() => {
             if (keybindsView) return;
             setMenu("keybinds")
@@ -228,15 +241,19 @@ export default function EditorPage() {
             return (
               <div key={map_id} className="beatmap">
                 <div>
-                  <h2>{song_metadata.song_name || 'Untitled Song'}</h2>
-                  <h2>Artist: {song_metadata.song_artist || "Untitled Artist"}</h2>  
+                  <h2><span>Title:</span> {song_metadata.song_name || 'Untitled Song'}</h2>
+                  <h2><span>Artist:</span> {song_metadata.song_artist || "Untitled Artist"}</h2>  
                   <h4>Last Edited: {formatDateFromMillis(timestamp)}</h4>
                 </div>
                 
-                <div>
-                  <button onClick={() => {
+                <div className="beatmap_icons">
+                  <button disabled={disabledEditButton} onClick={() => {
                     if (audioURL == "") {
                       console.log("Audio must be set first")
+                      setDisabledEditButton(true)
+                      setTimeout(() => {
+                        setDisabledEditButton(false)
+                      }, 1500)
                       audioNeeded();
                       return;
                     }
@@ -250,13 +267,20 @@ export default function EditorPage() {
                     setTimeout(() => {
                       setKeybindsView(false)
                     }, 1500)
-                    }}>Edit</button>
+                    }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-pencil-fill" viewBox="0 0 16 16">
+                        <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>
+                      </svg>
+                    </button>
                   <button onClick={() => {
                     setMenu("Delete")
                     setDeleteVisible(true)
                     setMapID(map_id)
                     setSelectedMap(editorMap)
-                  }}>Delete Beatmap
+                  }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-trash3-fill" viewBox="0 0 16 16">
+                      <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
+                    </svg>
                   </button>
                 </div>
                 
@@ -271,18 +295,20 @@ export default function EditorPage() {
         {(deletePromptVisible) &&
           <div id="delete_div">
             <h2>You are going to delete the &quot;{selectedMap?.song_metadata.song_name}&quot; beatmap. Are you sure?</h2>
-            <button onClick={() => {
-              setMenu("")
-              setTimeout(() => {
-                setDeleteVisible(false)
-              }, 500)
-            }}>No, Keep It</button>
+            <div id="delete_btns">
+              <button onClick={() => {
+                setMenu("")
+                setTimeout(() => {
+                  setDeleteVisible(false)
+                }, 500)
+              }}>No, Keep It</button>
 
-            <button onClick={() => {
-              deleteMap()
-              setMenu("")
-              setDeleteVisible(false)
-            }}>Yes, Delete It</button>
+              <button onClick={() => {
+                deleteMap()
+                setMenu("")
+                setDeleteVisible(false)
+              }}>Yes, Delete It</button>
+            </div>
           </div>
         }
       </div>

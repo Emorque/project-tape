@@ -242,14 +242,35 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
     }
   }
 
+  const singleNoteStyle =  {
+    backgroundColor: (actionKey === "Single")? "#91a89a" : "#1a1a1a",
+    color: (actionKey === "Single")? "#1d1d1d" : "#eaeaea"
+  }
+  const turnNoteStyle =  {
+      backgroundColor: (actionKey === "Turn")? "#91a89a" : "#1a1a1a",
+      color: (actionKey === "Turn")? "#1d1d1d" : "#eaeaea"
+  }
+  const lowerSpdStyle =  {
+      backgroundColor: (actionKey === "Decrease Spd")? "#91a89a" : "#1a1a1a",
+      color: (actionKey === "Decrease Spd")? "#1d1d1d" : "#eaeaea"
+  }
+  const raiseSpdStyle =  {
+      backgroundColor: (actionKey === "Increase Spd")? "#91a89a" : "#1a1a1a",
+      color: (actionKey === "Increase Spd")? "#1d1d1d" : "#eaeaea"
+  }
+  const snapStyle = {
+      backgroundColor: (actionKey === "Snap")? "#91a89a" : "#1a1a1a",
+      color: (actionKey === "Snap")? "#1d1d1d" : "#eaeaea"
+  }
+  const musicStyle = {
+      backgroundColor: (actionKey === "Music")? "#91a89a" : "#1a1a1a",
+      color: (actionKey === "Music")? "#1d1d1d" : "#eaeaea"
+  }
+
   return (
     <div id="keybinds_page">
       <button id="keybinds_back_btn" onClick={() => {
         clearKeybinds()
-        // setMenu("")
-        // setTimeout(() => {
-        //   setKeybindsView(false)
-        // }, 1000)
         }}>
         <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
           <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
@@ -260,32 +281,32 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
         
         <div className="horizontal_div">
           <h2>Single Note</h2>
-          <button id="singleNoteBtn" className="action_btn" onClick={() => {newActionKey("Single")}}>{singleNoteBtn}</button>
+          <button id="singleNoteBtn" className="action_btn" style={singleNoteStyle} onClick={() => {newActionKey("Single")}}>{singleNoteBtn}</button>
         </div>
 
         <div className="horizontal_div">
           <h2>Turn Note</h2>
-          <button id="turnNoteBtn" className="action_btn" onClick={() => {newActionKey("Turn")}}>{turnNoteBtn}</button>
+          <button id="turnNoteBtn" className="action_btn" style={turnNoteStyle} onClick={() => {newActionKey("Turn")}}>{turnNoteBtn}</button>
         </div>      
         
         <div className="horizontal_div">
           <h2>Lower Speed</h2>
-          <button id="decreaseSpdBtn" className="action_btn" onClick={() => {newActionKey("Decrease Spd")}}>{decreaseSpdBtn}</button>
+          <button id="decreaseSpdBtn" className="action_btn" style={lowerSpdStyle} onClick={() => {newActionKey("Decrease Spd")}}>{decreaseSpdBtn}</button>
         </div>
         
         <div className="horizontal_div">
           <h2>Raise Speed</h2>
-          <button id="increaseSpdBtn" className="action_btn" onClick={() => {newActionKey("Increase Spd")}}>{increaseSpdBtn}</button>
+          <button id="increaseSpdBtn" className="action_btn" style={raiseSpdStyle} onClick={() => {newActionKey("Increase Spd")}}>{increaseSpdBtn}</button>
         </div>
         
         <div className="horizontal_div">  
           <h2>Toggle Snap</h2>
-          <button id="snapBtn" className="action_btn" onClick={() => {newActionKey("Snap")}}>{snapBtn}</button>
+          <button id="snapBtn" className="action_btn" style={snapStyle} onClick={() => {newActionKey("Snap")}}>{snapBtn}</button>
         </div>
 
         <div className="horizontal_div">
           <h2>Toggle Music</h2>
-          <button id="toggleMusicBtn" className="action_btn" onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}
+          <button id="toggleMusicBtn" className="action_btn" style={musicStyle} onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}
             
             <h2 id="mapping_error">Keybind Conflict</h2>
   
