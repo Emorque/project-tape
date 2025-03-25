@@ -330,7 +330,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             <div className="settings_div">
                 <h1>Button Mapping</h1>
                 <div className="setting_tooltip_text">
-                    Set Keybinds
+                    Map Your Buttons
                 </div>
 
                 <div className="horizontal_div">                    

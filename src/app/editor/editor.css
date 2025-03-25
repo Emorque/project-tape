@@ -2,134 +2,464 @@
     box-sizing: border-box; /* Ensure borders don't add extra size */
 }
 
-#editor_page {
-    overflow: auto;
+#editor {
+    /* overflow: auto; */
     width: 100%;
     height: 100%;
+    background-color: var(--black); 
+    color: white;
     scrollbar-width: thin;
     scrollbar-color: var(--grey) transparent;
+    position: relative;
+}
+
+#create_div {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#audio_input {
+    width: 100%;
+    background-color: rgb(53, 53, 53);
+    cursor: pointer;
+}
+
+input::file-selector-button {
+    cursor: pointer;
+    font-weight: bold;
+    background-color: var(--white);
+    color: var(--black);
+    padding: 0.5em;
+    border: 1px solid grey;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+#beatmap_wrapper {
+    height: 100%;
+    width: 50%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+#audio_select {
+    padding-top: 50px;
+    width: 100%;
+    position: relative;
+}
+
+#create_settings {
+    display: flex;
+    width: 100%;
+}
+
+#create_btn {
+    /* height: 100%; */
+    width: 100%;
+    text-align: left;
+    padding-left: 10px;
+    background-color: rgb(53, 53, 53);
+}
+
+#keybinds_btn {
+    padding: 7.5px 5px 2.5px 5px;
+    background-color: var(--black);
+    svg {
+        fill: var(--white)
+    }
+}
+
+
+#beatmap_container {
+    overflow: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.beatmap_icons{
+    display: flex;
+    gap: 5px;
     button {
-        background-color: rgb(250, 238, 223);
+        padding: 5px;
+        background-color: var(--black);
+        transition: all 500ms ease;
+        svg {
+            fill: var(--white);
+            transition: all 500ms ease;
+        }
+    }
+    button:hover {
+        padding: 5px;
+        background-color: var(--white);
+        svg {
+            fill: var(--black)
+        }
+    }
+}
+
+.beatmap {
+    width: 100%;
+    display: flex;
+    padding: 0px 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#editor_wrapper {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(59, 59, 59, 1); 
+    position: absolute;
+    top:0;
+}
+
+/* Editor */
+#editor_page {
+    padding-top: 15px;
+    width: 100%;
+    height: 100%;
+    color: white;
+    background-color: var(--black);
+}
+
+#wave_bars {
+    position: relative;
+    width: 90%;
+    height: 20%;
+    margin: 0 auto;
+    padding: 0px 0px;
+}
+
+label {
+    font-size: 1.5rem;
+}
+
+.metadata_input {
+    background-color: var(--black);
+    color: white;
+    padding: 5px;
+    border-radius: 3px;
+    border: 1px solid var(--grey);
+}
+
+#waveform_container {
+    scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
+    scrollbar-width: thin;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+#waveform_bars{
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    pointer-events: none;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    content: "";
+    border-left: 0.01px solid grey;
+    border-right: 0.01px solid grey;
+}
+
+.waveform_bar {
+    border-right: 0.01px solid rgba(255, 255, 255, 0.25);
+}
+
+#hero_section {
+    padding-top: 25px;
+    width: 90%;
+    height: calc(80% - 20px);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+#hero_list {
+    width: 80%;
+    transform: scaleY(-1);
+}
+
+#hero_editor {
+    position: relative;
+    max-width: 400px;
+    margin: 0 auto;
+    height: 100%;
+}
+
+#current_bar {
+    background-color: rgba(119, 114, 114, 0.384);
+    z-index: 10;
+    position: absolute;
+    width: calc(100% - 10px);
+    height: 4px;
+    content: "";
+    top:0;
+    left: 0;
+}
+
+.hero_bar {
+    border-top: 0.01px solid rgba(255, 255, 255, 0.25); 
+    /* width: 100%; */
+    /* height: 100%; */
+}
+
+#metadata_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    div {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+#left_hero {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 20%;
+    height: 100%;
+    overflow-y: auto;   
+    button {
+        background-color: var(--white);
         border: 0;
         padding: 5px;
-        color: black;
+        color: var(--black);
         cursor: pointer;
     }
 }
 
-#topbar-container {
-    width: 1200px;
-    position: relative;
-    margin: 0 auto;
-    transform: translateX(100px);
+#right_hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 20%;
+    height: 100%;
+    overflow-y: auto;   
 }
 
-#vBars-Container{
-    width: 1000px;
-    height: 120px;
-    background-color: transparent;
-    content: "";
-    border: 0.01px solid grey;
+#save_return {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-.i-bar {
-    border-right: 0.01px solid rgba(255, 255, 255, 0.25);
-}
-
-/* .i-bar:nth-child(33){
-    border-right: 0.01px solid rgba(194, 61, 61, 0.952);
-} */
-
-#gameContainer {
-    width: 400px;
-    height: 500px;
-    background-color: transparent;
-    content: "";
-    transform: scaleY(-1);
-    margin: 0 auto;
-    /* border-top: 10px solid rgb(57, 0, 65); */
-  }
-  
-.v-bar {
-    border-top: 0.01px solid rgba(255, 255, 255, 0.25); 
-
-    /* background: linear-gradient(
-        to right, 
-        rgba(0, 0, 0, 0) 0px, 
-        rgba(0, 0, 0, 0) 99px, 
-        rgb(255, 255, 255) 100px, 
-        rgb(255, 255, 255) 100px,
-         rgba(0, 0, 0, 0) 100px, 
-         rgba(0, 0, 0, 0) 199px, 
-         rgb(255, 255, 255) 200px, 
-         rgb(255, 255, 255) 200px, 
-         rgba(0, 0, 0, 0) 200px, 
-         rgba(0, 0, 0, 0) 299px, 
-         rgb(255, 255, 255) 300px, 
-         rgb(255, 255, 255) 300px, 
-         rgba(0, 0, 0, 0) 300px, 
-         rgba(0, 0, 0, 0) 399px),
-
-        linear-gradient(to bottom, rgb(255, 0, 0) 50%, rgba(0, 0, 0, 0) 50%),
-        linear-gradient(to bottom, rgb(0, 0, 255) 50%, rgba(0, 0, 0, 0) 50%),
-        linear-gradient(to bottom, rgb(255, 0, 0) 50%, rgba(0, 0, 0, 0) 50%),
-        linear-gradient(to bottom, rgb(0, 0, 255) 50%, rgba(0, 0, 0, 0) 50%);
-
-    background-size:           
-        100% 100%,
-        99px, 100%,
-        99px, 100%,
-        99px, 100%,
-        99px, 100%;
-
-    background-position:
-        0 0,
-        0 0,
-        100px 0,
-        200px 0, 
-        300px 0; 
-    background-repeat: no-repeat; */
-}
-
-#gameContainer:after {
+#return_wrapper, #delete_wrapper {
     position: absolute;
-    left: 0;
     top: 0;
-    content: "";
-    width: 390px;
-    height: 10px;
-    background-color: transparent;
-    content: "";
-    transform: scaleY(-1);
-    background-color: rgba(138, 138, 19, 0.13);
-    margin: 0 auto;
-    /* border-top: 10px solid rgb(57, 0, 65); */
-  }
-
-#waveform-Container {
-    scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
-    scrollbar-width: thin;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.781);
+    z-index: 20;
+    height: 100%;
+    width: 100%;
 }
 
-.hideScrollbar {
-    scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
-    scrollbar-width:thin;
-    /* margin-bottom: 100px; */
+#return_div, #delete_div {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+    gap: 10px;
 }
 
+#notes {
+    display: flex;
+    flex-direction: column;
+}
+  
+.no_scrollbar {
+    scrollbar-width: none;
+}
 
 .scrollbar {
     scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
     scrollbar-width: thin;
+    overflow: hidden;
 }
 
+#beatmap_save_btn {
+    position: relative;
+}
+
+#beatmap_save_tooltip {
+    visibility: hidden;
+    opacity: 0;
+    width: fit-content;
+    background-color: var(--black);
+    color: #eaeaea;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    bottom: 110%;
+    left: 4px;
+    font-size: 1.2rem;
+}
+
+#editor_exit, #delete_btns {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    button {
+        background-color: var(--black);
+        border: 0;
+        padding: 5px;
+        color: var(--white);
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+    button:hover {
+        background-color: var(--white);
+        color: var(--black)
+
+    }
+}
+
+#play_speed {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    button {
+        background-color: var(--black);
+        border: 0;
+        padding: 5px;
+        /* color: var(--grey); */
+        cursor: pointer;
+        transition: all 0.25s ease;
+        /* font-size: 1.2rem; */
+    }
+    svg {
+        fill: var(--white);
+    }
+}
+
+
+
+/* Keybinds Component */
+#keybinds_wrapper {
+    background-color: rgba(59, 59, 59, 0.6);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top:0;
+    left: 0;
+}
+
+#keybinds_style {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top:0
+}
+
+.styledBtns {
+    background-color: var(--white);
+    border: 0;
+    padding: 5px;
+    color: var(--black);
+    cursor: pointer;
+} 
+
+#keybinds_page {
+    background-color: var(--grey);
+    width: 50%;
+    height: 100%;
+    overflow: auto;
+}
+
+#keybinds_container {
+    width: 90%;
+    height: calc(100% - 45px);
+    margin: 0 auto;
+    overflow: auto;
+
+    /* 45 px comes from back height from back button*/
+    /* color: white; */
+    letter-spacing: 1px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    h1 {
+        width: fit-content;
+    }
+}
+
+#toggleMusicBtn {
+    position: relative;
+}
+
+#mapping_error {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    visibility: hidden;
+    opacity: 0;
+    font-size: 1.75rem;
+    color: #c70000  ;
+}
+
+/* #audio_tooltip_text {
+    position: absolute;
+    height: fit-content;
+    top: 110%;
+    left: 0;
+    visibility: visible;
+    background-color: var(--black);
+    opacity: 1;
+    font-size: 1rem;
+    color: #c70000  ;
+} */
+
+.bottom_tooltip_text{
+    visibility: hidden;
+    opacity: 0;
+    width: fit-content;
+    background-color: var(--black);
+    color: #eaeaea;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    bottom: 110%;
+    left: 4px;
+    font-size: 1.2rem;
+}
+
+.horizontal_div {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    width: 90%;
+    margin: 0 auto;
+    button {
+        background-color: var(--black);
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    h2 {
+        margin: auto 0;
+    }
+}
 
 #divWrapper {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    /* align-items: center; */
-    /* justify-content: center; */
     gap: 100px;
     padding: 20px;
     padding-top: 60px;
@@ -141,6 +471,37 @@
     gap: 10px;
 }
 
+#save_reset_btns {
+    display: flex;
+    flex-direction: row;
+    margin: 0 auto;
+    padding-top: 20px;
+    gap: 10px;
+}
+.action_btn {
+    font-size: 2rem;
+    /* Background Color handled in TSX */
+}
+
+
+#keybinds_back_btn {
+    background-color: var(--black);
+    svg {
+        fill: var(--white)
+    }
+}
+
+.bottom_btns {
+    width: fit-content;
+    padding: 5px;
+    font-size: 1.4rem;
+    background-color: var(--black);
+    color: var(--white);
+    position: relative;
+    border-radius: 6px;
+}
+
+
 #exportDiv {
     display: flex;
     justify-content: center;
@@ -150,5 +511,60 @@
     }
 }
 
+#timeline {
+    width: 100%;
+}
 
+#pr_btn_container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between; /* This ensures buttons are evenly spaced */
+    div {
+        display: flex;
+    }
+}
 
+.playrate_btns {
+    width: 3em;
+}
+
+.playrate_btns:hover {
+    background-color: #ddd; /* Optional: Add hover effect */
+}
+
+/* This is affecting the waveform slider?? Why is the scroll bar green  */
+.slider {
+    appearance: none;
+    width: 100%;
+    /* max-width: 900px; */
+    border-radius: 10px;
+    height: 15px;
+    background: var(--green);
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+  
+.slider:hover {
+    opacity: 1;
+}
+  
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    border-radius: 5px;
+    aspect-ratio: 1;
+    background: var(--white);
+    cursor: pointer;
+}
+  
+.slider::-moz-range-thumb {
+    width: 15px;
+    aspect-ratio: 1;
+    background: var(--grey);
+    cursor: pointer;
+}

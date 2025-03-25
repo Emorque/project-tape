@@ -25,6 +25,28 @@ export type mapMetadata = {
 }
 
 export type sMap = [number,string][]
+
+export type localStorageMaps = {
+  [map_id: string] : {timestamp: string, song_metadata : editorMetadata, song_notes: string[][]}
+}
+
+// Conisder a "last edited key, to help with ordering and it may be a useful bit of info for users"
+export type editorMap = {
+  timestamp: string
+  song_metadata : editorMetadata,
+  song_notes: string[][]
+}
+
+export type editorMetadata = {
+  song_name: string,
+  song_artist: string,
+  song_mapper: string,
+  bpm: number,
+  genre: string,
+  language: string,
+  note_count: number,
+  description: string
+}
   
 export type ranking = {
   user_id: string,
@@ -49,4 +71,14 @@ export type settingsType = {
     hsVolume: number,
 
     offset: number
+}
+
+export type keybindsType = {
+  sNote: string,
+  tNote: string,
+  decreaseSpd: string,
+  increaseSpd: string,
+
+  snap: string,
+  toggleMusic: string
 }
