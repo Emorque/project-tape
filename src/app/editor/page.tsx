@@ -8,6 +8,8 @@ import gsap from 'gsap';
 import { useGSAP } from "@gsap/react";
 
 import { editorMap, keybindsType, localStorageMaps } from "@/utils/helperTypes";
+import { type User } from '@supabase/supabase-js'
+import { createClient } from '@/utils/supabase/client'
 
 const formatDateFromMillis = (milliseconds : string) => {
   const date = new Date(milliseconds);
@@ -21,6 +23,7 @@ const formatDateFromMillis = (milliseconds : string) => {
   return `${month}/${day}/${year} ${hours}:${minutes}`;
 }
 
+const MaxFileSize = 4.0 * 1024 * 1024; // 5.5MBs converting to Bytes which is what File type uses
 
 export default function EditorPage() {
   const [localMaps, setLocalMaps] = useState<localStorageMaps>({})
@@ -35,7 +38,23 @@ export default function EditorPage() {
   const [deletePromptVisible, setDeleteVisible] = useState<boolean>(false)
   // const [disabledEditButton, setDisabledEditButton] = useState<boolean>(false) 
   const [disabledCreateButton, setDisabledCreateButton] = useState<boolean>(false) 
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioFileError, setAudioFileError] = useState<boolean>(false)
 
+
+  const supabase = createClient()
+
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user }, } = await supabase.auth.getUser();
+      console.log(user?.id)
+      setUser(user);
+    };
+
+    fetchUser();
+  }, [supabase]);
 
   // Get all maps from Local Storage
   useEffect(() => {
@@ -80,6 +99,11 @@ export default function EditorPage() {
     gsap.to("#audio_tooltip_text", {color: "#df0000", yoyo: true, repeat: 1, duration:0.75})
   })
 
+  // const fileToBig = contextSafe(() => {
+  //   gsap.to("#audio_input", {backgroundColor: "#df0000 ", yoyo: true, repeat: 1, duration:0.75})
+  //   gsap.to("#audio_tooltip_text", {color: "#df0000", textContent: "Audio File Too Large", yoyo: true, repeat: 1, duration:0.75})
+  // })
+
   const keybindsWrapperStyle = {
     visibility: (menu === "keybinds")? "visible" : "hidden",
     transition: 'visibility 1s'
@@ -120,7 +144,18 @@ export default function EditorPage() {
   const audioChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setAudioURL(URL.createObjectURL(file));    
+    if (file.size > MaxFileSize) {
+      audioNeeded()
+      setAudioFileError(true)
+      setDisabledCreateButton(true);
+      return;
+    }
+    else {
+      setDisabledCreateButton(false);
+      setAudioFileError(false)
+      setAudioFile(file);
+      setAudioURL(URL.createObjectURL(file)); 
+    }   
   }, []);
 
   const clearEditor = () => {
@@ -188,7 +223,7 @@ export default function EditorPage() {
     <div id="editor">
       <div id="beatmap_wrapper">
         <div id="audio_select">
-          <h2 id="audio_tooltip_text">Enter Your Audio File</h2>
+          <h2 id="audio_tooltip_text">{(audioFileError)? "Audio File exceeds 5.5MB" : "Enter Your Audio File" }</h2>
           <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>
         </div>
 
@@ -201,6 +236,9 @@ export default function EditorPage() {
                 setDisabledCreateButton(false)
               }, 1500)
               audioNeeded();
+              return;
+            }
+            if (audioFileError) {
               return;
             }
             newMap()          
@@ -255,6 +293,9 @@ export default function EditorPage() {
                         setDisabledCreateButton(false)
                       }, 1500)
                       audioNeeded();
+                      return;
+                    }
+                    if (audioFileError) {
                       return;
                     }
                     console.log(song_notes)
@@ -324,8 +365,8 @@ export default function EditorPage() {
       </div>
       
       <div id="editor_wrapper" style={editorStyle}>
-        {userKeybinds && editorActive && audioURL && hitsoundsRef.current && selectedMapID && 
-        <Editor metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
+        {user && userKeybinds && editorActive && audioURL && audioFile && hitsoundsRef.current && selectedMapID && 
+        <Editor user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
         }
       </div>
       

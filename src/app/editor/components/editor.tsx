@@ -6,6 +6,7 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import gsap from 'gsap';
 import { useGSAP } from "@gsap/react";
 import { keybindsType, editorMap } from "@/utils/helperTypes";
+import { type User } from '@supabase/supabase-js'
 
 const barGradient = "linear-gradient(rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.50) 24%, rgba(255, 255, 255, 0.50) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 48.75%, rgba(255, 255, 255, 0.50) 48.75%, rgba(255, 255, 255, 0.50) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.50) 74%, rgba(255, 255, 255, 0.50) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box"
 const gameGradient = "linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.25) 24%, rgba(255, 255, 255, 0.25) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.25%, rgba(255, 255, 255, 0.25) 49.25%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.25) 74%, rgba(255, 255, 255, 0.25) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box";
@@ -33,16 +34,18 @@ const formatDateFromMillis = (milliseconds : string) => {
 // import Link from "next/link";
 
 interface editorInterface {
+  user: User | null,
   metadata : editorMap | null, //if null, that means a fresh map has to be made
   map_id: string,
   keybinds : keybindsType,
   songAudio: string,
+  songFile : File,
   hitsoundsRef: {play : () => void;}[];
   clearMap : () => void;
   updateLocalMaps: () => void;
 }
 
-export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
+export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
   const [songNotes, setSongNotes] = useState<string[][]>([])
   const [songLength, setSongLength] = useState<number>(0);    
   const [btn, setBtn] = useState<string>("Single Note");
@@ -62,8 +65,8 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
 
   // Multiple Prompt states
-  const [menu, setMenu] = useState<string>("") // Used for 
-  const [returnPromptVisible, setReturnPrompt] = useState<boolean>(false);
+  const [menu, setMenu] = useState<boolean>(false) // Used for 
+  const [promptMenu, setPromptMenu] = useState<string>("");
   const [mapSaved, setMapSaved] = useState<boolean>(true) 
   const [pbRate, setPbRate] = useState<number>(1)
   const [disabledSave, setDisabledSave] = useState<boolean>(false)
@@ -119,6 +122,7 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
         }
         console.log("Please exit Inspect Mode. Project Tape is likely to creash if you edit with it open. Be sure to save your map often.")
       }
+      console.log('Audio File', songFile)
     }
   }, [isReady])
 
@@ -431,10 +435,10 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
   }
 
   const closeEditor = () => {
-    if (menu === "Return") {
+    if (menu) {
       setMapSaved(false)
-      setReturnPrompt(false)
-      setMenu("")
+      setPromptMenu("")
+      setMenu(false)
       return
     };
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
@@ -467,17 +471,69 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
       
       console.log(isEqual)
       setMapSaved(isEqual)
-      setReturnPrompt(true)
-      setMenu("Return")
+      setPromptMenu("Exit")
+      setMenu(true)
     }
     else {
       setMapSaved(false)
-      setReturnPrompt(true)
-      setMenu("Return")
+      setPromptMenu("Exit")
+      setMenu(true)
     }
 
     // localStorage.setItem("localMaps", JSON.stringify(localMaps));
     console.log("Closed Editor")
+  }
+
+  const verifyDeployment = () => {
+    if (menu) {
+      setMapSaved(false)
+      setPromptMenu("")
+      setMenu(false)
+      return
+    };
+    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+
+    const currentMap = {
+      timestamp: metadata?.timestamp || "",
+      song_metadata : {
+        song_name: songName,
+        song_artist: songArtist,
+        song_mapper: songMapper,
+        bpm: bpm,
+        genre: genre,
+        language: language,
+        note_count: noteCount,
+        description: description
+      },
+      song_notes : songNotes
+    }
+
+    if (map_id in localMaps) {
+      console.log(localMaps[map_id])
+      console.log(currentMap)
+      const isEqual = JSON.stringify({
+        song_metadata: currentMap.song_metadata,
+        song_notes: currentMap.song_notes
+      }) === JSON.stringify({
+        song_metadata: localMaps[map_id].song_metadata,
+        song_notes: localMaps[map_id].song_notes
+      });
+      
+      console.log(isEqual)
+      setMapSaved(isEqual)
+      setPromptMenu("Deploy")
+      setMenu(true)
+    }
+    else {
+      setMapSaved(false)
+      setPromptMenu("Deploy")
+      setMenu(true)
+    }
+    console.log("Deploy Menu")
+  }
+
+  const deployMap = () => {
+    console.log("deployed map")
   }
 
   const { contextSafe } = useGSAP();
@@ -552,6 +608,12 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     }
   }
 
+  // First, ask the user if they are sure they want to upload their beatmap/song
+  // Set a temp limit of 
+  // const verifyUpload = () => {
+
+  // }
+
   const singleBtnStyle = {
     backgroundColor: (btn === "Single Note")? "rgb(145, 168, 154)" : "#3a4447",
     color: (btn === "Single Note")? "#1a1a1a" : "rgb(145, 168, 154)"
@@ -562,8 +624,8 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
     color: (btn === "Turn Note")? "#1a1a1a" : "rgb(145, 168, 154)"
   }
   const returnStyle = {
-    visibility: (menu === "Return")? "visible" : "hidden",
-    opacity: (menu === "Return")? 1 : 0,
+    visibility: (menu)? "visible" : "hidden",
+    opacity: (menu)? 1 : 0,
     transition: 'opacity 500ms ease, visibility 500ms'
   } as React.CSSProperties
 
@@ -752,30 +814,48 @@ export const Editor = ({metadata, map_id, keybinds, songAudio, hitsoundsRef, cle
 
             <button className="styledBtns" onClick={() => {closeEditor()}}>Return</button>
           </div>
-          <button disabled={true} className="styledBtns">Deploy</button>
+          <button className="styledBtns" onClick={() => {verifyDeployment()}}>Deploy</button>
         </div>
       
       </div>
       {/* Change song_mapper to user when I pass into this component. If not logged in, have a note that says "Only registered accounts can upload maps to the internet" */}
 
       <div id="return_wrapper" style={returnStyle}>
-        {(returnPromptVisible) && 
+        {(promptMenu === "Exit" || promptMenu === "Deploy") && 
         <div id="return_div">
-        
-          <h2>You are about to exit the editor. Are you sure?</h2>
-          <h3>{mapSaved? "All changes are Saved" : "You have Unsaved Changes"}</h3>
-          <div id="editor_exit">
-            <button onClick={() => {
-              setMenu("")
-              setTimeout(() => {
-                setReturnPrompt(false)
-              }, 500)
-            }}>No, Return to Editor</button>
-            <button onClick={() => {
-              clearMap()
-            }}>Yes, Exit the Editor</button>
-          </div>  
-          
+          {(promptMenu === "Exit")?
+          <>
+            <h2>You are about to exit the editor. Are you sure?</h2>
+            <h3>{mapSaved? "All changes are Saved" : "You have Unsaved Changes"}</h3> 
+            <div id="editor_exit">
+              <button onClick={() => {
+                setMenu(false)
+                setTimeout(() => {
+                  setPromptMenu("")
+                }, 500)
+              }}>No, Return to Editor</button>
+              <button onClick={() => {
+                clearMap()
+              }}>Yes, Exit the Editor</button>
+            </div>  
+          </>
+          :
+          <>
+            <h2>You are about to deploy your beatmap. Are you sure?</h2>
+            <h3>{mapSaved? "All changes are Saved" : "You have Unsaved Changes"}</h3> 
+            <div id="editor_exit">
+              <button onClick={() => {
+                setMenu(false)
+                setTimeout(() => {
+                  setPromptMenu("")
+                }, 500)
+              }}>No, Return to Editor</button>
+              <button onClick={() => {
+                deployMap()
+              }}>Yes, Deploy my Beatmap</button>
+            </div>  
+          </>
+          }
         </div>
         }
       </div>
