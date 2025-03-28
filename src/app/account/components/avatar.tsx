@@ -21,12 +21,14 @@ export default function Avatar({
   useEffect(() => {
     async function downloadImage(path: string) {
       try {
+        // const { data } = await supabase.storage.from('avatars').download(path)
+        // Changed from the code below because I got the error 
         const { data, error } = await supabase.storage.from('avatars').download(path)
         if (error) {
           throw error
         }
-
         const url = URL.createObjectURL(data)
+        // const url = data.publicUrl
         setAvatarUrl(url)
       } catch (error) {
         console.log('Error downloading image: ', error)
@@ -46,7 +48,7 @@ export default function Avatar({
 
       const file = event.target.files[0]
       const fileExt = file.name.split('.').pop()
-      const filePath = `${uid}-${Math.random()}.${fileExt}`
+      const filePath = `${uid}/${uid}-${Math.random()}.${fileExt}`
 
       // I can use the same file path here {filePath} to not only generate the filePath for the uploaded song, but also add it to the songs's links column when inserting in the sogns table 
 

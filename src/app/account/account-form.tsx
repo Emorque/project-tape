@@ -11,9 +11,9 @@ import "./account_form.css"
 export default function AccountForm({ user }: { user: User | null }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(true)
-  const [fullname, setFullname] = useState<string | null>(null)
+  // const [fullname, setFullname] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
-  const [website, setWebsite] = useState<string | null>(null)
+  // const [website, setWebsite] = useState<string | null>(null)
   const [avatar_url, setAvatarUrl] = useState<string | null>(null)
 
   const getProfile = useCallback(async () => {
@@ -22,7 +22,7 @@ export default function AccountForm({ user }: { user: User | null }) {
 
       const { data, error, status } = await supabase
         .from('profiles')
-        .select(`full_name, username, website, avatar_url`)
+        .select(`username, avatar_url`)
         .eq('id', user?.id)
         .single()
 
@@ -32,9 +32,7 @@ export default function AccountForm({ user }: { user: User | null }) {
       }
 
       if (data) {
-        setFullname(data.full_name)
         setUsername(data.username)
-        setWebsite(data.website)
         setAvatarUrl(data.avatar_url)
       }
     } catch (error) {
@@ -51,12 +49,12 @@ export default function AccountForm({ user }: { user: User | null }) {
 
   async function updateProfile({
     username,
-    website,
+    // website,
     avatar_url,
   }: {
     username: string | null
-    fullname: string | null
-    website: string | null
+    // fullname: string | null
+    // website: string | null
     avatar_url: string | null
   }) {
     try {
@@ -64,12 +62,11 @@ export default function AccountForm({ user }: { user: User | null }) {
 
       const { error } = await supabase.from('profiles').upsert({
         id: user?.id as string,
-        full_name: fullname,
         username,
-        website,
         avatar_url,
         updated_at: new Date().toISOString(),
-      })
+        }, { onConflict: 'id' }
+      )
       if (error) {
         console.error('Supabase Profile error:', error) // Only used for eslint
         throw error
@@ -92,7 +89,7 @@ export default function AccountForm({ user }: { user: User | null }) {
         size={150}
         onUpload={(url) => {
           setAvatarUrl(url)
-          updateProfile({ fullname, username, website, avatar_url: url })
+          updateProfile({ username, avatar_url: url })
         }}
       />
 
@@ -101,7 +98,7 @@ export default function AccountForm({ user }: { user: User | null }) {
         <input id="email" type="text" value={user?.email} disabled />
       </div>
 
-      <div className='account_div'>
+      {/* <div className='account_div'>
         <label htmlFor="fullName">Full Name</label>
         <input
           id="fullName"
@@ -109,7 +106,7 @@ export default function AccountForm({ user }: { user: User | null }) {
           value={fullname || ''}
           onChange={(e) => setFullname(e.target.value)}
         />
-      </div>
+      </div> */}
 
       <div className='account_div'>
         <label htmlFor="username">Username</label>
@@ -121,7 +118,7 @@ export default function AccountForm({ user }: { user: User | null }) {
         />
       </div>
 
-      <div className='account_div'>
+      {/* <div className='account_div'>
         <label htmlFor="website">Website</label>
         <input
           id="website"
@@ -129,12 +126,12 @@ export default function AccountForm({ user }: { user: User | null }) {
           value={website || ''}
           onChange={(e) => setWebsite(e.target.value)}
         />
-      </div>
+      </div> */}
 
       <div id='account_btns'>
         <button
           className="button primary block"
-          onClick={() => updateProfile({ fullname, username, website, avatar_url })}
+          onClick={() => updateProfile({ username, avatar_url })}
           disabled={loading}
         >
           {loading ? 'Loading ...' : 'Update'}

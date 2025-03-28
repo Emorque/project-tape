@@ -31,7 +31,6 @@ const formatDateFromMillis = (milliseconds : string) => {
 
   return `${month}/${day}/${year} ${hours}:${minutes}`;
 }
-
 // import Link from "next/link";
 
 interface editorInterface {
@@ -66,7 +65,11 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
   const [language, setLanguage] = useState<string>(metadata?.song_metadata.language || "")
   const [noteCount, setNoteCount] = useState<number>(metadata?.song_metadata.note_count || 0)
   const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
+  const [source, setSource] = useState<string>(metadata?.song_metadata.source || "");
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
+  const [deploymentMap, setDeploymentMap] = useState<editorMap | null>(null)
+  // DeploymentMap used to be set when deployment menu is set. Draw it from local storage
+  // Fail safe if a user edits the map from local storage. I don't want to send those changes to supabase
 
   // Multiple Prompt states
   const [menu, setMenu] = useState<boolean>(false) // Used for 
@@ -75,6 +78,8 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
   const [pbRate, setPbRate] = useState<number>(1)
   const [disabledSave, setDisabledSave] = useState<boolean>(false)
 
+  // String that will tell the user what fields of data are missing before deploying beatmap
+  const [missingData, setMissingData] = useState<string>("")
 
   const waveformRef = useRef<HTMLDivElement>(null);
 
@@ -421,7 +426,8 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
         genre: genre,
         language: language,
         note_count: noteCount,
-        description: description
+        description: description,
+        source : source
       },
       song_notes : songNotes
     }
@@ -455,7 +461,8 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
         genre: genre,
         language: language,
         note_count: noteCount,
-        description: description
+        description: description,
+        source : source
       },
       song_notes : songNotes
     }
@@ -493,11 +500,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
       setMenu(false)
       return
     };
-
-    // if (songName && songArtist)
-
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
-
     const currentMap = {
       timestamp: metadata?.timestamp || "",
       song_metadata : {
@@ -508,7 +511,8 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
         genre: genre,
         language: language,
         note_count: noteCount,
-        description: description
+        description: description,
+        source : source
       },
       song_notes : songNotes
     }
@@ -523,7 +527,40 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
         song_metadata: localMaps[map_id].song_metadata,
         song_notes: localMaps[map_id].song_notes
       });
-      
+
+      let missingDataString = "Missing fields:"
+
+      if (!localMaps[map_id].song_metadata.song_name) {
+        missingDataString += " Song Name ,"
+      }
+      if (!localMaps[map_id].song_metadata.song_artist) {
+        missingDataString += " Song Artist ,"
+      }
+      if (!localMaps[map_id].song_metadata.bpm) {
+        missingDataString += " BPM ,"
+      }
+      if (!localMaps[map_id].song_metadata.genre) {
+        missingDataString += " Genre ,"
+      }
+      if (!localMaps[map_id].song_metadata.language) {
+        missingDataString += " Song Language ,"
+      }
+      if (!localMaps[map_id].song_metadata.note_count) {
+        missingDataString += " Note Count ,"
+      }
+      if (!localMaps[map_id].song_metadata.source) {
+        missingDataString += " YT Source ,"
+      }
+
+      if (missingDataString.length > 16) {
+        setMissingData(missingDataString.slice(0, -1))
+      }
+      else {
+        setDeploymentMap(localMaps[map_id])
+        console.log("Deployment Map", localMaps[map_id])
+      }
+      // console.log(missingDataString)
+
       console.log(isEqual)
       setMapSaved(isEqual)
       setPromptMenu("Deploy")
@@ -573,15 +610,15 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
 
   const deployMap = async () => {
     
-    if (!songFile || !user) return;
+    if (!songFile || !user || !deploymentMap) return;
     const localMaps = localStorage.getItem("localMaps");
     if (!localMaps) {
       console.log("Beatmap not saved. Unable to Deploy")
       return;
     }
-    const currentMap = JSON.parse(localMaps)
-    const current_metadata = currentMap[map_id].song_metadata
-    const current_notes = currentMap[map_id].song_notes
+    // const currentMap = JSON.parse(localMaps)
+    const current_metadata = deploymentMap.song_metadata
+    const current_notes = deploymentMap.song_notes
     const song_metadata_upload = {
       "song_name" : current_metadata.song_name,
       "song_artist" : current_metadata.song_artist,
@@ -591,7 +628,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
     const map_metadata_upload = {
       "bpm": current_metadata.bpm,
       "genre": current_metadata.genre,
-      "source": "https://www.youtube.com/watch?v=nC3xw1L6ces",
+      "source": current_metadata.source,
       "language": current_metadata.language,
       "song_name": current_metadata.song_name,
       "note_count": current_metadata.note_count,
@@ -613,8 +650,6 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
       console.log('file', file)
       console.log('fileExt', fileExt)
       console.log('filePath', filePath)
-
-
 
       // Uploads song file to storage bucket
       const { error : songUploadError } = await supabase.storage.from('songs').upload(filePath, file);
@@ -864,6 +899,18 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
                 onChange={(e) => setDescription(e.target.value)}
               ></input>
             </div>
+
+            <div>
+              <label htmlFor="songSource">Source Link:</label>
+              <input 
+                className="metadata_input"
+                name="songSource" 
+                id="songSource"
+                type="text" 
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+              ></input>
+            </div>
             
             <label>Note Count: <br/>{noteCount}</label>
             <label>Last Updated: <br/>{formatDateFromMillis(timestamp)}</label>
@@ -943,7 +990,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
           {(promptMenu === "Exit")?
           <>
             <h2>You are about to exit the editor. Are you sure?</h2>
-            <h3>{mapSaved? "All changes are Saved" : "You have Unsaved Changes"}</h3> 
+            <h3>{mapSaved? "All changes are Saved" : "You have Unsaved Changes"}</h3>
             <div id="editor_exit">
               <button onClick={() => {
                 setMenu(false)
@@ -960,16 +1007,21 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
           <>
             <h2>You are about to deploy your beatmap. Are you sure?</h2>
             <h3>{mapSaved? "All changes are Saved" : "You have Unsaved Changes"}</h3> 
+            <h3>{missingData}</h3> 
             <div id="editor_exit">
               <button onClick={() => {
                 setMenu(false)
                 setTimeout(() => {
                   setPromptMenu("")
+                  setMissingData("")
+                  setDeploymentMap(null)
                 }, 500)
               }}>No, Return to Editor</button>
-              <button onClick={() => {
-                deployMap()
-              }}>Yes, Deploy my Beatmap</button>
+              {(missingData === "" && deploymentMap) && 
+                <button onClick={() => {
+                  deployMap()
+                }}>Yes, Deploy my Beatmap</button>
+              }
             </div>
             {!user && 
             <h2>You must be logged in before submititng a beatmap</h2>

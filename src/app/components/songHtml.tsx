@@ -224,6 +224,7 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
                         {(username && avatar_url)?
                         <>
                         <h3>{username}</h3>
+                        <Link href={"/account"}>Visit Account</Link>
                         <form action="/auth/signout" method="post">
                             <button className="button block" type="submit">
                                 Sign Out
@@ -231,10 +232,11 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
                         </form>   
                         </>
                         :
-                        <Link href="/login">Sign In/Up</Link>
+                        <>
+                            <Link href="/login">Sign In/Up</Link>
+                        </>
                         }
                     </div>
-                    {/* <Link href="/login">Sign In / Up</Link> */}
                 </div>
             </div>
             <div id="content_container">

@@ -45,7 +45,8 @@ export type editorMetadata = {
   genre: string,
   language: string,
   note_count: number,
-  description: string
+  description: string,
+  source: string,
 }
   
 export type ranking = {
