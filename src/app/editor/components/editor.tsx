@@ -1,6 +1,7 @@
 
 import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useWavesurfer } from '@wavesurfer/react'
+import { createClient } from '@/utils/supabase/client'
 import { FixedSizeList as List } from 'react-window';
 import AutoSizer from "react-virtualized-auto-sizer";
 import gsap from 'gsap';
@@ -35,6 +36,7 @@ const formatDateFromMillis = (milliseconds : string) => {
 
 interface editorInterface {
   user: User | null,
+  username : string | null
   metadata : editorMap | null, //if null, that means a fresh map has to be made
   map_id: string,
   keybinds : keybindsType,
@@ -45,18 +47,20 @@ interface editorInterface {
   updateLocalMaps: () => void;
 }
 
-export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
+export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, songFile, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
   const [songNotes, setSongNotes] = useState<string[][]>([])
   const [songLength, setSongLength] = useState<number>(0);    
   const [btn, setBtn] = useState<string>("Single Note");
   const [snapOn, setSnap] = useState<boolean>(true);
+
+  const supabase = createClient()
 
   // All of the metadata
   // When setting metadata, like description, disable the other buttons being activiated. Like when pressing "P" for the description, don't play the song 
   // const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "")
   const [songName, setSongName] = useState<string>(metadata?.song_metadata.song_name || "")
   const [songArtist, setSongArtist] = useState<string>(metadata?.song_metadata.song_artist || "")
-  const [songMapper, setSongMapper] = useState<string>(metadata?.song_metadata.song_mapper || "")
+  // const [songMapper, setSongMapper] = useState<string>(metadata?.song_metadata.song_mapper || "")
   const [bpm, setBPM] = useState<number>(metadata?.song_metadata.bpm || 0)
   const [genre, setGenre] = useState<string>(metadata?.song_metadata.genre || "")
   const [language, setLanguage] = useState<string>(metadata?.song_metadata.language || "")
@@ -139,12 +143,10 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
       
       else if (event.key === keybindMappings.decreaseSpd[0] || event.key === keybindMappings.decreaseSpd[1]) {
-        // setPbRate(prevRate => Math.max(0.25, prevRate - 0.25))
         updatePBRate(Math.max(0.25, pbRate - 0.25))
       }
 
       else if (event.key === keybindMappings.increaseSpd[0] || event.key === keybindMappings.increaseSpd[1]) {
-        // setPbRate(prevRate => Math.min(1, prevRate + 0.25))
         updatePBRate(Math.min(1, pbRate + 0.25))
       }
 
@@ -163,7 +165,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return () => {
         document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [btn, pbRate, snapOn, ])
+  }, [btn, pbRate, snapOn ])
 
   const onPlayPause = () => {
     if (wavesurfer) {
@@ -414,7 +416,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
-        song_mapper: songMapper,
+        song_mapper: username || "",
         bpm: bpm,
         genre: genre,
         language: language,
@@ -448,7 +450,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
-        song_mapper: songMapper,
+        song_mapper: username || "",
         bpm: bpm,
         genre: genre,
         language: language,
@@ -491,6 +493,9 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       setMenu(false)
       return
     };
+
+    // if (songName && songArtist)
+
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
 
     const currentMap = {
@@ -498,7 +503,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
-        song_mapper: songMapper,
+        song_mapper: username || "",
         bpm: bpm,
         genre: genre,
         language: language,
@@ -532,8 +537,120 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     console.log("Deploy Menu")
   }
 
-  const deployMap = () => {
-    console.log("deployed map")
+  const [beatmapUpload, setBeatmapUploading] = useState<boolean>(false)
+
+  const formatNotes = (notes : string[][]) => {
+    const finalNotes : [number, string][] = [] 
+    for (let i = 0; i < notes[0].length; i++) {
+      // First Turn
+      if (notes[0][i] === 'T') {
+        finalNotes.push([i * 62.5, "FT"])
+      }
+      // First Left
+      if (notes[0][i] === 'S') {
+        finalNotes.push([i * 62.5, "FL"])
+      }
+      // First Right
+      if (notes[1][i] === 'S') {
+        finalNotes.push([i * 62.5, "FR"])
+      }
+
+      // First Turn
+      if (notes[2][i] === 'T') {
+        finalNotes.push([i * 62.5, "ST"])
+      }
+      // Second Left
+      if (notes[2][i] === 'S') {
+        finalNotes.push([i * 62.5, "SL"])
+      }
+      // Second Right
+      if (notes[3][i] === 'S') {
+        finalNotes.push([i * 62.5, "SR"])
+      }
+    }  
+    return finalNotes;
+  }
+
+  const deployMap = async () => {
+    
+    if (!songFile || !user) return;
+    const localMaps = localStorage.getItem("localMaps");
+    if (!localMaps) {
+      console.log("Beatmap not saved. Unable to Deploy")
+      return;
+    }
+    const currentMap = JSON.parse(localMaps)
+    const current_metadata = currentMap[map_id].song_metadata
+    const current_notes = currentMap[map_id].song_notes
+    const song_metadata_upload = {
+      "song_name" : current_metadata.song_name,
+      "song_artist" : current_metadata.song_artist,
+      "song_mapper" : username
+    }
+
+    const map_metadata_upload = {
+      "bpm": current_metadata.bpm,
+      "genre": current_metadata.genre,
+      "source": "https://www.youtube.com/watch?v=nC3xw1L6ces",
+      "language": current_metadata.language,
+      "song_name": current_metadata.song_name,
+      "note_count": current_metadata.note_count,
+      "description": current_metadata.description,
+      "song_length": (songLength - 1) / 16
+    }
+
+    console.log("SU", song_metadata_upload)
+    console.log("MU", map_metadata_upload)
+    // return 
+    const final_notes = formatNotes(current_notes)
+    try {
+      setBeatmapUploading(true);
+      const file = songFile;
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${user.id}/${user.id}-${Math.random()}.${fileExt}`
+      // user.id is needed with '/' because in my RLS, each user has their own folder, with the name {user.id}
+      // so to be able to upload folders, that folder header with their id is needed to be included
+      console.log('file', file)
+      console.log('fileExt', fileExt)
+      console.log('filePath', filePath)
+
+
+
+      // Uploads song file to storage bucket
+      const { error : songUploadError } = await supabase.storage.from('songs').upload(filePath, file);
+      if (songUploadError) {
+        throw songUploadError
+      }
+      else {
+        try {
+          const { error : beatmapUploadError } = await supabase
+          .from('songs')
+          .insert([{
+            'song_metadata' : song_metadata_upload,
+            'map_metadata' : map_metadata_upload,
+            "song_map" : final_notes,
+            "song_link" : filePath
+          }])
+
+          if (beatmapUploadError) {
+            throw beatmapUploadError
+          }
+        }
+        catch (error) {
+          console.log("Error uploading Beatmap", error)
+        }
+        finally {
+          console.log("Uploaded Beatmap")
+        }
+      }
+      // Uploads beatmap to database table "songs"
+    }
+    catch (error) {
+      console.log("Error uploading Song", error)
+    }
+    finally{
+      setBeatmapUploading(false)
+    }
   }
 
   const { contextSafe } = useGSAP();
@@ -688,17 +805,17 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
               ></input>
             </div>
             
-            <div>
+            {/* <div>
               <label htmlFor="songMapper">Song Mapper:</label>
               <input 
                 className="metadata_input"
                 name="songMapper" 
                 id="songMapper"
                 type="text" 
-                value={songMapper}
+                value={username}
                 onChange={(e) => setSongMapper(e.target.value)}
               ></input>
-            </div>
+            </div> */}
            
             <div>
               <label htmlFor="songBPM">BPM:</label>
@@ -853,7 +970,10 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
               <button onClick={() => {
                 deployMap()
               }}>Yes, Deploy my Beatmap</button>
-            </div>  
+            </div>
+            {!user && 
+            <h2>You must be logged in before submititng a beatmap</h2>
+            }  
           </>
           }
         </div>

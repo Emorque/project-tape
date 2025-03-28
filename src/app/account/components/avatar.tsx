@@ -48,8 +48,11 @@ export default function Avatar({
       const fileExt = file.name.split('.').pop()
       const filePath = `${uid}-${Math.random()}.${fileExt}`
 
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file)
+      // I can use the same file path here {filePath} to not only generate the filePath for the uploaded song, but also add it to the songs's links column when inserting in the sogns table 
 
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file)
+      // File is the actual file itself, and filepath is created manually on the client with user id, some Math.random and the extension of the file
+      // 
       if (uploadError) {
         throw uploadError
       }

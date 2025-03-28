@@ -23,10 +23,11 @@ const formatDateFromMillis = (milliseconds : string) => {
   return `${month}/${day}/${year} ${hours}:${minutes}`;
 }
 
-const MaxFileSize = 4.0 * 1024 * 1024; // 5.5MBs converting to Bytes which is what File type uses
+const MaxFileSize = 5.0 * 1024 * 1024; // 5.5MBs converting to Bytes which is what File type uses
 
 export default function EditorPage() {
   const [localMaps, setLocalMaps] = useState<localStorageMaps>({})
+  const [username, setUsername] = useState<string | null>(null)
   const [editorActive, setEditorActive] = useState<boolean>(false);
   const [selectedMap, setSelectedMap] = useState<editorMap | null>(null)
   const [userKeybinds, setUserKeybinds] = useState<keybindsType | null>(null)
@@ -36,7 +37,6 @@ export default function EditorPage() {
 
   // Multiple Prompt states
   const [deletePromptVisible, setDeleteVisible] = useState<boolean>(false)
-  // const [disabledEditButton, setDisabledEditButton] = useState<boolean>(false) 
   const [disabledCreateButton, setDisabledCreateButton] = useState<boolean>(false) 
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioFileError, setAudioFileError] = useState<boolean>(false)
@@ -55,6 +55,38 @@ export default function EditorPage() {
 
     fetchUser();
   }, [supabase]);
+
+  const getUsername = useCallback(async () => {
+    if (!user) return; // Error without this. Likely because it would query profiles with a null id without it
+    try {
+        // setProfileLoading(true)
+      const { data, error, status } = await supabase
+        .from('profiles')
+        .select(`username`)
+        .eq('id', user?.id)
+        .single()
+
+      if (error && status !== 406) {
+        console.log(error)
+        throw error
+      }
+
+      if (data) {
+        setUsername(data.username)
+      }
+    } catch (error) {
+        console.log(error);
+        console.log("Unsigned User");
+    //   alert('Error loading user data!')
+    } finally {
+        console.log("User loaded")
+        // setProfileLoading(false)
+    }
+  }, [user, supabase])
+
+  useEffect(() => {
+    getUsername()
+  }, [user, getUsername])
 
   // Get all maps from Local Storage
   useEffect(() => {
@@ -179,7 +211,7 @@ export default function EditorPage() {
       return;
     }
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
-    let highestMapId = 1
+    let highestMapId = 0
     for (const map_id in localMaps) {
       const id = parseInt(map_id)
       if (id > highestMapId) {
@@ -223,7 +255,7 @@ export default function EditorPage() {
     <div id="editor">
       <div id="beatmap_wrapper">
         <div id="audio_select">
-          <h2 id="audio_tooltip_text">{(audioFileError)? "Audio File exceeds 5.5MB" : "Enter Your Audio File" }</h2>
+          <h2 id="audio_tooltip_text">{(audioFileError)? "Audio File exceeds 5MB" : "Enter Your Audio File" }</h2>
           <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>
         </div>
 
@@ -365,8 +397,8 @@ export default function EditorPage() {
       </div>
       
       <div id="editor_wrapper" style={editorStyle}>
-        {user && userKeybinds && editorActive && audioURL && audioFile && hitsoundsRef.current && selectedMapID && 
-        <Editor user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
+        {userKeybinds && editorActive && audioURL && audioFile && hitsoundsRef.current && selectedMapID && 
+        <Editor user={user} username={username} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
         }
       </div>
       

@@ -75,7 +75,20 @@ export default function Home() {
       if (songMap) {
         // console.log("fefa", songMap.song_map)
         setGameMap(songMap.song_map)
-        setAudioURL(songMap.song_link);
+        console.log(songMap.song_link)
+        // setAudioURL(songMap.song_link);
+        // downloadAudio()
+        try {
+          const {data : songFile, error : songFileError} = await supabase.storage.from("songs").download(songMap.song_link)
+          if (songFileError) {
+            throw songFileError
+          } 
+          const url = URL.createObjectURL(songFile)
+          setAudioURL(url)
+        }
+        catch (error) {
+          console.log("Error downloading Audio", error)
+        }
       }
     } catch (error) {
       console.error('User error:', error) // Only used for eslint
@@ -89,26 +102,26 @@ export default function Home() {
       const localSettings = localStorage.getItem("settings")
       let updateSettings : settingsType 
       if (!localSettings) {
-          console.log("No Local Settings")
-          updateSettings = {
-              lLane: "J",
-              rLane: "L",
-              lTurn: "A",
-              rTurn: "D",
+        console.log("No Local Settings")
+        updateSettings = {
+            lLane: "J",
+            rLane: "L",
+            lTurn: "A",
+            rTurn: "D",
 
-              pause: "Q",
-              restart: "P",
+            pause: "Q",
+            restart: "P",
 
-              scrollSpd: 1500,
+            scrollSpd: 1500,
 
-              gpVolume: 1,
-              hsVolume: 1,
+            gpVolume: 1,
+            hsVolume: 1,
 
-              offset: 0
-          }
+            offset: 0
+        }
       }
       else{
-          updateSettings = JSON.parse(localSettings);
+        updateSettings = JSON.parse(localSettings);
       }
       
       // Come back to fix in case some users delete/rename keys
