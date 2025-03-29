@@ -1,4 +1,5 @@
-import { login, signup } from './actions'
+import Link from 'next/link'
+import { login } from './actions'
 import './login.css'
 
 export default function LoginPage() {
@@ -14,7 +15,10 @@ export default function LoginPage() {
       </div>
       <div>
         <button formAction={login}>Log in</button>
-        <button formAction={signup}>Sign up</button>
+      </div>
+      <div>
+        <h1>Don't Have an Acccount?</h1>
+        <Link href={"/signup"}>Sign Up Here</Link>
       </div>
     </form>
   )

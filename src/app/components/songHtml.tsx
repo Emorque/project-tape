@@ -221,7 +221,7 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
                         size={30}
                     />
                     <div id="user_info">
-                        {(username && avatar_url)?
+                        {(username && (typeof(avatar_url) === 'string'))?
                         <>
                         <h3>{username}</h3>
                         <Link href={"/account"}>Visit Account</Link>
