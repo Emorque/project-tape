@@ -5,21 +5,15 @@ import { type User } from '@supabase/supabase-js'
 import Avatar from './components/avatar'
 
 import "./account_form.css"
-
-// ...
+import Link from 'next/link'
 
 export default function AccountForm({ user }: { user: User | null }) {
   const supabase = createClient()
-  const [loading, setLoading] = useState(true)
-  // const [fullname, setFullname] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
-  // const [website, setWebsite] = useState<string | null>(null)
   const [avatar_url, setAvatarUrl] = useState<string | null>(null)
 
   const getProfile = useCallback(async () => {
     try {
-      setLoading(true)
-
       const { data, error, status } = await supabase
         .from('profiles')
         .select(`username, avatar_url`)
@@ -39,7 +33,7 @@ export default function AccountForm({ user }: { user: User | null }) {
       console.error('User error:', error) // Only used for eslint
       alert('Error loading user data!')
     } finally {
-      setLoading(false)
+      console.log("Profile Successfully Obtained")
     }
   }, [user, supabase])
 
@@ -48,21 +42,13 @@ export default function AccountForm({ user }: { user: User | null }) {
   }, [user, getProfile])
 
   async function updateProfile({
-    username,
-    // website,
     avatar_url,
   }: {
-    username: string | null
-    // fullname: string | null
-    // website: string | null
     avatar_url: string | null
   }) {
     try {
-      setLoading(true)
-
       const { error } = await supabase.from('profiles').upsert({
         id: user?.id as string,
-        username,
         avatar_url,
         updated_at: new Date().toISOString(),
         }, { onConflict: 'id' }
@@ -71,77 +57,46 @@ export default function AccountForm({ user }: { user: User | null }) {
         console.error('Supabase Profile error:', error) // Only used for eslint
         throw error
       }
-      alert('Profile updated!')
     } catch (error) {
       console.error('Profile Update error:', error) // Only used for eslint
       alert('Error updating the data!')
     } finally {
-      setLoading(false)
     }
   }
 
   return (
     <div id='account_form' className="form-widget">
-
        <Avatar
         uid={user?.id ?? null}
         url={avatar_url}
         size={150}
         onUpload={(url) => {
           setAvatarUrl(url)
-          updateProfile({ username, avatar_url: url })
+          updateProfile({ avatar_url: url })
         }}
       />
 
       <div className='account_div'>
-        <label htmlFor="email">Email</label>
-        <input id="email" type="text" value={user?.email} disabled />
+        <label htmlFor="email">Email:</label>
+        <h2>{user?.email}</h2>
       </div>
-
-      {/* <div className='account_div'>
-        <label htmlFor="fullName">Full Name</label>
-        <input
-          id="fullName"
-          type="text"
-          value={fullname || ''}
-          onChange={(e) => setFullname(e.target.value)}
-        />
-      </div> */}
 
       <div className='account_div'>
-        <label htmlFor="username">Username</label>
-        <input
-          id="username"
-          type="text"
-          value={username || ''}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+        <label htmlFor="username">Username:</label>
+        <h2 id='username'>{username || ''}</h2>
       </div>
 
-      {/* <div className='account_div'>
-        <label htmlFor="website">Website</label>
-        <input
-          id="website"
-          type="url"
-          value={website || ''}
-          onChange={(e) => setWebsite(e.target.value)}
-        />
-      </div> */}
-
       <div id='account_btns'>
-        <button
-          className="button primary block"
-          onClick={() => updateProfile({ username, avatar_url })}
-          disabled={loading}
-        >
-          {loading ? 'Loading ...' : 'Update'}
-        </button>
-
         <form action="/auth/signout" method="post">
           <button className="button block" type="submit">
             Sign out
           </button>
         </form>
+        {/* Link is too quick lol. I can bring back Link only I add a loading element to the main page */}
+      </div>
+      <div id='links_div'>
+        <Link href={"/account/updatepassword"}>Reset Password</Link> 
+        <a href={"/"}>Back to Project Tape</a> 
       </div>
     </div>
   )

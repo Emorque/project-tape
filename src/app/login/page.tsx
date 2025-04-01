@@ -12,13 +12,17 @@ export default function LoginPage() {
       <div>
         <label htmlFor="password">Password:</label>
         <input id="password" name="password" type="password" required />  
+        <Link href={"/passwordrecovery"}>Forgot Password?</Link>
       </div>
       <div>
         <button formAction={login}>Log in</button>
       </div>
       <div>
         <h1>Don't Have an Acccount?</h1>
-        <Link href={"/signup"}>Sign Up Here</Link>
+        <Link className='links' href={"/signup"}>Sign Up Here</Link>
+      </div>
+      <div>
+        <a className='links' href={"/"}>Back to Project Tape</a> 
       </div>
     </form>
   )
