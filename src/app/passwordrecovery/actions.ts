@@ -20,6 +20,15 @@ const getURL = () => {
 export async function recoverPassword(formData: FormData) {
   const supabase = await createClient()
 
+  // Check if a user's logged in
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user) {
+    await supabase.auth.signOut()
+  }
+
   // type-casting here for convenience
   // in practice, you should validate your inputs
   const data = {
@@ -35,5 +44,5 @@ export async function recoverPassword(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/account')
+  redirect('/passwordreset')
 }

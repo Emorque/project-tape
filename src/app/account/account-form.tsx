@@ -95,7 +95,7 @@ export default function AccountForm({ user }: { user: User | null }) {
         {/* Link is too quick lol. I can bring back Link only I add a loading element to the main page */}
       </div>
       <div id='links_div'>
-        <Link href={"/account/updatepassword"}>Reset Password</Link> 
+        <Link href={"/passwordrecovery"}>Reset Password</Link> 
         <a href={"/"}>Back to Project Tape</a> 
       </div>
     </div>

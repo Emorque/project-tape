@@ -27,6 +27,16 @@ export async function signup(formData: FormData) {
     console.error('Missing email, password, or username')
     redirect('/error')
   }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    console.error('Invalid email format');
+    redirect('/signup?error=Invalid+email+format');
+  }
+
+  if (username.length < 3) {
+    console.error('Username is too shirt')
+    redirect('/signup?error=Username+needs+to+be+longer')
+  }
 
   // Check if the username is unique. 
   let { data: profiles, error : usernameError } = await supabase

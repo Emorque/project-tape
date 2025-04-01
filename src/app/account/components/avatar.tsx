@@ -30,6 +30,7 @@ export default function Avatar({
         const url = URL.createObjectURL(data)
         // const url = data.publicUrl
         setAvatarUrl(url)
+        console.log("Image downloaded")
       } catch (error) {
         console.log('Error downloading image: ', error)
       }
@@ -40,6 +41,9 @@ export default function Avatar({
 
   const uploadAvatar: React.ChangeEventHandler<HTMLInputElement> = async (event) => {
     try {
+      const oldUrl = url;
+      // console.log(oldUrl, "oldUrl")
+      // console.log(url)
       setUploading(true)
 
       if (!event.target.files || event.target.files.length === 0) {
@@ -57,6 +61,23 @@ export default function Avatar({
       // 
       if (uploadError) {
         throw uploadError
+      }
+      else {
+        if (oldUrl) {
+          try {
+            const { error : deleteError } = await supabase
+              .storage
+              .from('avatars')
+              .remove([oldUrl])
+            if (deleteError) {
+               throw deleteError
+            }
+          }
+          catch (error) {
+            console.log("Error deleting old profile", error)
+          }
+        }
+
       }
 
       onUpload(filePath)

@@ -11,6 +11,8 @@
 }
 
 #main_menu {
+    height: 100%;
+    /* background-color: red; */
     position: absolute;
     top:0%;
     z-index: 200;
@@ -19,23 +21,10 @@
     min-width: 175px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    overflow: auto;
     gap: 0px;
     transition: left 1s ease;
-}
-
-@media screen and (min-height: 450px) {
-    #main_menu {
-        position: absolute;
-        top:20%;
-        z-index: 200;
-        width: 20%;
-        max-width: 250px;
-        min-width: 175px;
-        display: flex;
-        flex-direction: column;
-        gap: 0px;
-        transition: left 1s ease;
-    }
 }
 
 .cas_btn {
@@ -50,7 +39,9 @@
     &:nth-of-type(3) {
         border-top:0
     }
-    
+    &:nth-of-type(4) {
+        border-top:0
+    }
 }
 
 .cas_btn:hover {

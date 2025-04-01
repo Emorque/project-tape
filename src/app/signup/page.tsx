@@ -15,7 +15,7 @@ export default function SignUpPage() {
       </div>
       <div>
         <label htmlFor="username">Username:</label>
-        <input id="username" name="username" type="string" required />  
+        <input id="username" name="username" type="string" required minLength={3} />  
       </div>
       <div>
         <button formAction={signup}>Sign Up</button>
@@ -23,6 +23,9 @@ export default function SignUpPage() {
       <div>
         <h1>Already Have an Acccount?</h1>
         <Link href={"/login"}>Log in Here</Link>
+      </div>
+      <div>
+        <a className='links' href={"/"}>Back to Project Tape</a> 
       </div>
     </form>
   )

@@ -72,6 +72,7 @@
         background-color: var(--black);
         border: 0;
         padding: 5px;
+        font-size: 1.4rem
     }
     button:hover, a:hover {
         color: var(--green);
