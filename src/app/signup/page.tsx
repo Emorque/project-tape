@@ -15,7 +15,7 @@ export default function SignUpPage() {
       </div>
       <div>
         <label htmlFor="username">Username:</label>
-        <input id="username" name="username" type="string" required minLength={3} />  
+        <input id="username" name="username" type="string" required minLength={3} maxLength={12}/>  
       </div>
       <div>
         <button formAction={signup}>Sign Up</button>

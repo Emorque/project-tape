@@ -275,6 +275,7 @@ label {
     align-items: center;
     padding-top: 50px;
     gap: 10px;
+    text-align: center;
 }
 
 #notes {

@@ -68,6 +68,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
   const [source, setSource] = useState<string>(metadata?.song_metadata.source || "");
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
   const [deploymentMap, setDeploymentMap] = useState<editorMap | null>(null)
+  const [deployMessage, setDeployMessage] = useState<string>("")
   // DeploymentMap used to be set when deployment menu is set. Draw it from local storage
   // Fail safe if a user edits the map from local storage. I don't want to send those changes to supabase
 
@@ -574,7 +575,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
     console.log("Deploy Menu")
   }
 
-  const [beatmapUpload, setBeatmapUploading] = useState<boolean>(false)
+  // const [beatmapUpload, setBeatmapUploading] = useState<boolean>(false)
 
   const formatNotes = (notes : string[][]) => {
     const finalNotes : [number, string][] = [] 
@@ -608,15 +609,44 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
     return finalNotes;
   }
 
+  const canUserUpload = () => {
+    if (missingData !== "" || !deploymentMap || !user) return;
+    // setLinkLoading(true);
+    const currentTime = Date.now()
+    const oneDayInMilliseconds = 24 * 3600 * 1000; // 1 day = 24 hours * 3600 seconds/hour * 1000 milliseconds/second
+    const lastUpload = localStorage.getItem("lastUpload")
+    if (lastUpload) {
+      const timeDifference = currentTime - parseInt(lastUpload);
+      // console.log(timeDifference, oneDayInMilliseconds, currentTime.toString())
+      if (timeDifference > oneDayInMilliseconds){
+        localStorage.setItem("lastUpload", currentTime.toString())
+        deployMap();
+      }
+      else {
+        const remainingHours = Math.floor((oneDayInMilliseconds - timeDifference) / (3600 * 1000)); // Get hours
+        const remainingMinutes = Math.floor(((oneDayInMilliseconds - timeDifference) % (3600 * 1000)) / (60 * 1000)); // Get minutes
+
+        console.log("User has already uploaded a song in the last 24 hours.(LS)");
+        setDeployMessage(`You Can Only Upload One Beatmap per Day. You Can Upload Again In ${remainingHours} Hours, ${remainingMinutes} Minutes.`)
+        return;
+      }
+    }
+    else {
+      localStorage.setItem("lastUpload", currentTime.toString())
+      deployMap();
+    }
+  }
+
   const deployMap = async () => {
-    
     if (!songFile || !user || !deploymentMap) return;
     const localMaps = localStorage.getItem("localMaps");
     if (!localMaps) {
+      setDeployMessage("Beatmap Not Saved. Unable To Deploy")
       console.log("Beatmap not saved. Unable to Deploy")
       return;
     }
     // const currentMap = JSON.parse(localMaps)
+    console.log("deployMap")
     const current_metadata = deploymentMap.song_metadata
     const current_notes = deploymentMap.song_notes
     const song_metadata_upload = {
@@ -636,55 +666,64 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
       "song_length": (songLength - 1) / 16
     }
 
-    console.log("SU", song_metadata_upload)
-    console.log("MU", map_metadata_upload)
+    // console.log("SU", song_metadata_upload)
+    // console.log("MU", map_metadata_upload)
     // return 
     const final_notes = formatNotes(current_notes)
     try {
-      setBeatmapUploading(true);
+      setDeployMessage("Beatmap Uploading...");
+
+      const { data: recentUploads, error: uploadCheckError } = await supabase
+      .from("songs")
+      .select("key")
+      .eq("user_id", user.id)
+      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Check for uploads in the last 24 hours
+
+      if (uploadCheckError) {
+        throw uploadCheckError;
+      }
+
+      if (recentUploads && recentUploads.length > 0) {
+        console.log("User has already uploaded a song in the last 24 hours.");
+        setDeployMessage("You Can Only Upload One Beatmap per Day.")
+        return;
+      }
+
       const file = songFile;
       const fileExt = file.name.split('.').pop()
       const filePath = `${user.id}/${user.id}-${Math.random()}.${fileExt}`
       // user.id is needed with '/' because in my RLS, each user has their own folder, with the name {user.id}
       // so to be able to upload folders, that folder header with their id is needed to be included
-      console.log('file', file)
-      console.log('fileExt', fileExt)
-      console.log('filePath', filePath)
 
       // Uploads song file to storage bucket
       const { error : songUploadError } = await supabase.storage.from('songs').upload(filePath, file);
       if (songUploadError) {
         throw songUploadError
       }
-      else {
-        try {
-          const { error : beatmapUploadError } = await supabase
-          .from('songs')
-          .insert([{
-            'song_metadata' : song_metadata_upload,
-            'map_metadata' : map_metadata_upload,
-            "song_map" : final_notes,
-            "song_link" : filePath
-          }])
 
-          if (beatmapUploadError) {
-            throw beatmapUploadError
-          }
-        }
-        catch (error) {
-          console.log("Error uploading Beatmap", error)
-        }
-        finally {
-          console.log("Uploaded Beatmap")
-        }
+      const { error : beatmapUploadError, status } = await supabase
+      .from('songs')
+      .insert([{
+        'user_id' : user.id,
+        'song_metadata' : song_metadata_upload,
+        'map_metadata' : map_metadata_upload,
+        "song_map" : final_notes,
+        "song_link" : filePath
+      }])
+
+      if (beatmapUploadError && status === 403) {
+        setDeployMessage("You Can Only Upload One Beatmap per Day.");
+        throw (beatmapUploadError)
       }
-      // Uploads beatmap to database table "songs"
+      else if (beatmapUploadError && status === 406) {
+        setDeployMessage("Error Uploading Beatmap. Try Again Later");
+        throw (beatmapUploadError)
+        // return;
+      }
+      setDeployMessage("Beatmap Successfully Uploaded & Ready for Review. The Review Process is ~1 day.")
     }
     catch (error) {
-      console.log("Error uploading Song", error)
-    }
-    finally{
-      setBeatmapUploading(false)
+      console.log("Error Uploading Beatmap", error)
     }
   }
 
@@ -1014,15 +1053,19 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
                 setTimeout(() => {
                   setPromptMenu("")
                   setMissingData("")
+                  setDeployMessage("")
                   setDeploymentMap(null)
                 }, 500)
               }}>No, Return to Editor</button>
-              {(missingData === "" && deploymentMap) && 
-                <button onClick={() => {
-                  deployMap()
+              {(missingData === "" && deploymentMap && user) && 
+                <button disabled={deployMessage!==""} onClick={() => {
+                  canUserUpload()
                 }}>Yes, Deploy my Beatmap</button>
               }
             </div>
+            {(deployMessage !== "") && 
+              <h2>{deployMessage}</h2>
+            }
             {!user && 
             <h2>You must be logged in before submititng a beatmap</h2>
             }  
