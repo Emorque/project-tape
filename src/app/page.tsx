@@ -41,6 +41,7 @@ export default function Home() {
     const fetchUser = async () => {
       const { data: { user }, } = await supabase.auth.getUser()
       setUser(user);
+      console.log("User:", user)
     };
 
     fetchUser();
@@ -176,10 +177,6 @@ export default function Home() {
     setAudioReady(false);
   } 
 
-  // useEffect(() => {
-  //   console.log("Audio is Ready: ", audioReady)
-  // }, [audioReady])
-  const [username, setUsername] = useState<string | null>(null)
   const [avatar_url, setAvatarUrl] = useState<string | null>(null)
 
   const getProfile = useCallback(async () => {
@@ -198,7 +195,6 @@ export default function Home() {
         }
   
         if (data) {
-          setUsername(data.username)
           setAvatarUrl(data.avatar_url)
         }
       } catch (error) {
@@ -241,7 +237,7 @@ export default function Home() {
           rotation={[0, 0, 0]}
         >
           <div className="htmlDiv" style={databaseStyle}>
-            <SongHtml songToPlay={handleSelectedSong} username={username} avatar_url={avatar_url}/>
+            <SongHtml songToPlay={handleSelectedSong} username={user?.user_metadata.username} avatar_url={avatar_url}/>
           </div>
         </Html>
 
@@ -462,7 +458,7 @@ export default function Home() {
       
       <div id="songScreen" style={stageStyle}>
         {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && 
-        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} username={username}/>
+        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong}/>
         }
       </div>
     </div>

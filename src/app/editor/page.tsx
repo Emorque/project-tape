@@ -49,44 +49,45 @@ export default function EditorPage() {
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user }, } = await supabase.auth.getUser();
-      console.log(user?.id)
+      console.log(user)
       setUser(user);
+      setUsername(user?.app_metadata.username)
     };
 
     fetchUser();
   }, [supabase]);
 
-  const getUsername = useCallback(async () => {
-    if (!user) return; // Error without this. Likely because it would query profiles with a null id without it
-    try {
-        // setProfileLoading(true)
-      const { data, error, status } = await supabase
-        .from('profiles')
-        .select(`username`)
-        .eq('id', user?.id)
-        .single()
+  // const getUsername = useCallback(async () => {
+  //   if (!user) return; // Error without this. Likely because it would query profiles with a null id without it
+  //   try {
+  //       // setProfileLoading(true)
+  //     const { data, error, status } = await supabase
+  //       .from('profiles')
+  //       .select(`username`)
+  //       .eq('id', user?.id)
+  //       .single()
 
-      if (error && status !== 406) {
-        console.log(error)
-        throw error
-      }
+  //     if (error && status !== 406) {
+  //       console.log(error)
+  //       throw error
+  //     }
 
-      if (data) {
-        setUsername(data.username)
-      }
-    } catch (error) {
-        console.log(error);
-        console.log("Unsigned User");
-    //   alert('Error loading user data!')
-    } finally {
-        console.log("User loaded")
-        // setProfileLoading(false)
-    }
-  }, [user, supabase])
+  //     if (data) {
+  //       // setUsername(data.username)
+  //     }
+  //   } catch (error) {
+  //       console.log(error);
+  //       console.log("Unsigned User");
+  //   //   alert('Error loading user data!')
+  //   } finally {
+  //       console.log("User loaded")
+  //       // setProfileLoading(false)
+  //   }
+  // }, [user, supabase])
 
-  useEffect(() => {
-    getUsername()
-  }, [user, getUsername])
+  // useEffect(() => {
+  //   getUsername()
+  // }, [user, getUsername])
 
   // Get all maps from Local Storage
   useEffect(() => {
@@ -398,7 +399,7 @@ export default function EditorPage() {
       
       <div id="editor_wrapper" style={editorStyle}>
         {userKeybinds && editorActive && audioURL && audioFile && hitsoundsRef.current && selectedMapID && 
-        <Editor user={user} username={username} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
+        <Editor user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
         }
       </div>
       

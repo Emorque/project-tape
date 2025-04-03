@@ -17,7 +17,6 @@ interface gameInterface {
   audioProp: React.RefObject<HTMLAudioElement>;
   user : User | null;
   song_id: string;
-  username: string | null
 }
 
 const getKeyMapping = (key : string) => {
@@ -31,7 +30,7 @@ const getAccuracy = (perfect: number, okay: number, miss: number) => {
     return accuracy.toFixed(2)
 }
 
-export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, username} : gameInterface) => {   
+export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : gameInterface) => {   
     const [gameState, setGameState] = useState<string>("Waiting"); //False is for paused/complete, True is when the song is playing
     
     // Game Visuals
@@ -797,7 +796,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, use
                     { 'song_id' : song_id, 'user_id': user?.id, 
                         'score': score, 
                         'accuracy': getAccuracy(perfectCount, okayCount, missCount), 
-                        'username' : username, 
+                        'username' : user.user_metadata.username, 
                         'max_combo': maxCombo},
                     ])
     

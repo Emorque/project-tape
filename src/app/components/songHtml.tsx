@@ -39,9 +39,6 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
     })
     const [songLoading, setSongLoading] = useState<boolean>(true);
 
-    // const [profileLoading, setProfileLoading] = useState<boolean>(true)
-
-
     const [leaderboardList, setLeaderboardList] = useState<[string, ranking[]]>(["",[]])
     const [leaderboardLoading, setLeaderboardLoading] = useState<boolean>(true);
     
@@ -108,8 +105,6 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
     const playSong = () => {
         songToPlay(songID)
     }
-    
-    // const leaderboardList = [100,200,300,400,500,600,700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600]
 
     const toggleTab = () => {
         if (tab === "songs") {
@@ -130,7 +125,7 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
         .select('*')
         .eq('song_id', song_id)
         .order('score', {ascending: false})
-        // .limit(10)
+        .limit(10)
 
         // console.log("leader", song_id)
           if (error) {
@@ -145,7 +140,7 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
           }
         } catch (error) {
           console.error('Leaderboard error:', error) // Only used for eslint
-          alert('Error loading Leaderboard!')
+        //   alert('Error loading Leaderboard!')
         } finally {
           console.log('Loaded Leaderboard')
           setLeaderboardLoading(false);
@@ -190,20 +185,6 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
         
         localStorage.setItem("local_songs", JSON.stringify(local_songs));
       }
-    
-    //   useEffect(() => {
-    //     const handleKeyDown = (event: {key: string; repeat: boolean}) => {
-    //         if (event.repeat) return;
-    //         if (event.key === "f") {
-    //             console.log(bookmarkedSongs)
-    //         }
-    //     }
-    //     document.addEventListener('keydown', handleKeyDown);
-    //     // Cleanup the event listener on unmount
-    //     return () => {
-    //         document.removeEventListener('keydown', handleKeyDown);
-    //     };
-    // }, [bookmarkedSongs])  
 
     return (
         <div id="songHtml">
@@ -215,7 +196,6 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
                     </h2>
                 </div>
                 <div id="account_nav">
-                    {/* <h2>{username || ''}</h2> */}
                     <HomeAvatar
                         url={avatar_url}
                         size={30}
@@ -424,37 +404,6 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
                                         </button>                                    
                                     )
                                 })}
-                                {/* <div>
-                                    hi
-                                </div>
-                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>                                <div>
-                                    hi
-                                </div>
-                                 */}
                             </div>
 
 
@@ -503,62 +452,6 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
                                         // <button className="" key={index}>{index}: {player.player_id} - Score: {player.score} - Acc: {player.accuracy} - MC: {player.max_combo}</button>
                                         )
                                     })}
-                                    {/* <tr>
-                                        <th scope="row">{3}</th>
-                                        <td>{233}</td>
-                                        <td>{5435435}</td>
-                                        <td>{43.12}</td>
-                                        <td>{7945}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">{4}</th>
-                                        <td>{233}</td>
-                                        <td>{5435435}</td>
-                                        <td>{43.12}</td>
-                                        <td>{7945}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">{5}</th>
-                                        <td>{233}</td>
-                                        <td>{5435435}</td>
-                                        <td>{43.12}</td>
-                                        <td>{7945}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">{6}</th>
-                                        <td>{233}</td>
-                                        <td>{5435435}</td>
-                                        <td>{43.12}</td>
-                                        <td>{7945}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">{7}</th>
-                                        <td>{233}</td>
-                                        <td>{5435435}</td>
-                                        <td>{43.12}</td>
-                                        <td>{7945}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">{8}</th>
-                                        <td>{233}</td>
-                                        <td>{5435435}</td>
-                                        <td>{43.12}</td>
-                                        <td>{7945}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">{9}</th>
-                                        <td>{233}</td>
-                                        <td>{5435435}</td>
-                                        <td>{43.12}</td>
-                                        <td>{7945}</td>
-                                    </tr>
-                                    <tr>
-                                        <th scope="row">{10}</th>
-                                        <td>{233}</td>
-                                        <td>{5435435}</td>
-                                        <td>{43.12}</td>
-                                        <td>{7945}</td>
-                                    </tr> */}
                                 </tbody>
                             </table>
                             }

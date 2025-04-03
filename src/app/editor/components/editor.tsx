@@ -35,7 +35,6 @@ const formatDateFromMillis = (milliseconds : string) => {
 
 interface editorInterface {
   user: User | null,
-  username : string | null
   metadata : editorMap | null, //if null, that means a fresh map has to be made
   map_id: string,
   keybinds : keybindsType,
@@ -46,7 +45,7 @@ interface editorInterface {
   updateLocalMaps: () => void;
 }
 
-export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, songFile, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
+export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
   const [songNotes, setSongNotes] = useState<string[][]>([])
   const [songLength, setSongLength] = useState<number>(0);    
   const [btn, setBtn] = useState<string>("Single Note");
@@ -422,7 +421,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
-        song_mapper: username || "",
+        song_mapper: user?.user_metadata.username || "",
         bpm: bpm,
         genre: genre,
         language: language,
@@ -457,7 +456,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
-        song_mapper: username || "",
+        song_mapper: user?.user_metadata.username || "",
         bpm: bpm,
         genre: genre,
         language: language,
@@ -507,7 +506,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
-        song_mapper: username || "",
+        song_mapper: user?.user_metadata.username || "",
         bpm: bpm,
         genre: genre,
         language: language,
@@ -652,7 +651,7 @@ export const Editor = ({user, username, metadata, map_id, keybinds, songAudio, s
     const song_metadata_upload = {
       "song_name" : current_metadata.song_name,
       "song_artist" : current_metadata.song_artist,
-      "song_mapper" : username
+      "song_mapper" : user.user_metadata.username
     }
 
     const map_metadata_upload = {
