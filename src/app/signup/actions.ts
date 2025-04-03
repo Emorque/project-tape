@@ -55,11 +55,14 @@ export async function signup(formData: FormData) {
     console.log("username is Available")
   }
 
+  // console.log(`${getURL()}welcome`)
+
+  // return;
   const { error } = await supabase.auth.signUp({
   email: email,
   password: password,
   options : {
-    emailRedirectTo: `${getURL()}welcome`,
+    emailRedirectTo: getURL(),
     data: {
         username: username
     }

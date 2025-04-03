@@ -68,6 +68,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
   const [deploymentMap, setDeploymentMap] = useState<editorMap | null>(null)
   const [deployMessage, setDeployMessage] = useState<string>("")
+
+  // const [videoOffset, setVideoOffset] = useState<number>(15)
   // DeploymentMap used to be set when deployment menu is set. Draw it from local storage
   // Fail safe if a user edits the map from local storage. I don't want to send those changes to supabase
 
@@ -673,7 +675,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       setDeployMessage("Beatmap Uploading...");
 
       const { data: recentUploads, error: uploadCheckError } = await supabase
-      .from("songs")
+      .from("pending_songs")
       .select("key")
       .eq("user_id", user.id)
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Check for uploads in the last 24 hours
@@ -701,7 +703,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
 
       const { error : beatmapUploadError, status } = await supabase
-      .from('songs')
+      .from('pending_songs')
       .insert([{
         'user_id' : user.id,
         'song_metadata' : song_metadata_upload,
@@ -1073,6 +1075,19 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         </div>
         }
       </div>
+      {/* <div id="youtube_frame">
+        <iframe 
+          width="560" 
+          height="315" 
+          src={`https://www.youtube.com/embed/xFbv40GfF2k?si=1mZTLli-n2xhUurJ&amp;start=${videoOffset}`} 
+          title="YouTube video player" 
+          frameBorder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          referrerPolicy="strict-origin-when-cross-origin" 
+          allowFullScreen
+          >
+        </iframe>
+      </div> */}
     </div>
   );
 

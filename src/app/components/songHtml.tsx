@@ -6,7 +6,7 @@ import Link from 'next/link'
 import HomeAvatar from "./home_avatar"
 
 interface SongHtmlProps {
-    songToPlay : (songID: string) => void,
+    songToPlay : (songID: number) => void,
     username: string | null,
     avatar_url : string | null
 }
@@ -26,7 +26,7 @@ const supabase = createClient()
 export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => {   
     const [tab, setTab] = useState<string>("songs")
     const [songlist, setSongList] = useState<songType[]>([])
-    const [songID, setSongID] = useState<string>("")
+    const [songID, setSongID] = useState<number>(0)
     const [selectedSong, setSelectedSong] = useState<mapMetadata>({
         song_name: "",
         bpm: 0,
@@ -39,7 +39,7 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
     })
     const [songLoading, setSongLoading] = useState<boolean>(true);
 
-    const [leaderboardList, setLeaderboardList] = useState<[string, ranking[]]>(["",[]])
+    const [leaderboardList, setLeaderboardList] = useState<[number, ranking[]]>([0,[]])
     const [leaderboardLoading, setLeaderboardLoading] = useState<boolean>(true);
     
     const [bookmarkActive, setBookmarkActive] = useState<boolean>(false);
@@ -50,8 +50,8 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
         try {
         
         const { data: songs, error } = await supabase
-        .from('songs')
-        .select('song_id,song_metadata')
+        .from('verified_songs')
+        .select('id,song_metadata')
     
           if (error) {
             console.log(error)
@@ -65,21 +65,22 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
         } catch (error) {
           console.error('Song error:', error) // Only used for eslint
           alert('Error Loading Songs!')
-        } finally {
-          console.log('Loaded Songs')
-        }
+        } 
+        // finally {
+        //   console.log('Loaded Songs')
+        // }
     }, [supabase])
 
     useEffect(() => {
         loadSongs()
     }, [supabase, loadSongs])
 
-    const updateSong = useCallback(async (song_id : string) => {
+    const updateSong = useCallback(async (song_id : number) => {
         if (songID === song_id) return;
         try {
             setSongLoading(true)
             const { data: song, error } = await supabase
-            .from('songs')
+            .from('verified_songs')
             .select('map_metadata')
             .eq('song_id', song_id)
         
@@ -117,7 +118,7 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
     }
 
     // TODO: make leaderboard have a loading component
-    const updateLeaderboard = useCallback(async (song_id : string) => {
+    const updateLeaderboard = useCallback(async (song_id : number) => {
         try {
         setLeaderboardLoading(true)
         const { data: leaderboard, error } = await supabase
@@ -134,8 +135,6 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
           }
     
           if (leaderboard) {
-            // console.log("id", song_id)
-            // console.log("leaderboard", leaderboard)
             setLeaderboardList([song_id, leaderboard])
           }
         } catch (error) {
@@ -148,7 +147,7 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
     }, [supabase])
 
     useEffect(() => {
-        const local_songs = JSON.parse(localStorage.getItem("local_songs") || "{}");
+        const local_songs = JSON.parse(localStorage.getItem("bookmarked_songs") || "{}");
         setBookmarkSongs(local_songs)
     }, [])
 
@@ -160,12 +159,11 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
         setBookmarkActive(false);
     }
 
-    const bookmarkSong = (song_id: string, song_metadata: songMetadata) => {
+    const bookmarkSong = (song_id: number, song_metadata: songMetadata) => {
         const isBookmarked = bookmarkedSongs.hasOwnProperty(song_id);
-        // console.log(isBookmarked);
       
         // Get the existing local_songs from localStorage
-        const local_songs = JSON.parse(localStorage.getItem("local_songs") || "{}");
+        const local_songs = JSON.parse(localStorage.getItem("bookmarked_songs") || "{}");
       
         if (isBookmarked) {
           delete local_songs[song_id];
@@ -183,7 +181,7 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
           }));
         }
         
-        localStorage.setItem("local_songs", JSON.stringify(local_songs));
+        localStorage.setItem("bookmarked_songs", JSON.stringify(local_songs));
       }
 
     return (
@@ -344,16 +342,16 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
                             <div className={!bookmarkActive? "song_list active_list" : "song_list"}>
                                 {songlist.map((song : songType, index) => {
                                     return (
-                                        <button key={index} className={(song.song_id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.song_id)}}>
+                                        <button key={index} className={(song.id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id)}}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
                                                     <h3>{song.song_metadata.song_name}</h3>
                                                     <div onClick={(e) => {
                                                         e.stopPropagation(); 
                                                         // console.log(bookmarkedSongs)
-                                                        bookmarkSong(song.song_id, song.song_metadata)}}
+                                                        bookmarkSong(song.id, song.song_metadata)}}
                                                         >
-                                                        {((song.song_id) in bookmarkedSongs) ? 
+                                                        {((song.id) in bookmarkedSongs) ? 
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="000" className="bi bi-bookmark-fill" viewBox="0 0 16 16">
                                                             <path d="M2 2v13.5a.5.5 0 0 0 .74.439L8 13.069l5.26 2.87A.5.5 0 0 0 14 15.5V2a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2"/>
                                                         </svg>
@@ -378,14 +376,14 @@ export const SongHtml = ({songToPlay, username, avatar_url} : SongHtmlProps) => 
                                     console.log(bookmarkedSongs)
                                     console.log("bookmark", song_id, metadata.song_metadata);
                                     return (
-                                        <button key={song_id} className={(song_id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song_id)}}>
+                                        <button key={song_id} className={(parseInt(song_id) === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(parseInt(song_id))}}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
                                                     <h3>{metadata.song_metadata.song_name}</h3>
                                                     <div onClick={(e) => {
                                                         e.stopPropagation(); 
                                                         // console.log(bookmarkedSongs)
-                                                        bookmarkSong(song_id, metadata.song_metadata)}}
+                                                        bookmarkSong(parseInt(song_id), metadata.song_metadata)}}
                                                         >
                                                         {((song_id) in bookmarkedSongs) ? 
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="000" className="bi bi-bookmark-fill" viewBox="0 0 16 16">

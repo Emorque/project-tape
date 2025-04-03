@@ -1,5 +1,5 @@
 export type songType = {
-  song_id: string,
+  id: number,
   song_metadata: songMetadata,
 };
 

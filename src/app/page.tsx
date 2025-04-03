@@ -21,7 +21,7 @@ export default function Home() {
   const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
 
-  const[selectedSong, setSelectedSong] = useState<string | null>(null)
+  const[selectedSong, setSelectedSong] = useState<number | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
   const[menu, setMenu] = useState<string>("main_menu")
   const[userSettings, setUserSettings] = useState<settingsType | null>(null);
@@ -41,13 +41,13 @@ export default function Home() {
     const fetchUser = async () => {
       const { data: { user }, } = await supabase.auth.getUser()
       setUser(user);
-      console.log("User:", user)
+      // console.log("User:", user)
     };
 
     fetchUser();
   }, [supabase]);
 
-  const handleGameMap = (currentSong : string | null) => { 
+  const handleGameMap = (currentSong : number | null) => { 
     setSelectedSong(currentSong);
     updateCamera([14,12,34,   14,12,26]); //Set back to Songs Div 
     setSongPlaying(false) 
@@ -56,16 +56,15 @@ export default function Home() {
 
   const handleNewSettings = (newSettings: settingsType | null) => {
     setUserSettings(newSettings)
-    // console.log(newSettings)
   }
 
-  const getMap = useCallback(async (selectedSong : string) => {
+  const getMap = useCallback(async (selectedSong : number) => {
     console.log("called Supabase for Map")
     try {
       const { data: songMap, error, status } = await supabase
-      .from('songs')
+      .from('verified_songs')
       .select('song_map, song_link')
-      .eq('song_id', selectedSong)
+      .eq('id', selectedSong)
       .single()
 
       if (error && status !== 406) {
@@ -74,11 +73,8 @@ export default function Home() {
       }
 
       if (songMap) {
-        // console.log("fefa", songMap.song_map)
         setGameMap(songMap.song_map)
-        console.log(songMap.song_link)
-        // setAudioURL(songMap.song_link);
-        // downloadAudio()
+        // console.log(songMap.song_link)
         try {
           const {data : songFile, error : songFileError} = await supabase.storage.from("songs").download(songMap.song_link)
           if (songFileError) {
@@ -124,7 +120,6 @@ export default function Home() {
       else{
         updateSettings = JSON.parse(localSettings);
       }
-      
       // Come back to fix in case some users delete/rename keys
       setUserSettings(updateSettings)
       localStorage.setItem("settings", JSON.stringify(updateSettings))
@@ -159,7 +154,7 @@ export default function Home() {
     cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], true);
   }
 
-  const handleSelectedSong = (songID: string) => {
+  const handleSelectedSong = (songID: number) => {
     updateCamera([14,8,34,   14, 7, 26])
     setSongPlaying(true);
     setSelectedSong(songID); 
@@ -201,10 +196,11 @@ export default function Home() {
           console.log(error);
           console.log("Unsigned User");
       //   alert('Error loading user data!')
-      } finally {
-          console.log("User loaded")
+      } 
+      // finally {
+          // console.log("User loaded")
           // setProfileLoading(false)
-      }
+      // }
     }, [user, supabase])
   
     useEffect(() => {
@@ -327,11 +323,8 @@ export default function Home() {
           </div>
         </button>
 
-
         {/* Once a formal tutorial stage is made, remove this button and associated states/styles */}
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
-          // updateCamera([4,8,34.5,   -1,7,34.5]);
-          // setPlayerView(true);
           if (settingsView) return; //If not checked and settigns btn is clicked too soon, settings div doesn't load.
           setMenu("settings_menu")
           setSettingsView(true);

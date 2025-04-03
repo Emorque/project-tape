@@ -216,6 +216,13 @@ label {
     /* height: 100%; */
 }
 
+#youtube_frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+}
+
 #metadata_wrapper {
     display: flex;
     flex-direction: column;
