@@ -14,7 +14,39 @@ import { sMap, settingsType } from "@/utils/helperTypes"
 import { createClient } from '@/utils/supabase/client'
 import { SongHtml } from "./components/songHtml";
 import { type User } from '@supabase/supabase-js'
+import { LocalTape } from "./components/localTape";
 
+const formatNotes = (notes : string[][]) => {
+  const finalNotes : [number, string][] = [] 
+  for (let i = 0; i < notes[0].length; i++) {
+    // First Turn
+    if (notes[0][i] === 'T') {
+      finalNotes.push([i * 62.5, "FT"])
+    }
+    // First Left
+    if (notes[0][i] === 'S') {
+      finalNotes.push([i * 62.5, "FL"])
+    }
+    // First Right
+    if (notes[1][i] === 'S') {
+      finalNotes.push([i * 62.5, "FR"])
+    }
+
+    // First Turn
+    if (notes[2][i] === 'T') {
+      finalNotes.push([i * 62.5, "ST"])
+    }
+    // Second Left
+    if (notes[2][i] === 'S') {
+      finalNotes.push([i * 62.5, "SL"])
+    }
+    // Second Right
+    if (notes[3][i] === 'S') {
+      finalNotes.push([i * 62.5, "SR"])
+    }
+  }  
+  return finalNotes;
+}
 
 export default function Home() {
   const cameraRef = useRef<CameraControls | null>(null);
@@ -54,6 +86,14 @@ export default function Home() {
     setGameMap(null);
   }
 
+  const closeLocalMap = () => {
+    setSelectedSong(null);
+    updateCamera([14,12,34,   14,12,26]); //Set back to Songs Div 
+    setSongPlaying(false) 
+    setGameMap(null);
+    setUsingLocalMap(false)
+  }
+
   const handleNewSettings = (newSettings: settingsType | null) => {
     setUserSettings(newSettings)
   }
@@ -63,7 +103,7 @@ export default function Home() {
     try {
       const { data: songMap, error, status } = await supabase
       .from('verified_songs')
-      .select('song_map, song_link')
+      .select('song_map, audio_link')
       .eq('id', selectedSong)
       .single()
 
@@ -74,9 +114,8 @@ export default function Home() {
 
       if (songMap) {
         setGameMap(songMap.song_map)
-        // console.log(songMap.song_link)
         try {
-          const {data : songFile, error : songFileError} = await supabase.storage.from("songs").download(songMap.song_link)
+          const {data : songFile, error : songFileError} = await supabase.storage.from("songs").download(songMap.audio_link)
           if (songFileError) {
             throw songFileError
           } 
@@ -154,11 +193,24 @@ export default function Home() {
     cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], true);
   }
 
+  // Local Songs 
+  const [usingLocalMap, setUsingLocalMap] = useState<boolean>(false);
+  // const [localNotes, setLocalNotes] = useState<string[][]>([]);
+
   const handleSelectedSong = (songID: number) => {
     updateCamera([14,8,34,   14, 7, 26])
     setSongPlaying(true);
     setSelectedSong(songID); 
     getMap(songID);
+    setUsingLocalMap(false)
+  }
+
+  const handleLocalMap = (song_url: string, song_notes: string[][]) => {
+    updateCamera([14,8,34,   14, 7, 26])
+    setSongPlaying(true);
+    setAudioURL(song_url)
+    setGameMap(formatNotes(song_notes))
+    setUsingLocalMap(true)
   }
 
   const handleSongReady = () => {
@@ -173,6 +225,7 @@ export default function Home() {
   } 
 
   const [avatar_url, setAvatarUrl] = useState<string | null>(null)
+  const [role, setRole] = useState<string | null>(null)
 
   const getProfile = useCallback(async () => {
       if (!user) return; // Error without this. Likely because it would query profiles with a null id without it
@@ -180,7 +233,7 @@ export default function Home() {
           // setProfileLoading(true)
         const { data, error, status } = await supabase
           .from('profiles')
-          .select(`username, avatar_url`)
+          .select(`avatar_url, role`)
           .eq('id', user?.id)
           .single()
   
@@ -190,6 +243,7 @@ export default function Home() {
         }
   
         if (data) {
+          setRole(data.role)
           setAvatarUrl(data.avatar_url)
         }
       } catch (error) {
@@ -233,7 +287,7 @@ export default function Home() {
           rotation={[0, 0, 0]}
         >
           <div className="htmlDiv" style={databaseStyle}>
-            <SongHtml songToPlay={handleSelectedSong} username={user?.user_metadata.username} avatar_url={avatar_url}/>
+            <SongHtml songToPlay={handleSelectedSong} playLocalSong={handleLocalMap} user={user} role={role} avatar_url={avatar_url}/>
           </div>
         </Html>
 
@@ -450,7 +504,12 @@ export default function Home() {
       />
       
       <div id="songScreen" style={stageStyle}>
-        {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && 
+        {/* Game Component for Local Maps */}
+        {gameMap && songPlaying && userSettings && audioRef && audioReady && usingLocalMap && 
+        <LocalTape gMap={gameMap} gameMapProp={closeLocalMap} settings={userSettings} audioProp={audioRef}/>
+        }
+        {/* Game Component for Online Maps */}
+        {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && !usingLocalMap &&
         <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong}/>
         }
       </div>

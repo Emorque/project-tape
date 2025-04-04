@@ -27,7 +27,7 @@ const MaxFileSize = 5.0 * 1024 * 1024; // 5.5MBs converting to Bytes which is wh
 
 export default function EditorPage() {
   const [localMaps, setLocalMaps] = useState<localStorageMaps>({})
-  const [username, setUsername] = useState<string | null>(null)
+  // const [username, setUsername] = useState<string | null>(null)
   const [editorActive, setEditorActive] = useState<boolean>(false);
   const [selectedMap, setSelectedMap] = useState<editorMap | null>(null)
   const [userKeybinds, setUserKeybinds] = useState<keybindsType | null>(null)
@@ -51,7 +51,7 @@ export default function EditorPage() {
       const { data: { user }, } = await supabase.auth.getUser();
       console.log(user)
       setUser(user);
-      setUsername(user?.app_metadata.username)
+      // setUsername(user?.app_metadata.username)
     };
 
     fetchUser();

@@ -1,22 +1,18 @@
 // 'use client' taken out because of the gameMapProp. use client is now implied i think b/c parent has use client
 
-import React, { RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import React, { RefObject, useEffect, useRef, useState } from 'react';
 import "./tape.css";
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { settingsType } from '@/utils/helperTypes';
-import { type User } from '@supabase/supabase-js'
-import { createClient } from '@/utils/supabase/client'
+// Same as tape.tsx, except without all of the calls to supabase. This is designed to run entirely local
 
-const supabase = createClient()
 
 interface gameInterface {
   gMap: [number,string][];
-  gameMapProp: (currentSong: number | null) => void;
+  gameMapProp: () => void;
   settings: settingsType;
   audioProp: React.RefObject<HTMLAudioElement>;
-  user : User | null;
-  song_id: number;
 }
 
 const getKeyMapping = (key : string) => {
@@ -24,13 +20,7 @@ const getKeyMapping = (key : string) => {
     return res
 }
 
-const getAccuracy = (perfect: number, okay: number, miss: number) => {
-    const total = perfect + okay + miss;
-    const accuracy = ((perfect + okay) / total) * 100
-    return accuracy.toFixed(2)
-}
-
-export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : gameInterface) => {   
+export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) => {   
     const [gameState, setGameState] = useState<string>("Waiting"); //False is for paused/complete, True is when the song is playing
     
     // Game Visuals
@@ -93,10 +83,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
     // Styling States
     const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
 
-    // Score for Leaderboard
-    const [scoreUploading, setScoreUploading] = useState<boolean>(true)
-    const [leaderboardText, setLeadboardText] = useState<string>("Loading")
-    
     useEffect(() => {
         let animationFrameId: number;
         let lastTime: number | null = null;
@@ -212,7 +198,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
 
     useEffect(() => {
         const handleKeyDown = (event: { key: string; repeat : boolean}) => {
-            // console.log(buttonMappings)
             if (event.repeat) return;
 
             if (gameState === "End" || gameState === "Waiting") return;
@@ -310,10 +295,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
             if (event.key === buttonMappings.restart[0]|| event.key === buttonMappings.restart[1]) {
                 restartMap()
             }
-            // if (event.key === 'f' || event.key === "F") { 
-            //     if (audioProp.current) audioProp.current.currentTime = audioProp.current.currentTime + 30;
-            //     console.log(gameState)  
-            // }
         }
         document.addEventListener('keydown', handleKeyDown);
     
@@ -529,10 +510,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
             const laneClass = (lane === lane_one)? "left" : "right";
             newBar.classList.add(laneClass);
             newBar.style.animation = `barAnime ${scrollSpeed}ms linear 1, ${laneClass}Animation ${scrollSpeed}ms linear 1`
-            // const spike = document.createElement('div');
-            // spike.classList.add(`${laneClass}Spike`)
-            // spike.style.animation = `${laneClass}SpikeAnimation ${scrollSpeed}ms linear 1`
-            // newBar.appendChild(spike);
         }
         else {
             newBar.style.animation = `barAnime ${scrollSpeed}ms linear 1`
@@ -550,24 +527,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
             newBar.removeEventListener("animationend", cleanup)
         }
     }
-
-    // const createBar = (lane: RefObject<HTMLDivElement>, turnNote : boolean) => {
-    //     const newBar = document.createElement('div');
-    //     newBar.classList.add("bar")
-    //     if (turnNote) {
-    //         if (lane === lane_one) newBar.classList.add("left");
-    //         else newBar.classList.add("right")            
-    //     }
-    //     lane.current?.appendChild(newBar);
-    //     newBar.style.animation = `barAnime ${scrollSpeed}ms linear`
-    //     const cleanup = () => {
-    //         lane.current?.removeChild(newBar);
-    //     }
-    //     newBar.addEventListener("animationend", cleanup)
-    //     return () => {
-    //         newBar.removeEventListener("animationend", cleanup)
-    //     }
-    // }
 
     // Handle Curve Creation
     // Left Notes
@@ -736,95 +695,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
         }
     }, [endScreen])
 
-    // useEffect(() => {
-    //     console.log(user)
-    // }, [])
-
-    const uploadScore = useCallback(async () => {
-        if (!user && gameState === "End") {
-            setLeadboardText("You need to be logged in to upload scores")
-            setScoreUploading(false);
-            return;
-        }
-        if (!user || gameState !== "End") return; // Error without this. Likely because it would query profiles with a null id without it
-        try {
-            setScoreUploading(true)
-
-            const { data, error, status } = await supabase
-            .from('leaderboard')
-            .select(`score`)
-            .eq('user_id', user?.id)
-            .eq('song_id', song_id)
-            .single()
-    
-            if (error && status !== 406) {
-                console.log("Error obtaining leaderboard score", error)
-                throw error
-            }
-    
-            if (data) {
-                if (data.score < score) {
-                    try {
-                        const { error : uploadError } = await supabase
-                        .from('leaderboard')
-                        .update({ score: score })
-                        .eq('user_id', user?.id)
-                        .eq('song_id', song_id)
-
-                        if (uploadError) {
-                            console.log("upload Error", uploadError)
-                            throw error
-                        }
-                    }
-                    catch (uploadError) {
-                        console.log("Error Updating Score", uploadError)
-                    }
-                    finally {
-                        setLeadboardText("Updated Score to Leaderboard")
-                    }
-                }
-                else {
-                    setLeadboardText(`Your Previous Score: ${data.score}`)
-                }
-            }
-            else if (error && error.code === "PGRST116") {
-                console.log("This row with these ids don't exist")
-                try {
-                    const { error : insertError } = await supabase
-                    .from('leaderboard')
-                    .insert([
-                    { 'song_id' : song_id, 'user_id': user?.id, 
-                        'score': score, 
-                        'accuracy': getAccuracy(perfectCount, okayCount, missCount), 
-                        'username' : user.user_metadata.username, 
-                        'max_combo': maxCombo},
-                    ])
-    
-                    if (insertError) {
-                        console.log("Error inserting score", insertError);
-                        throw insertError
-                    }
-                }                
-                catch (insertError) {
-                    console.log("Error inserting new score to leaderboard", insertError)
-                }
-                finally {
-                    setLeadboardText("Score Uploaded to Leaderboard")
-                }
-            }
-        } catch (error) {
-            console.log("Caught leaderboard error", error);
-        } finally {
-            console.log("Leaderboard Score Complete")
-            setScoreUploading(false)
-        }
-    }, [user, supabase, gameState, perfectCount, okayCount, missCount, score, maxCombo, song_id]);
-    
-    useEffect(() => {
-        uploadScore()
-    }, [user, uploadScore])
-
-
     return (
     <div>
         <div id='game-container'>
@@ -848,7 +718,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
                 <div id="pause_screen">
                     <button onClick={() => resumeMap()}>Resume</button>
                     <button onClick={() => restartMap()}>Retry</button>
-                    <button onClick={() => {gameMapProp(null)}}>Main Menu</button>
+                    <button onClick={() => {gameMapProp()}}>Main Menu</button>
                 </div>
             </div>
 
@@ -903,9 +773,8 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
                     <div id='scoreUpload_menu'>
                         <div id='menu_div'>
                             <button onClick={restartMap} className='gameBtns'>Retry</button>
-                            <button onClick={() => {gameMapProp(null)}} className='gameBtns'>Main Menu</button>
+                            <button onClick={() => {gameMapProp()}} className='gameBtns'>Main Menu</button>
                         </div>
-                        <h2>{scoreUploading? "Checking server..." : leaderboardText}</h2>
                     </div>                    
                 </div>
             }

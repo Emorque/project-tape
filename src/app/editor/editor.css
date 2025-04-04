@@ -216,12 +216,12 @@ label {
     /* height: 100%; */
 }
 
-#youtube_frame {
+/* #youtube_frame {
     position: absolute;
     top: 0;
     left: 0;
     z-index: 20;
-}
+} */
 
 #metadata_wrapper {
     display: flex;
@@ -418,20 +418,8 @@ label {
     visibility: hidden;
     opacity: 0;
     font-size: 1.75rem;
-    color: #c70000  ;
+    color: #c70000;
 }
-
-/* #audio_tooltip_text {
-    position: absolute;
-    height: fit-content;
-    top: 110%;
-    left: 0;
-    visibility: visible;
-    background-color: var(--black);
-    opacity: 1;
-    font-size: 1rem;
-    color: #c70000  ;
-} */
 
 .bottom_tooltip_text{
     visibility: hidden;

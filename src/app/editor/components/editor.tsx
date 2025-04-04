@@ -55,10 +55,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
 
   // All of the metadata
   // When setting metadata, like description, disable the other buttons being activiated. Like when pressing "P" for the description, don't play the song 
-  // const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "")
   const [songName, setSongName] = useState<string>(metadata?.song_metadata.song_name || "")
   const [songArtist, setSongArtist] = useState<string>(metadata?.song_metadata.song_artist || "")
-  // const [songMapper, setSongMapper] = useState<string>(metadata?.song_metadata.song_mapper || "")
   const [bpm, setBPM] = useState<number>(metadata?.song_metadata.bpm || 0)
   const [genre, setGenre] = useState<string>(metadata?.song_metadata.genre || "")
   const [language, setLanguage] = useState<string>(metadata?.song_metadata.language || "")
@@ -799,12 +797,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
     }
   }
-
-  // First, ask the user if they are sure they want to upload their beatmap/song
-  // Set a temp limit of 
-  // const verifyUpload = () => {
-
-  // }
 
   const singleBtnStyle = {
     backgroundColor: (btn === "Single Note")? "rgb(145, 168, 154)" : "#3a4447",
