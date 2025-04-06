@@ -49,45 +49,11 @@ export default function EditorPage() {
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user }, } = await supabase.auth.getUser();
-      console.log(user)
       setUser(user);
-      // setUsername(user?.app_metadata.username)
     };
 
     fetchUser();
   }, [supabase]);
-
-  // const getUsername = useCallback(async () => {
-  //   if (!user) return; // Error without this. Likely because it would query profiles with a null id without it
-  //   try {
-  //       // setProfileLoading(true)
-  //     const { data, error, status } = await supabase
-  //       .from('profiles')
-  //       .select(`username`)
-  //       .eq('id', user?.id)
-  //       .single()
-
-  //     if (error && status !== 406) {
-  //       console.log(error)
-  //       throw error
-  //     }
-
-  //     if (data) {
-  //       // setUsername(data.username)
-  //     }
-  //   } catch (error) {
-  //       console.log(error);
-  //       console.log("Unsigned User");
-  //   //   alert('Error loading user data!')
-  //   } finally {
-  //       console.log("User loaded")
-  //       // setProfileLoading(false)
-  //   }
-  // }, [user, supabase])
-
-  // useEffect(() => {
-  //   getUsername()
-  // }, [user, getUsername])
 
   // Get all maps from Local Storage
   useEffect(() => {
@@ -131,11 +97,6 @@ export default function EditorPage() {
     gsap.to("#audio_input", {backgroundColor: "#df0000 ", yoyo: true, repeat: 1, duration:0.75})
     gsap.to("#audio_tooltip_text", {color: "#df0000", yoyo: true, repeat: 1, duration:0.75})
   })
-
-  // const fileToBig = contextSafe(() => {
-  //   gsap.to("#audio_input", {backgroundColor: "#df0000 ", yoyo: true, repeat: 1, duration:0.75})
-  //   gsap.to("#audio_tooltip_text", {color: "#df0000", textContent: "Audio File Too Large", yoyo: true, repeat: 1, duration:0.75})
-  // })
 
   const keybindsWrapperStyle = {
     visibility: (menu === "keybinds")? "visible" : "hidden",

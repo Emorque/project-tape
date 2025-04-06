@@ -9,7 +9,7 @@ import { Settings } from "./components/settings";
 import "./page.css";
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { sMap, settingsType } from "@/utils/helperTypes"
+import { sMap, settingsType, ytBackgroundType } from "@/utils/helperTypes"
 
 import { createClient } from '@/utils/supabase/client'
 import { SongHtml } from "./components/songHtml";
@@ -55,6 +55,7 @@ export default function Home() {
 
   const[selectedSong, setSelectedSong] = useState<number | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
+  const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
   const[menu, setMenu] = useState<string>("main_menu")
   const[userSettings, setUserSettings] = useState<settingsType | null>(null);
   const[settingsView, setSettingsView] = useState<boolean>(false);
@@ -205,12 +206,13 @@ export default function Home() {
     setUsingLocalMap(false)
   }
 
-  const handleLocalMap = (song_url: string, song_notes: string[][]) => {
+  const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => {
     updateCamera([14,8,34,   14, 7, 26])
     setSongPlaying(true);
     setAudioURL(song_url)
     setGameMap(formatNotes(song_notes))
     setUsingLocalMap(true)
+    setSongBackground(song_background)
   }
 
   const handleSongReady = () => {
@@ -506,7 +508,7 @@ export default function Home() {
       <div id="songScreen" style={stageStyle}>
         {/* Game Component for Local Maps */}
         {gameMap && songPlaying && userSettings && audioRef && audioReady && usingLocalMap && 
-        <LocalTape gMap={gameMap} gameMapProp={closeLocalMap} settings={userSettings} audioProp={audioRef}/>
+        <LocalTape gMap={gameMap} gameMapProp={closeLocalMap} settings={userSettings} audioProp={audioRef} songBackground={songBackground}/>
         }
         {/* Game Component for Online Maps */}
         {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && !usingLocalMap &&

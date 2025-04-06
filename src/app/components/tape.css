@@ -6,6 +6,28 @@
     z-index: 300;
 }
 
+#song_background {
+    position: absolute;
+    pointer-events: none;
+    perspective: 1000px; /* Adjust perspective based on screen width */
+    z-index: 300;
+    transition: opacity 1s ease;
+}
+
+.showBackground {
+    opacity: 1;
+    width: 100%;
+    height: 100%;
+}
+
+.hideBackground {
+    opacity: 0;
+    width: 480px;
+    height: 270px;
+}
+
+
+
 #lane-container {
     margin: 0 auto;
     position: relative;

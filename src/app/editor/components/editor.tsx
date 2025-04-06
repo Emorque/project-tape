@@ -9,6 +9,8 @@ import { useGSAP } from "@gsap/react";
 import { keybindsType, editorMap } from "@/utils/helperTypes";
 import { type User } from '@supabase/supabase-js'
 
+import ReactPlayer from "react-player/youtube";
+
 const barGradient = "linear-gradient(rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.50) 24%, rgba(255, 255, 255, 0.50) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 48.75%, rgba(255, 255, 255, 0.50) 48.75%, rgba(255, 255, 255, 0.50) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.50) 74%, rgba(255, 255, 255, 0.50) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box"
 const gameGradient = "linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.25) 24%, rgba(255, 255, 255, 0.25) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.25%, rgba(255, 255, 255, 0.25) 49.25%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.25) 74%, rgba(255, 255, 255, 0.25) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box";
 const formatTime = (seconds: number) => [seconds / 60, seconds % 60, (seconds % 1) * 100].map((v) => `0${Math.floor(v)}`.slice(-2)).join(':')
@@ -63,11 +65,27 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const [noteCount, setNoteCount] = useState<number>(metadata?.song_metadata.note_count || 0)
   const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
   const [source, setSource] = useState<string>(metadata?.song_metadata.source || "");
+  const [ytBackground, setYTBackground] = useState<string>(metadata?.song_metadata.ytID || ""); //Fix to .ytbg
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
   const [deploymentMap, setDeploymentMap] = useState<editorMap | null>(null)
   const [deployMessage, setDeployMessage] = useState<string>("")
 
-  // const [videoOffset, setVideoOffset] = useState<number>(15)
+  const [ytOffset, setYTOffset] = useState<number>(metadata?.song_metadata.ytStart || 0)
+  const [ytEnd, setYTEnd] = useState<number>(metadata?.song_metadata.ytEnd || 0)
+  const ytOffsetRef = useRef<HTMLInputElement>(null)
+  const ytEndRef = useRef<HTMLInputElement>(null)
+  const ytIDRef= useRef<HTMLInputElement>(null)
+  const prevID = useRef<string>("")
+
+  useEffect(() => {
+    if (ytOffsetRef.current && ytEndRef.current && ytIDRef.current){
+      ytOffsetRef.current.value = (metadata?.song_metadata.ytStart || 0).toString()
+      ytEndRef.current.value = (metadata?.song_metadata.ytEnd || 0).toString()
+      ytIDRef.current.value = metadata?.song_metadata.ytID || ""
+      prevID.current = metadata?.song_metadata.ytID || ""
+    }
+  }, [])
+
   // DeploymentMap used to be set when deployment menu is set. Draw it from local storage
   // Fail safe if a user edits the map from local storage. I don't want to send those changes to supabase
 
@@ -129,7 +147,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
           setSongLength((duration * 16) + 1);
           setSongNotes(tempNotes);    
         }
-        console.log("Please exit Inspect Mode. Project Tape is likely to creash if you edit with it open. Be sure to save your map often.")
+        console.log("Please exit Inspect Mode. Project Tape is likely to crash if you edit with it open. Be sure to save your map often.")
       }
       console.log('Audio File', songFile)
     }
@@ -175,6 +193,13 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const onPlayPause = () => {
     if (wavesurfer) {
       wavesurfer.playPause()
+      if (reactPlayerRef.current && !isPlaying) {
+        reactPlayerRef.current.seekTo(wavesurfer.getCurrentTime() + ytOffset)
+        setVideoPlaying(true)
+      }
+      else if (isPlaying) {
+        setVideoPlaying(false)
+      }
     }
   }
 
@@ -427,7 +452,10 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         language: language,
         note_count: noteCount,
         description: description,
-        source : source
+        source : source,
+        ytID: ytBackground,
+        ytStart: ytOffset,
+        ytEnd: ytEnd
       },
       song_notes : songNotes
     }
@@ -494,7 +522,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   }
 
   const verifyDeployment = () => {
-    if (menu) {
+    if (menu || !user) {
       setMapSaved(false)
       setPromptMenu("")
       setMenu(false)
@@ -506,7 +534,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
-        song_mapper: user?.user_metadata.username || "",
+        song_mapper: user.user_metadata.username,
         bpm: bpm,
         genre: genre,
         language: language,
@@ -559,7 +587,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         setDeploymentMap(localMaps[map_id])
         console.log("Deployment Map", localMaps[map_id])
       }
-      // console.log(missingDataString)
 
       console.log(isEqual)
       setMapSaved(isEqual)
@@ -761,7 +788,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     // if (listRef.current && isPlaying) {
     if (listRef.current) {
       listRef.current.scrollTo(currentTime * 256)
-      console.log("snap,useEffect", currentTime)
+      // console.log("snap,useEffect", currentTime)
     }
   }, [currentTime])
 
@@ -818,10 +845,50 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     color: (snapOn)? "#1a1a1a" : "rgb(145, 168, 154)"
   }
 
+  const [videoPlaying, setVideoPlaying] = useState<boolean>(false)
+  const [videoMuted, setVideoMuted] = useState<boolean>(true)
+  const [videoDuration, setVideoDuration] = useState<number>(0)
+  const reactPlayerRef = useRef<ReactPlayer | null>(null)
+
+  const updatePlayerTime = () => {
+    if (reactPlayerRef.current) {
+      reactPlayerRef.current.seekTo(ytOffset);
+      setVideoPlaying(true)
+    }
+  }
+
+  const setTimestamps = () => {
+    if (ytEndRef.current && ytOffsetRef.current) {
+      const start = Math.min(Math.floor(parseInt(ytOffsetRef.current.value.replace(/[^0-9]/g, '') || "0")), videoDuration)
+      const end = Math.min(Math.floor(parseInt(ytEndRef.current.value.replace(/[^0-9]/g, '')) || videoDuration), videoDuration)
+      setYTOffset(start)
+      setYTEnd(end)
+      ytOffsetRef.current.value = start.toString();
+      ytEndRef.current.value = end.toString()
+    }
+  }
+
+  const handleProgress = (state: any) => {
+    if (state.playedSeconds >= ytEnd) {
+      setVideoPlaying(false)
+    }
+  }
+
+  const handleDuration = (duration: any) => {
+    if (ytIDRef.current && prevID.current !== ytIDRef.current.value && ytOffsetRef.current && ytEndRef.current) {
+      setVideoDuration(duration)
+      prevID.current = ytIDRef.current.value
+      ytOffsetRef.current.value = "0"
+      ytEndRef.current.value = duration
+      setYTOffset(0)
+      setYTEnd(duration)
+    }
+  }
+
   return (
     <div id="editor_page">
       <div id="wave_bars">
-        <div id="waveform_container" ref={waveformRef}>
+        <div id="waveform_container" className={isPlaying? "no_scroll" : ""} ref={waveformRef}>
         </div>
 
         <div id="waveform_bars">
@@ -829,7 +896,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
             {({height, width}) => (
               <List
               ref={vListRef}
-              className="no_scrollbar"
+              className={isPlaying? "no_scrollbar no_scroll" : "no_scrollbar"}
               height={height} 
               itemCount={songLength} 
               itemSize={16} 
@@ -871,18 +938,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
                 onChange={(e) => setSongArtist(e.target.value)}
               ></input>
             </div>
-            
-            {/* <div>
-              <label htmlFor="songMapper">Song Mapper:</label>
-              <input 
-                className="metadata_input"
-                name="songMapper" 
-                id="songMapper"
-                type="text" 
-                value={username}
-                onChange={(e) => setSongMapper(e.target.value)}
-              ></input>
-            </div> */}
            
             <div>
               <label htmlFor="songBPM">BPM:</label>
@@ -943,9 +998,89 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
                 onChange={(e) => setSource(e.target.value)}
               ></input>
             </div>
-            
             <label>Note Count: <br/>{noteCount}</label>
             <label>Last Updated: <br/>{formatDateFromMillis(timestamp)}</label>
+            <br/>
+            <div>
+              <label htmlFor="ytBackground">Youtube ID:</label>
+              <input 
+                ref={ytIDRef}
+                className="metadata_input"
+                name="ytBackground" 
+                id="ytBackground"
+                type="text"
+              ></input>
+            </div>
+            <button onClick={() => setYTBackground(ytIDRef.current?.value || "")}>Set Youtube ID</button>
+
+            <div>
+              <label htmlFor="ytOffset">Start at Second:</label>
+              <input 
+                ref={ytOffsetRef}
+                className="metadata_input"
+                name="ytOffset" 
+                id="ytOffset"
+                type="number" 
+                min={0}
+                max={videoDuration}
+              ></input>
+            </div>
+
+            <div>
+              <label htmlFor="ytEnd">End at Second:</label>
+              <input 
+                ref={ytEndRef}
+                className="metadata_input"
+                name="ytEnd" 
+                id="ytEnd"
+                type="number" 
+                min={0}
+                max={videoDuration}
+              ></input>
+            </div>
+            <button onClick={() => setTimestamps()}>Set Start/End Timestamps</button>
+            <button onClick={() => setVideoPlaying(!videoPlaying)}>{videoPlaying? "Pause" : "Play"}</button>
+            <button onClick={() => updatePlayerTime()}>Go To Start</button>
+            <button onClick={() => setVideoMuted(!videoMuted)}>{videoMuted? "Unmute" : "Mute"}</button>
+            
+            <div id="youtube_frame">
+              {/* <iframe 
+                width="100%" 
+                height="100%" 
+                src={`https://www.youtube.com/embed/${ytBackground}?si=1mZTLli-n2xhUurJ&amp;start=${ytOffset}&autoplay=1&mute=1`} 
+                title="YouTube video player" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                referrerPolicy="strict-origin-when-cross-origin" 
+                allowFullScreen
+                >
+              </iframe> */}
+              <ReactPlayer
+                ref={reactPlayerRef}
+                url={`https://www.youtube.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0`} //&rel=0 means that "more videos" are locked to uploader's channel
+                loop={false}
+                controls={false}
+                volume={100}
+                muted={videoMuted}
+                height={"100%"}
+                width={"100%"}
+                playing={videoPlaying}
+                pip={false}
+                light={false}
+                playsinline={true}
+                playbackRate={pbRate}
+                onProgress={handleProgress}
+                onDuration={handleDuration}
+                onEnded={() => setVideoPlaying(false)}
+                config={{
+                  playerVars: {
+                    iv_load_policy: 3,
+                    // cc_load_policy: 0, //Just setting it to 0 still puts the captions up. Opposite of the intent
+                    disablekb: 1
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -956,7 +1091,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
               {({height, width}) => (
                 <List
                 ref={listRef}
-                className="scrollbar"
+                className={isPlaying? "scrollbar no_scroll" : "scrollbar"}
                 height={height}
                 itemCount={songLength}
                 onScroll={
@@ -1067,19 +1202,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         </div>
         }
       </div>
-      {/* <div id="youtube_frame">
-        <iframe 
-          width="560" 
-          height="315" 
-          src={`https://www.youtube.com/embed/xFbv40GfF2k?si=1mZTLli-n2xhUurJ&amp;start=${videoOffset}`} 
-          title="YouTube video player" 
-          frameBorder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-          referrerPolicy="strict-origin-when-cross-origin" 
-          allowFullScreen
-          >
-        </iframe>
-      </div> */}
     </div>
   );
 

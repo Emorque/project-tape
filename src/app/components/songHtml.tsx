@@ -1,7 +1,7 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react"
 import "./songHtml.css"
 import { createClient } from '@/utils/supabase/client'
-import { songType, mapMetadata, ranking, bookmarkedSongs, songMetadata, localStorageMaps, editorMetadata } from "@/utils/helperTypes"
+import { songType, mapMetadata, ranking, bookmarkedSongs, songMetadata, localStorageMaps, editorMetadata, ytBackgroundType } from "@/utils/helperTypes"
 import Link from 'next/link'
 import HomeAvatar from "./home_avatar"
 import { type User } from '@supabase/supabase-js'
@@ -11,7 +11,7 @@ import { useGSAP } from "@gsap/react";
 
 interface SongHtmlProps {
     songToPlay : (songID: number) => void,
-    playLocalSong: (song_url: string, song_notes: string[][]) => void,
+    playLocalSong: (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => void,
     user: User | null,
     role : string | null,
     avatar_url : string | null
@@ -37,6 +37,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     const [pendingSongList, setPendingSongList] = useState<songType[]>([])
     const [localMapsList, setLocalMapsList] = useState<localStorageMaps>({})
     const [songID, setSongID] = useState<number>(0)
+    const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
     const [selectedSong, setSelectedSong] = useState<mapMetadata>({
         song_name: "",
         bpm: 0,
@@ -326,7 +327,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                     </div>
                     
                     {usingLocalMap? 
-                        <button id="play_btn" onClick={() => playLocalSong(audioURL, localNotes)} disabled={disabledLocalMap}>
+                        <button id="play_btn" onClick={() => playLocalSong(audioURL, localNotes, songBackground)} disabled={disabledLocalMap}>
                             Play Local Map
                         </button>
                         :
@@ -484,7 +485,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             <div className={(currentMenu === "Global")? "song_list active_list" : "song_list"}>
                                 {songlist.map((song : songType, index) => {
                                     return (
-                                        <button key={index} className={(song.id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id)}}>
+                                        <button key={index} className={(song.id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id); setSongBackground(null) }}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
                                                     <h3>{song.song_metadata.song_name}</h3>
@@ -516,7 +517,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             <div className={(currentMenu === "Bookmark")? "song_list active_list" : "song_list"}>
                                 {Object.entries(bookmarkedSongs).map(([song_id, metadata]) => {
                                     return (
-                                        <button key={song_id} className={(parseInt(song_id) === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(parseInt(song_id))}}>
+                                        <button key={song_id} className={(parseInt(song_id) === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(parseInt(song_id)); setSongBackground(null)}}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
                                                     <h3>{metadata.song_metadata.song_name}</h3>
@@ -560,6 +561,13 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                             <button key={map_id} className="song_btn active" onClick={() => {
                                                     setLocalNotes(song_notes);
                                                     updateLocalSong(song_metadata)
+                                                    if (song_metadata.ytID !== "" && song_metadata.ytStart !== 0 && song_metadata.ytEnd !== 0) {
+                                                        setSongBackground({
+                                                            ytID: song_metadata.ytID,
+                                                            ytStart: song_metadata.ytStart,
+                                                            ytEnd: song_metadata.ytEnd
+                                                        })
+                                                    }
                                                 }}>
                                                 <div className="song_metadata">
                                                     <h3>{song_metadata.song_name || 'Untitled Song'}</h3>

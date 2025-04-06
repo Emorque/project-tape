@@ -4,7 +4,8 @@ import React, { RefObject, useEffect, useRef, useState } from 'react';
 import "./tape.css";
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { settingsType } from '@/utils/helperTypes';
+import { settingsType, ytBackgroundType } from '@/utils/helperTypes';
+import ReactPlayer from "react-player/youtube";
 // Same as tape.tsx, except without all of the calls to supabase. This is designed to run entirely local
 
 
@@ -13,6 +14,7 @@ interface gameInterface {
   gameMapProp: () => void;
   settings: settingsType;
   audioProp: React.RefObject<HTMLAudioElement>;
+  songBackground: ytBackgroundType | null;
 }
 
 const getKeyMapping = (key : string) => {
@@ -20,7 +22,7 @@ const getKeyMapping = (key : string) => {
     return res
 }
 
-export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterface) => {   
+export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackground} : gameInterface) => {   
     const [gameState, setGameState] = useState<string>("Waiting"); //False is for paused/complete, True is when the song is playing
     
     // Game Visuals
@@ -302,7 +304,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterfa
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex, gameState]);
+    }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex, gameState]);
     
     const handleEnd = contextSafe(() => {
         gsap.to("#lane-container", {
@@ -334,6 +336,9 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterfa
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "running";
             }
         }
+        if (reactPlayerRef.current){
+            setVideoPlaying(true)
+        }
     }
     
 
@@ -347,6 +352,9 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterfa
             for (let i = 0; i < curves.length; i++) {
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "paused";
             }
+        }
+        if (reactPlayerRef.current){
+            setVideoPlaying(false)
         }
     }
 
@@ -401,6 +409,10 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterfa
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
                 }
+                if (reactPlayerRef.current) {
+                    setVideoPlaying(true)
+                    setVideoEnded(false)
+                }
             }, ((scrollSpeed * 2) + 3000 + offset))
     
             setTimeout(() => {
@@ -435,6 +447,10 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterfa
             audioProp.current.pause();
             audioProp.current.currentTime = 0;
         }
+        if (reactPlayerRef.current && songBackground) {
+            reactPlayerRef.current.seekTo(songBackground.ytStart)
+            setVideoPlaying(false)
+        }
 
         setStopwatchActive(false);
         setStPaused(true);
@@ -465,6 +481,9 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterfa
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
+                }
+                if (reactPlayerRef.current && songBackground) {
+                    setVideoPlaying(true)
                 }
             }, ((scrollSpeed * 2) + 3000 + offset))
     
@@ -695,8 +714,47 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp} : gameInterfa
         }
     }, [endScreen])
 
+    const [videoPlaying, setVideoPlaying] = useState<boolean>(false)
+    const [videoDuration, setVideoDuration] = useState<number>(0)
+    const reactPlayerRef = useRef<ReactPlayer | null>(null)
+    const [videoEnded, setVideoEnded] = useState<boolean>(true)
+    const [backgroundStarted, setBackgroundStart] = useState<boolean>(true)
+
+    // const handleProgress = (state: any) => {
+    //     if (songBackground && state.playedSeconds >= songBackground.ytEnd) {
+    //         setVideoPlaying(false)
+    //     }
+    // }
+
     return (
     <div>
+        {songBackground && 
+        <div id='song_background' className={videoEnded? "hideBackground" : "showBackground"} >
+            <ReactPlayer
+                ref={reactPlayerRef}
+                url={`https://www.youtube.com/watch?v=${songBackground.ytID}?start=${songBackground.ytStart}?end=${songBackground.ytEnd}&rel=0`} //&rel=0 means that "more videos" are locked to uploader's channel
+                loop={false}
+                controls={false}
+                volume={100}
+                muted={true}
+                height={"100%"}
+                width={"100%"}
+                playing={videoPlaying}
+                pip={false}
+                light={false}
+                playsinline={true}
+                // onProgress={handleProgress}
+                onEnded={() => {setVideoPlaying(false), console.log("video Ended"); setVideoEnded(true)}}
+                config={{
+                    playerVars: {
+                    iv_load_policy: 3,
+                    // cc_load_policy: 0, //Just setting it to 0 still puts the captions up. Opposite of the intent
+                    disablekb: 1
+                    }
+                }}
+            />
+        </div>
+        }
         <div id='game-container'>
             <div id='lane-container'>
                 <div ref={lane_one} className='lane lane-one'> <div id='cOne' className='circle'></div> </div>

@@ -216,12 +216,21 @@ label {
     /* height: 100%; */
 }
 
-/* #youtube_frame {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 20;
-} */
+#youtube_frame {
+    /* position: absolute; */
+    /* top: 0; */
+    /* left: 0; */
+    /* width: 480px;
+    height: 270px;
+    These specific values were chosen as they can be found in .player-wrapper in https://github.com/cookpete/react-player/blob/master/examples/react/public/App.css
+    And according to https://github.com/CookPete/react-player/issues/587 , it seems that once the player gets to a certain size, "more videos" overlay appears
+    */
+    /* z-index: 20; */
+    /* opacity: 0.5; */
+    width: 100%;
+    aspect-ratio: 16/9;
+    pointer-events: none;
+}
 
 #metadata_wrapper {
     display: flex;
@@ -292,6 +301,10 @@ label {
   
 .no_scrollbar {
     scrollbar-width: none;
+}
+
+.no_scroll {
+    pointer-events: none;
 }
 
 .scrollbar {

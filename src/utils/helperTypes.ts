@@ -47,6 +47,16 @@ export type editorMetadata = {
   note_count: number,
   description: string,
   source: string,
+
+  ytID: string,
+  ytStart: number,
+  ytEnd: number
+}
+
+export type ytBackgroundType = {
+  ytID: string,
+  ytStart: number,
+  ytEnd: number
 }
   
 export type ranking = {
