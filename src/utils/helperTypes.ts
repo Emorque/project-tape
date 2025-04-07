@@ -21,7 +21,11 @@ export type mapMetadata = {
   language: string,
   note_count: number,
   song_length: number,
-  description: string
+  description: string,
+
+  ytID: string,
+  ytStart: number,
+  ytEnd: number
 }
 
 export type sMap = [number,string][]

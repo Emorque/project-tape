@@ -15,6 +15,7 @@
 :root {
   --black: #1a1a1a;
   --grey: #3a4447;
+  --greyTransparent: #3a444767;
   --green: #0b7033;
   --white: #91a89a;
 }

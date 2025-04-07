@@ -6,27 +6,78 @@
     z-index: 300;
 }
 
-#song_background {
+#video_visible {
     position: absolute;
     pointer-events: none;
-    perspective: 1000px; /* Adjust perspective based on screen width */
-    z-index: 300;
-    transition: opacity 1s ease;
+    z-index: 200;
+    transition: opacity 0.5s ease;
+}
+
+#header-cover {
+
 }
 
 .showBackground {
-    opacity: 1;
-    width: 100%;
-    height: 100%;
+    /* opacity: 1; */
+    width: 100vw;
+    height: 140vh;
+    top: -20vh
 }
 
 .hideBackground {
-    opacity: 0;
-    width: 480px;
-    height: 270px;
+    /* opacity: 0; */
+    width: 300px;
+    height: 140vh;
 }
 
+#yt-cover {
+    position: absolute;
+    /* top: 0; */
+    color: white;
+    left: 0;
+    top:-50%;
+    /* z-index: 500; */
+    /* width: 100%; */
+    /* height: fit-content; */
+}
 
+#bg_label {
+    font-size: 1.5rem;
+}
+
+.slider-dim {
+    appearance: none;
+    width: 100%;
+    max-width: 900px;
+    border-radius: 10px;
+    height: 15px;
+    background: var(--green);
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.slider-dim:hover {
+    opacity: 1;
+}
+  
+.slider-dim::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    border-radius: 5px;
+    aspect-ratio: 1;
+    background: var(--white);
+    cursor: pointer;
+}
+  
+.slider-dim::-moz-range-thumb {
+    width: 25px;
+    aspect-ratio: 1;
+    background: var(--grey);
+    cursor: pointer;
+}
 
 #lane-container {
     margin: 0 auto;
@@ -34,6 +85,7 @@
     width: 75%;  /* Responsive width */
     height: 150%;  /* Full height of the container */
     /* max-height: 1000px;  */
+    background-color: var(--greyTransparent);
     max-width: 750px;  /* Prevent too wide elements */
     top:0;
     z-index: 1;
@@ -44,7 +96,7 @@
 }
 
 #lane-container::after {
-    background-color: transparent;
+    background-color: var(--greyTransparent);
     border: 1px solid #eaeaea;
     transform: translateX(-1px) translateY(2px);
     width: 100%;
@@ -53,6 +105,26 @@
     position: absolute;
     bottom: -25px;
 }
+
+/* 
+#cursor-cover-bottom, #cursor-cover-top{
+    position: absolute;
+    content: "";
+    height: 10%;
+    background-color: rgb(0, 0, 0);
+} */
+
+/* To cover captions */
+/* To cover the top-right "copy link" button. Its unclickable anyways */
+
+/* #cursor-cover-bottom{ 
+    bottom: 0;
+}
+#cursor-cover-top{
+    width: 80px;
+    top: 0;
+    right:0;
+} */
 
 #lane-selection {
     position: absolute;
@@ -226,7 +298,7 @@
     /* margin: 0 auto; */
     height: 100%;
     z-index: 200;
-    background-color: rgba(0, 0, 0, 0.767);
+    background-color: rgba(0, 0, 0, 0.253);
 }
 
 #waiting_wrapper {
@@ -279,6 +351,14 @@
     transform: translateX(-50%);
     opacity: 0;
     animation: countdown 3s linear;
+}
+
+#yt_info {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white
 }
 
 @keyframes countdown {
@@ -669,6 +749,8 @@
     background: linear-gradient(to right, transparent 40%, #eaeaea 40%, #eaeaea 60%, transparent 60%);
     border-radius: 50%;
     content: "";
+    z-index: 100; 
+    /* z-index to place on top of transparent background of div */
 }
 
 @media screen and (min-width: 950px) {

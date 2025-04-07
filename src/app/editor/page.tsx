@@ -10,6 +10,7 @@ import { useGSAP } from "@gsap/react";
 import { editorMap, keybindsType, localStorageMaps } from "@/utils/helperTypes";
 import { type User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
+import Link from "next/link";
 
 const formatDateFromMillis = (milliseconds : string) => {
   const date = new Date(milliseconds);
@@ -217,6 +218,7 @@ export default function EditorPage() {
     <div id="editor">
       <div id="beatmap_wrapper">
         <div id="audio_select">
+          <Link href={"/"}>Back to Project Tape</Link>
           <h2 id="audio_tooltip_text">{(audioFileError)? "Audio File exceeds 5MB" : "Enter Your Audio File" }</h2>
           <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>
         </div>

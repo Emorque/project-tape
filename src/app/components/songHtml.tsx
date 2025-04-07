@@ -36,7 +36,8 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     const [songlist, setSongList] = useState<songType[]>([])
     const [pendingSongList, setPendingSongList] = useState<songType[]>([])
     const [localMapsList, setLocalMapsList] = useState<localStorageMaps>({})
-    const [songID, setSongID] = useState<number>(0)
+    const [songID, setSongID] = useState<number | null>(null)
+    const [localID, setLocalID] = useState<number | null>(null)
     const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
     const [selectedSong, setSelectedSong] = useState<mapMetadata>({
         song_name: "",
@@ -46,7 +47,11 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
         language: "",
         note_count: 0,
         song_length: 0,
-        description: ""
+        description: "",
+
+        ytID: "",
+        ytStart: 0,
+        ytEnd: 0
     })
     const [songLoading, setSongLoading] = useState<boolean>(true);
 
@@ -133,6 +138,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
             if (song) {
                 setSelectedSong(song[0].map_metadata)
                 setSongID(song_id)
+                setLocalID(null)
                 setUsingLocalMap(false);
                 // setSongIndex(index);
             }
@@ -146,13 +152,15 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     }, [supabase, songID])
 
     const playSong = () => {
-        songToPlay(songID)
+        if (songID) {
+            songToPlay(songID)
+        }
     }
 
     const toggleTab = () => {
         if (tab === "songs") {
             setTab("leaderboard")
-            if (leaderboardList[0] !== songID) updateLeaderboard(songID)
+            if (songID && leaderboardList[0] !== songID) updateLeaderboard(songID)
         }
         else {
             setTab("songs")
@@ -274,19 +282,27 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     const updateLocalSong = (song_metadata : editorMetadata) => {
 
         const extractedMapMetata: mapMetadata = {
-            song_name: song_metadata.song_name,
-            bpm: song_metadata.bpm,
-            genre: song_metadata.genre,
+            song_name: song_metadata.song_name || "Untitled Song",
+            bpm: song_metadata.bpm || 0,
+            genre: song_metadata.genre || " ",
             source: song_metadata.source,
-            language: song_metadata.language,
-            note_count: song_metadata.note_count,
-            song_length: 0, // TODO: add song_length as a key in editorMetadata and update editor save
-            description: song_metadata.description
+            language: song_metadata.language || " ",
+            note_count: song_metadata.note_count || 0,
+            song_length: localNotes.length * 62.5, // TODO: add song_length as a key in editorMetadata and update editor save
+            description: song_metadata.description || " ",
+
+            ytID: song_metadata.ytID,
+            ytStart: song_metadata.ytStart,
+            ytEnd: song_metadata.ytEnd
         }
         setSelectedSong(extractedMapMetata)
         setUsingLocalMap(true);
         setSongID(0)
     }
+
+    useEffect(() => {
+        console.log(selectedSong)
+    }, [selectedSong])
 
     return (
         <div id="songHtml">
@@ -331,7 +347,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             Play Local Map
                         </button>
                         :
-                        <button id="play_btn" onClick={playSong} disabled={selectedSong.note_count === 0 || songLoading}>
+                        <button id="play_btn" onClick={playSong} disabled={selectedSong.note_count === 0 || songLoading || !songID}>
                             Play
                         </button>
                     }
@@ -392,8 +408,9 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                         :
                         <>
                         {selectedSong.source && 
-                            <div>
+                            <div id="source_links">
                                 <a href={selectedSong.source} target="blank">Source</a>
+                                <a href={selectedSong.source} target="blank">Background Source</a>
                             </div>
                             }
                             {selectedSong.genre && selectedSong.language && 
@@ -558,10 +575,13 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                         // const { timestamp , song_metadata, song_notes } = editorMap; //Timestamp removed for now b/c I don't have a use atm. Maybe for ordering?
                                         const { song_metadata, song_notes } = editorMap;
                                         return (
-                                            <button key={map_id} className="song_btn active" onClick={() => {
+                                            <button key={map_id} className={(localID === parseInt(map_id))? "song_btn active" : "song_btn"} onClick={() => {
                                                     setLocalNotes(song_notes);
                                                     updateLocalSong(song_metadata)
-                                                    if (song_metadata.ytID !== "" && song_metadata.ytStart !== 0 && song_metadata.ytEnd !== 0) {
+                                                    setSongLoading(false)
+                                                    setLocalID(parseInt(map_id))
+                                                    setSongID(null)
+                                                    if (song_metadata.ytID !== "" && song_metadata.ytStart !== null && song_metadata.ytEnd !== null) {
                                                         setSongBackground({
                                                             ytID: song_metadata.ytID,
                                                             ytStart: song_metadata.ytStart,

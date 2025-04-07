@@ -216,6 +216,11 @@ label {
     /* height: 100%; */
 }
 
+a {
+    font-size: 2rem;
+    padding-bottom: 10px;
+}
+
 #youtube_frame {
     /* position: absolute; */
     /* top: 0; */

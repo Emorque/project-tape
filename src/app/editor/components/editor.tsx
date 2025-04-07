@@ -875,8 +875,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   }
 
   const handleDuration = (duration: any) => {
+    setVideoDuration(duration)
     if (ytIDRef.current && prevID.current !== ytIDRef.current.value && ytOffsetRef.current && ytEndRef.current) {
-      setVideoDuration(duration)
       prevID.current = ytIDRef.current.value
       ytOffsetRef.current.value = "0"
       ytEndRef.current.value = duration
@@ -1057,7 +1057,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
               </iframe> */}
               <ReactPlayer
                 ref={reactPlayerRef}
-                url={`https://www.youtube.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0`} //&rel=0 means that "more videos" are locked to uploader's channel
+                // url={`https://www.youtube.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0`} //&rel=0 means that "more videos" are locked to uploader's channel
+                url={`https://www.youtube-nocookie.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0&nocookie=true&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&widgetid=1&aoriginsup=1&vf=1`} //&rel=0 means that "more videos" are locked to uploader's channel
                 loop={false}
                 controls={false}
                 volume={100}
