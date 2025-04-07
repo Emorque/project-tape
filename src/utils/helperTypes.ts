@@ -85,7 +85,9 @@ export type settingsType = {
     gpVolume: number,
     hsVolume: number,
 
-    offset: number
+    offset: number,
+
+    backgroundDim: number
 }
 
 export type keybindsType = {

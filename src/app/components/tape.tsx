@@ -4,9 +4,11 @@ import React, { RefObject, useCallback, useEffect, useRef, useState } from 'reac
 import "./tape.css";
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { settingsType } from '@/utils/helperTypes';
+import { settingsType, ytBackgroundType } from '@/utils/helperTypes';
 import { type User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
+import ReactPlayer from "react-player/youtube";
+
 
 const supabase = createClient()
 
@@ -17,6 +19,7 @@ interface gameInterface {
   audioProp: React.RefObject<HTMLAudioElement>;
   user : User | null;
   song_id: number;
+  songBackground: ytBackgroundType | null;
 }
 
 const getKeyMapping = (key : string) => {
@@ -30,9 +33,9 @@ const getAccuracy = (perfect: number, okay: number, miss: number) => {
     return accuracy.toFixed(2)
 }
 
-export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : gameInterface) => {   
+export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, songBackground} : gameInterface) => {   
     const [gameState, setGameState] = useState<string>("Waiting"); //False is for paused/complete, True is when the song is playing
-    
+    const [songStarted, setSongStarted] = useState<boolean>(false)
     // Game Visuals
     const lane_one = useRef<HTMLDivElement>(null);
     const lane_two = useRef<HTMLDivElement>(null);
@@ -217,7 +220,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
 
             if (gameState === "End" || gameState === "Waiting") return;
 
-            if (event.key === buttonMappings.pause[0]|| event.key === buttonMappings.pause[1]) {
+            if ((event.key === buttonMappings.pause[0]|| event.key === buttonMappings.pause[1]) && songStarted) {
                 pauseMap();
             }
             if(gameState === "Paused") return; //If false, that means game is complete/paused
@@ -321,7 +324,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex, gameState]);
+        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex, gameState, songStarted]);
     
     const handleEnd = contextSafe(() => {
         gsap.to("#lane-container", {
@@ -353,6 +356,9 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "running";
             }
         }
+        if (reactPlayerRef.current){
+            setVideoPlaying(true)
+        }
     }
     
 
@@ -366,6 +372,9 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
             for (let i = 0; i < curves.length; i++) {
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "paused";
             }
+        }
+        if (reactPlayerRef.current){
+            setVideoPlaying(false)
         }
     }
 
@@ -419,6 +428,11 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
+                    setSongStarted(true)
+                }
+                if (reactPlayerRef.current && songBackground) {
+                    reactPlayerRef.current.seekTo(songBackground.ytStart)
+                    setVideoVisible(true)
                 }
             }, ((scrollSpeed * 2) + 3000 + offset))
     
@@ -453,6 +467,12 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
         if (audioProp.current) {
             audioProp.current.pause();
             audioProp.current.currentTime = 0;
+            setSongStarted(false)
+        }
+        if (reactPlayerRef.current && songBackground) {
+            reactPlayerRef.current.seekTo(songBackground.ytStart)
+            setVideoPlaying(false)
+            setVideoVisible(false)
         }
 
         setStopwatchActive(false);
@@ -484,6 +504,11 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
+                    setSongStarted(true)
+                }
+                if (reactPlayerRef.current && songBackground) {
+                    setVideoPlaying(true)
+                    setVideoVisible(true)
                 }
             }, ((scrollSpeed * 2) + 3000 + offset))
     
@@ -499,6 +524,11 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
+                    setSongStarted(true)
+                }
+                if (reactPlayerRef.current && songBackground) {
+                    setVideoPlaying(true)
+                    setVideoVisible(true)
                 }
             }, ((scrollSpeed * 2) + 3000))
     
@@ -529,10 +559,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
             const laneClass = (lane === lane_one)? "left" : "right";
             newBar.classList.add(laneClass);
             newBar.style.animation = `barAnime ${scrollSpeed}ms linear 1, ${laneClass}Animation ${scrollSpeed}ms linear 1`
-            // const spike = document.createElement('div');
-            // spike.classList.add(`${laneClass}Spike`)
-            // spike.style.animation = `${laneClass}SpikeAnimation ${scrollSpeed}ms linear 1`
-            // newBar.appendChild(spike);
         }
         else {
             newBar.style.animation = `barAnime ${scrollSpeed}ms linear 1`
@@ -550,24 +576,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
             newBar.removeEventListener("animationend", cleanup)
         }
     }
-
-    // const createBar = (lane: RefObject<HTMLDivElement>, turnNote : boolean) => {
-    //     const newBar = document.createElement('div');
-    //     newBar.classList.add("bar")
-    //     if (turnNote) {
-    //         if (lane === lane_one) newBar.classList.add("left");
-    //         else newBar.classList.add("right")            
-    //     }
-    //     lane.current?.appendChild(newBar);
-    //     newBar.style.animation = `barAnime ${scrollSpeed}ms linear`
-    //     const cleanup = () => {
-    //         lane.current?.removeChild(newBar);
-    //     }
-    //     newBar.addEventListener("animationend", cleanup)
-    //     return () => {
-    //         newBar.removeEventListener("animationend", cleanup)
-    //     }
-    // }
 
     // Handle Curve Creation
     // Left Notes
@@ -736,9 +744,18 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
         }
     }, [endScreen])
 
-    // useEffect(() => {
-    //     console.log(user)
-    // }, [])
+    const [videoPlaying, setVideoPlaying] = useState<boolean>(true)
+    const reactPlayerRef = useRef<ReactPlayer | null>(null)
+
+    const [videoVisible, setVideoVisible] = useState<boolean>(false)
+    const handleProgress = (state: any) => {
+        if (songBackground && state.playedSeconds >= songBackground.ytEnd - 5) {
+            setVideoPlaying(false)
+            setVideoVisible(false)
+        }
+    }
+
+    const [backgroundDim, setBackgroundDim] = useState<number>(settings.backgroundDim)
 
     const uploadScore = useCallback(async () => {
         if (!user && gameState === "End") {
@@ -824,9 +841,38 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
         uploadScore()
     }, [user, uploadScore])
 
-
     return (
     <div>
+        {songBackground && 
+        <div id='video_visible' style={{opacity: videoVisible? (1 - backgroundDim) : 0}} className={videoVisible? "showBackground" : "hideBackground"} >
+            {/* <div id='yt-cover'> */}
+            {/* </div> */}
+            <ReactPlayer
+                ref={reactPlayerRef}
+                // https://www.youtube-nocookie.com/embed/eh1r0ZpTrXo?controls=0&rel=0&playsinline=1&disablekb=1&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&origin=https%3A%2F%2Frhythm-plus.com&widgetid=1&forigin=https%3A%2F%2Frhythm-plus.com%2Fgame%2FGyLLbFGVGXJ9TagPGE5dur&aoriginsup=1&vf=1 i found a secret
+                
+                url={`https://www.youtube-nocookie.com/watch?v=${songBackground.ytID}?start=${songBackground.ytStart}&end=${songBackground.ytEnd}&rel=0&nocookie=true`} //&rel=0 means that "more videos" are locked to uploader's channel
+                loop={false}
+                controls={false}
+                volume={100}
+                muted={true}
+                height={"140vh"}
+                width={videoVisible? "100vw" : 300}
+                playing={videoPlaying}
+                pip={false}
+                light={false}
+                playsinline={true}
+                onProgress={handleProgress}
+                // class={"yo"}
+                config={{
+                    playerVars: {
+                        iv_load_policy: 3,
+                        disablekb: 1
+                    }
+                }}
+            />
+        </div>
+        }
         <div id='game-container'>
             <div id='lane-container'>
                 <div ref={lane_one} className='lane lane-one'> <div id='cOne' className='circle'></div> </div>
@@ -846,6 +892,17 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
 
             <div id='pause_wrapper' className={(gameState === "Paused")? "pause_active" : 'pause_unactive'}>
                 <div id="pause_screen">
+                    <label id='bg_label' htmlFor='bg_slider'>Background Dim</label>
+                    <input 
+                        id='bg_slider'
+                        className="slider-dim"
+                        type="range"
+                        min={0}
+                        max={1}
+                        value={backgroundDim}
+                        onChange={e => setBackgroundDim(parseFloat(e.target.value))}
+                        step={0.1}
+                    ></input>
                     <button onClick={() => resumeMap()}>Resume</button>
                     <button onClick={() => restartMap()}>Retry</button>
                     <button onClick={() => {gameMapProp(null)}}>Main Menu</button>
@@ -854,6 +911,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id} : g
 
             {gameState === "Waiting"? 
             <div id='waiting_wrapper'>
+                {songBackground?.ytID !== undefined && <p id='yt_info'>Video Background Powered by Youtube. Copyright belongs to respective owners.</p>}
                 <div id='countdown'>
                     <span>3</span>
                     <span>2</span>

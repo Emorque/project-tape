@@ -55,7 +55,7 @@ export default function Home() {
 
   const[selectedSong, setSelectedSong] = useState<number | null>(null)
   const[gameMap, setGameMap] = useState<sMap | null>(null)
-  const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
+  const[songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
   const[menu, setMenu] = useState<string>("main_menu")
   const[userSettings, setUserSettings] = useState<settingsType | null>(null);
   const[settingsView, setSettingsView] = useState<boolean>(false);
@@ -154,7 +154,9 @@ export default function Home() {
             gpVolume: 1,
             hsVolume: 1,
 
-            offset: 0
+            offset: 0,
+
+            backgroundDim: 0.5
         }
       }
       else{
@@ -198,12 +200,13 @@ export default function Home() {
   const [usingLocalMap, setUsingLocalMap] = useState<boolean>(false);
   // const [localNotes, setLocalNotes] = useState<string[][]>([]);
 
-  const handleSelectedSong = (songID: number) => {
+  const handleSelectedSong = (songID: number, song_background : ytBackgroundType | null) => {
     updateCamera([14,8,34,   14, 7, 26])
     setSongPlaying(true);
     setSelectedSong(songID); 
     getMap(songID);
     setUsingLocalMap(false)
+    setSongBackground(song_background)
   }
 
   const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => {
@@ -512,7 +515,7 @@ export default function Home() {
         }
         {/* Game Component for Online Maps */}
         {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && !usingLocalMap &&
-        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong}/>
+        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground}/>
         }
       </div>
     </div>

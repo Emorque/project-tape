@@ -10,7 +10,7 @@ import gsap from 'gsap';
 import { useGSAP } from "@gsap/react";
 
 interface SongHtmlProps {
-    songToPlay : (songID: number) => void,
+    songToPlay : (songID: number, song_background: ytBackgroundType | null) => void,
     playLocalSong: (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => void,
     user: User | null,
     role : string | null,
@@ -140,7 +140,12 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                 setSongID(song_id)
                 setLocalID(null)
                 setUsingLocalMap(false);
-                // setSongIndex(index);
+                const background : ytBackgroundType = {
+                    ytID: song[0].map_metadata.ytID,
+                    ytStart: song[0].map_metadata.ytStart,
+                    ytEnd: song[0].map_metadata.ytEnd
+                }
+                setSongBackground(background)
             }
         } catch (error) {
             console.error('Song error:', error) // Only used for eslint
@@ -153,7 +158,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
 
     const playSong = () => {
         if (songID) {
-            songToPlay(songID)
+            songToPlay(songID, songBackground)
         }
     }
 
@@ -534,7 +539,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             <div className={(currentMenu === "Bookmark")? "song_list active_list" : "song_list"}>
                                 {Object.entries(bookmarkedSongs).map(([song_id, metadata]) => {
                                     return (
-                                        <button key={song_id} className={(parseInt(song_id) === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(parseInt(song_id)); setSongBackground(null)}}>
+                                        <button key={song_id} className={(parseInt(song_id) === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(parseInt(song_id))}}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
                                                     <h3>{metadata.song_metadata.song_name}</h3>

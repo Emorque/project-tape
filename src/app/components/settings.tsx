@@ -23,6 +23,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
     const [scrollSpeed, setScrollSpeed] = useState<number>(1500);
     const [gameplayVolume, setGameplayVolume] = useState<number>(1);
     const [hitsoundVolume, setHitsoundVolume] = useState<number>(1);
+    const [backgroundDim, setBackgroundDim] = useState<number>(0.5);
 
     const [offset, setOffset] = useState<number | null>(0);
 
@@ -158,7 +159,9 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 gpVolume: 1,
                 hsVolume: 1,
 
-                offset: 0
+                offset: 0,
+
+                backgroundDim: 0.5
             }
         }
         else{
@@ -181,6 +184,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         setHitsoundVolume(updateSettings.hsVolume);
 
         setOffset(updateSettings.offset)
+        setBackgroundDim(updateSettings.backgroundDim)
 
         saveSettings(updateSettings)
 
@@ -196,6 +200,10 @@ export const Settings = ({saveSettings} : settingsInterface) => {
     const handleHitsoundVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         // console.log(event.target.value)
         setHitsoundVolume(parseFloat(event.target.value))
+    }
+
+    const handleBackgroundDimChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setBackgroundDim(parseFloat(event.target.value))
     }
 
     const handleScrollSpdChange = (event : React.ChangeEvent<HTMLInputElement>) => {
@@ -247,7 +255,9 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             gpVolume: gameplayVolume,
             hsVolume: hitsoundVolume,
 
-            offset: boundedOffset
+            offset: boundedOffset,
+
+            backgroundDim: backgroundDim
         }
         setOffset(boundedOffset)
         bottomAnimation("#save_tooltip_text")
@@ -274,7 +284,9 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             gpVolume: 1,
             hsVolume: 1,
 
-            offset: 0
+            offset: 0,
+
+            backgroundDim: 0.5
         }
 
         setLeftAction(defaultSettings.lLane);
@@ -435,6 +447,26 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                         max={1}
                         value={hitsoundVolume}
                         onChange={handleHitsoundVolumeChange}
+                        step={0.1}
+                    ></input>
+                </div>
+
+            </div>
+
+            <div className="settings_div">
+                <h1>Background Dim</h1>
+                <div className="setting_tooltip_text">
+                    Adjust Background Dim            
+                </div>
+                <div className="slider_div">
+                    <h1>{backgroundDim}</h1>
+                    <input 
+                        className="slider"
+                        type="range"
+                        min={0}
+                        max={1}
+                        value={backgroundDim}
+                        onChange={handleBackgroundDimChange}
                         step={0.1}
                     ></input>
                 </div>

@@ -505,6 +505,11 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
+                    setSongStarted(true)
+                }
+                if (reactPlayerRef.current && songBackground) {
+                    setVideoPlaying(true)
+                    setVideoVisible(true)
                 }
             }, ((scrollSpeed * 2) + 3000))
     
@@ -731,12 +736,12 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
         }
     }
 
-    const [backgroundDim, setBackgroundDim] = useState<number>(0.5)
+    const [backgroundDim, setBackgroundDim] = useState<number>(settings.backgroundDim)
 
     return (
     <div>
         {songBackground && 
-        <div id='video_visible' style={{opacity: videoVisible? backgroundDim : 0}} className={videoVisible? "showBackground" : "hideBackground"} >
+        <div id='video_visible' style={{opacity: videoVisible? (1 - backgroundDim) : 0}} className={videoVisible? "showBackground" : "hideBackground"} >
             {/* <div id='yt-cover'> */}
             {/* </div> */}
             <ReactPlayer
