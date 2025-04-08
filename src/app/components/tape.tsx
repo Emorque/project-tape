@@ -1,6 +1,6 @@
 // 'use client' taken out because of the gameMapProp. use client is now implied i think b/c parent has use client
 
-import React, { RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import React, { MouseEvent,RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import "./tape.css";
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -243,32 +243,10 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
     
             else if (event.key === buttonMappings.leftLane[0] || event.key === buttonMappings.leftLane[1]) {
                 if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
-                    if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 150) {
-                        handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "FL")
-                        return;
-                    }
-                    if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 250){
-                        setComboCount(0);
-                        setMode("base");
-                        earlyAnimation("cOne")
-                    }
-                    else {
-                        defaultAnimation("cOne")
-                    }
+                    checkFirstLane()
                 }
                 else if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
-                    if (leftTiming.current[leftTimingIndex][1] === "SL" && leftTiming.current[leftTimingIndex][0] <= time + 150) {
-                        handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "SL")
-                        return
-                    }
-                    if (leftTiming.current[leftTimingIndex][1] === "SL" && leftTiming.current[leftTimingIndex][0] <= time + 250) {
-                        setComboCount(0);
-                        setMode("base");
-                        earlyAnimation("cThree")   
-                    }
-                    else {
-                        defaultAnimation("cThree")
-                    }
+                    checkThirdLane()
                 }
                 hitsoundsRef.current[hitsoundIndex].play();
                 setHitsoundIndex((index) => (index + 1) % 12);       
@@ -277,33 +255,11 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
     
             else if (event.key === buttonMappings.rightLane[0]|| event.key === buttonMappings.rightLane[1]) {
                 if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
-                    if (rightTiming.current[rightTimingIndex][1] === "FR" && rightTiming.current[rightTimingIndex][0] <= time + 150) {
-                        handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "FR")
-                        return
-                    }
-                    if (rightTiming.current[rightTimingIndex][1] === "FR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
-                        setComboCount(0);
-                        setMode("base");  
-                        earlyAnimation("cTwo")
-                    }
-                    else {
-                        defaultAnimation("cTwo")
-                    }                    
+                    checkSecondLane()                               
                 }
         
                 else if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
-                    if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 150){
-                        handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "SR")
-                        return
-                    }
-                    if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
-                        setComboCount(0);
-                        setMode("base");
-                        earlyAnimation("cFour")
-                    }
-                    else {
-                        defaultAnimation("cFour")
-                    }    
+                    checkFourthLane()    
                 }
                 hitsoundsRef.current[hitsoundIndex].play();
                 setHitsoundIndex((index) => (index + 1) % 12); 
@@ -313,10 +269,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
             if (event.key === buttonMappings.restart[0]|| event.key === buttonMappings.restart[1]) {
                 restartMap()
             }
-            // if (event.key === 'f' || event.key === "F") { 
-            //     if (audioProp.current) audioProp.current.currentTime = audioProp.current.currentTime + 30;
-            //     console.log(gameState)  
-            // }
         }
         document.addEventListener('keydown', handleKeyDown);
     
@@ -333,6 +285,8 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
             onComplete: () => {
                 setEndScreen(true)
                 setGameState("End")
+                setVideoVisible(false)
+                setVideoPlaying(false)
             }
         })
     })
@@ -757,6 +711,148 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
 
     const [backgroundDim, setBackgroundDim] = useState<number>(settings.backgroundDim)
 
+    const circleContainerRef = useRef<HTMLDivElement>(null)
+    const handleFirstLane = () => {
+        console.log("First Lane Clicked")
+        if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
+            checkFirstLane()
+        }
+    }
+
+    const handleSecondLane = () => {
+        console.log("Second Lane Clicked")
+        if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
+            checkSecondLane()              
+        }
+    }
+
+    const handleThirdLane = () => {
+        console.log("Third Lane Clicked")
+        if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
+            checkThirdLane()
+        }
+    }
+
+    const handleFourthLane = () => {
+        console.log("Fourth Lane Clicked")
+        if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
+            checkFourthLane()
+        }
+    }
+
+    const handleLeftTurn = () => {
+        if (direction === "Left") return
+        moveLeft();
+        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
+            handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "FT")
+        }
+    }
+
+    const handleRightTurn = () => {
+        if (direction === "Right") return
+        moveRight();
+        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
+            handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "ST")
+        }
+    }
+
+    const handleCircleContainer = (event : MouseEvent<HTMLDivElement>) => { //React. not needed because imported at the top
+        if (!circleContainerRef.current) return
+        const circleContainerInfo = circleContainerRef.current.getBoundingClientRect();
+        let mousePlacement = event.clientX - circleContainerInfo.left
+        let containerWidth = circleContainerInfo.right - circleContainerInfo.left
+
+        if (!mousePlacement || !containerWidth) return;
+        const oneFourth = containerWidth * (1/4)
+        const twoFourths = containerWidth * (2/4)
+        const threeFourths = containerWidth * (3/4)
+        
+        if (0 < mousePlacement && mousePlacement <= oneFourth) { // First Bar
+            console.log("First Circle")
+            if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
+                checkFirstLane()
+            }
+          }
+          else if (oneFourth < mousePlacement && mousePlacement <= twoFourths) { // Second Bar
+            console.log("Second Circle")
+            if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
+                checkSecondLane()              
+            }
+          }
+          else if (twoFourths < mousePlacement && mousePlacement <= threeFourths) { // Third Bar
+            console.log("Third Circle")
+            if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
+                checkThirdLane()
+            }
+          }
+          else if (threeFourths < mousePlacement && mousePlacement <= containerWidth) { // Fourth Bar
+            console.log("Fourth Circle")
+            if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
+                checkFourthLane()
+            }
+          }
+    }
+
+    const checkFirstLane = () => {
+        if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 150) {
+            handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "FL")
+            return;
+        }
+        if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 250){
+            setComboCount(0);
+            setMode("base");
+            earlyAnimation("cOne")
+        }
+        else {
+            defaultAnimation("cOne")
+        }
+    }
+
+    const checkSecondLane = () => {
+        if (rightTiming.current[rightTimingIndex][1] === "FR" && rightTiming.current[rightTimingIndex][0] <= time + 150) {
+            handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "FR")
+            return
+        }
+        if (rightTiming.current[rightTimingIndex][1] === "FR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
+            setComboCount(0);
+            setMode("base");  
+            earlyAnimation("cTwo")
+        }
+        else {
+            defaultAnimation("cTwo")
+        }      
+    }
+
+    const checkThirdLane = () => {
+        if (leftTiming.current[leftTimingIndex][1] === "SL" && leftTiming.current[leftTimingIndex][0] <= time + 150) {
+            handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "SL")
+            return
+        }
+        if (leftTiming.current[leftTimingIndex][1] === "SL" && leftTiming.current[leftTimingIndex][0] <= time + 250) {
+            setComboCount(0);
+            setMode("base");
+            earlyAnimation("cThree")   
+        }
+        else {
+            defaultAnimation("cThree")
+        }
+    }
+
+    const checkFourthLane = () => {
+        if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 150){
+            handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "SR")
+            return
+        }
+        if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
+            setComboCount(0);
+            setMode("base");
+            earlyAnimation("cFour")
+        }
+        else {
+            defaultAnimation("cFour")
+        }    
+    }
+
     const uploadScore = useCallback(async () => {
         if (!user && gameState === "End") {
             setLeadboardText("You need to be logged in to upload scores")
@@ -841,6 +937,29 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
         uploadScore()
     }, [user, uploadScore])
 
+    const [tabActive, setTabActive] = useState<boolean>(true)
+
+    useEffect(() => {
+        const handleTabChange = () => {
+            setTabActive(!document.hidden)
+            console.log(!document.hidden)
+        }
+
+        document.addEventListener('visibilitychange', handleTabChange)
+        return () => {
+            document.removeEventListener('visibilitychange', handleTabChange)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (tabActive) {
+            console.log("Tape is active")
+        }
+        else if (!tabActive && gameState !== "Paused") {
+            pauseMap()
+        }
+    }, [tabActive, gameState])
+
     return (
     <div>
         {songBackground && 
@@ -863,7 +982,6 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
                 light={false}
                 playsinline={true}
                 onProgress={handleProgress}
-                // class={"yo"}
                 config={{
                     playerVars: {
                         iv_load_policy: 3,
@@ -875,15 +993,20 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
         }
         <div id='game-container'>
             <div id='lane-container'>
-                <div ref={lane_one} className='lane lane-one'> <div id='cOne' className='circle'></div> </div>
-                <div ref={lane_two} className='lane lane-two'> <div id='cTwo' className='circle'></div> </div>
-                <div ref={lane_three} className='lane lane-three'> <div id='cThree' className='circle'></div> </div>
-                <div ref={lane_four} className='lane lane-four'> <div id='cFour' className='circle'></div> </div>
+            <div onClick={handleFirstLane} ref={lane_one} className='lane lane-one'> <div id='cOne' className='circle'></div> </div>
+                <div onClick={handleSecondLane} ref={lane_two} className='lane lane-two'> <div id='cTwo' className='circle'></div> </div>
+                <div onClick={handleThirdLane} ref={lane_three} className='lane lane-three'> <div id='cThree' className='circle'></div> </div>
+                <div onClick={handleFourthLane} ref={lane_four} className='lane lane-four'> <div id='cFour' className='circle'></div> </div>
+                <div ref={circleContainerRef} onClick={handleCircleContainer} id='circle-container'></div>
                 <div style={player_style} id='lane-selection'>
                     <div id='lane-selection-inner'></div>
                     {(mode === "ex") && 
                         <div id='ex-lane'></div>
                     }
+                </div>
+                <div id='turnBtns_container'>
+                    <div onClick={handleLeftTurn} className='turnBtn'>{"<<"}</div>
+                    <div onClick={handleRightTurn} className='turnBtn'>{">>"}</div>
                 </div>
                 <div id='combo-bar'>
                     <div style={combo_style} ref={combo_bar} id='combo-bar-fill'></div>
@@ -911,7 +1034,7 @@ export const Tape = ({gMap, gameMapProp, settings, audioProp, user, song_id, son
 
             {gameState === "Waiting"? 
             <div id='waiting_wrapper'>
-                {songBackground?.ytID !== undefined && <p id='yt_info'>Video Background Powered by Youtube. Copyright belongs to respective owners.</p>}
+                {songBackground?.ytID !== undefined && <p id='yt_info'>Video Background Powered by Youtube. Video copyright belongs to respective owners.</p>}
                 <div id='countdown'>
                     <span>3</span>
                     <span>2</span>

@@ -16,8 +16,10 @@
   --black: #1a1a1a;
   --grey: #3a4447;
   --greyTransparent: #3a444767;
+  --greyTransparent2:rgba(58, 68, 71, 0.2);
   --green: #0b7033;
   --white: #91a89a;
+  --whiteTransparent: #91a89a27; 
 }
 
 html,

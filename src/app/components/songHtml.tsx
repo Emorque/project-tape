@@ -348,7 +348,14 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                     </div>
                     
                     {usingLocalMap? 
-                        <button id="play_btn" onClick={() => playLocalSong(audioURL, localNotes, songBackground)} disabled={disabledLocalMap}>
+                        <button id="play_btn" onClick={() => {
+                            if (audioURL) {
+                                playLocalSong(audioURL, localNotes, songBackground)
+                            }
+                            else {
+                                audioNeeded()
+                            }
+                            }} disabled={disabledLocalMap}>
                             Play Local Map
                         </button>
                         :
@@ -415,7 +422,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                         {selectedSong.source && 
                             <div id="source_links">
                                 <a href={selectedSong.source} target="blank">Source</a>
-                                <a href={selectedSong.source} target="blank">Background Source</a>
+                                <a href={`https://www.youtube.com/watch?v=${selectedSong.ytID}`} target="blank">Background Source</a>
                             </div>
                             }
                             {selectedSong.genre && selectedSong.language && 
