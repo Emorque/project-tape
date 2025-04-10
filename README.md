@@ -8,19 +8,17 @@ Project Tape is a browser-based rhythm game built with the Next.js Framework
 ![Blender](https://img.shields.io/badge/blender-%23F5792A.svg?style=for-the-badge&logo=blender&logoColor=white)
 
 ## Getting Started
-You can visit the deployed game [here](https://project-tape.vercel.app/)
+You can play the game [here](https://project-tape.vercel.app/)!
 
 ## Gameplay
 <img src="https://github.com/user-attachments/assets/912a0318-4076-4037-91ba-2ff2ae284d3b" width=640 height=360>
-<img src="https://github.com/user-attachments/assets/111febf9-384f-491e-8787-27527c24c2a8" width=640 height=360>
+<img src="https://github.com/user-attachments/assets/6cefd905-03c1-48f0-996f-0a73c8dacaeb" width=640 height=360>
 
-<img src="https://github.com/user-attachments/assets/1dd5fdd6-7b2f-445c-8bbd-9233cc830be5" width=640 height=360>
+<img src="https://github.com/user-attachments/assets/3afa7688-ddb2-4ac7-a68e-d7b31c05c891" width=640 height=360>
 <img src="https://github.com/user-attachments/assets/e8b21db4-ec5f-4bba-aeb1-fc93d683a6d1" width=640 height=360>
 
 ## Editor
-<img src="https://github.com/user-attachments/assets/973976c4-9846-45eb-b583-91b37e94e26f" width=640 height=360>
-<img src="https://github.com/user-attachments/assets/ad15c158-0553-4cc4-b286-80cdecb712d0" width=640 height=360>
-
+<img src="https://github.com/user-attachments/assets/8df072f6-0483-479c-9c75-7da0ceec53ef" width=640 height=360>
 
 ## Running Project Tape Yourself
 
@@ -97,7 +95,9 @@ useEffect(() => {
 
 ## Roadmap
 - [x] Complete the beatmap editor.
-- [ ] Implement backend storage for audio files.
+- [x] Implement backend storage for audio files.
+- [x] Allow background videos for beatmaps
+- [ ] Finalize the design/theme
 - [ ] Add map/menu customizations.
 - [ ] Support custom art for each stage.
 - [ ] Continue building and refining 3D models.
