@@ -39,7 +39,7 @@ export async function signup(formData: FormData) {
   }
 
   // Check if the username is unique. 
-  let { data: profiles, error : usernameError } = await supabase
+  const { data: profiles, error : usernameError } = await supabase
   .from('profiles')
   .select()
   .ilike('username', username) // Very important that it is a case insensitive check. I want "Zhalo" and "zhaLo" to be considered the same username

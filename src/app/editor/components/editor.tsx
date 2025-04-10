@@ -51,7 +51,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const [songNotes, setSongNotes] = useState<string[][]>([])
   const [songLength, setSongLength] = useState<number>(0);    
   const [btn, setBtn] = useState<string>("Single Note");
-  const [snapOn, setSnap] = useState<boolean>(true);
+  const [snapOn, setSnap] = useState<boolean>(false);
+  const [keybindsActive, setKeybinds] = useState<boolean>(true);
 
   const supabase = createClient()
 
@@ -156,6 +157,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   useEffect(() => {
     const handleKeyDown = (event: {key: string; repeat: boolean}) => {
       if (event.repeat) return;
+      if (!keybindsActive) return;
 
       if (event.key === keybindMappings.sNote[0] || event.key === keybindMappings.sNote[1]) {
         setBtn("Single Note")
@@ -188,7 +190,61 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return () => {
         document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [btn, pbRate, snapOn ])
+  }, [btn, pbRate, snapOn, keybindsActive])
+
+  
+  useEffect(() => {
+    const handleUserLeave = (event: BeforeUnloadEvent) => {
+      // console.log(event, typeof(event.preventDefault()))
+      const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+
+      let isMapSaved = false;
+      const currentMap = {
+        timestamp: metadata?.timestamp || "",
+        song_metadata : {
+          song_name: songName,
+          song_artist: songArtist,
+          song_mapper: user?.user_metadata.username || "",
+          bpm: bpm,
+          genre: genre,
+          song_length: Math.floor((songLength- 1) / 16),
+          language: language,
+          note_count: noteCount,
+          description: description,
+          source : source,
+          ytID: ytBackground,
+          ytStart: ytOffset,
+          ytEnd: ytEnd
+        },
+        song_notes : songNotes
+      }
+      if (map_id in localMaps) {
+        const isEqual = JSON.stringify({
+          song_metadata: currentMap.song_metadata,
+          song_notes: currentMap.song_notes
+        }) === JSON.stringify({
+          song_metadata: localMaps[map_id].song_metadata,
+          song_notes: localMaps[map_id].song_notes
+        });
+        isMapSaved = isEqual
+      }
+      else {
+        isMapSaved = false
+      }
+        
+      if (!isMapSaved) {
+        event.preventDefault()
+        event.returnValue = true
+      }
+    }
+
+    window.addEventListener('beforeunload', handleUserLeave);
+
+    // Cleanup the event listener on unmount
+    return () => {
+        window.removeEventListener('beforeunload', handleUserLeave);
+    };
+  }, [metadata, songName, songArtist, user, bpm, genre, songLength, language, noteCount, description, source, ytBackground, ytOffset, ytEnd, map_id, songNotes])
 
   const onPlayPause = () => {
     if (wavesurfer) {
@@ -449,6 +505,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         song_mapper: user?.user_metadata.username || "",
         bpm: bpm,
         genre: genre,
+        song_length: Math.floor((songLength- 1) / 16),
         language: language,
         note_count: noteCount,
         description: description,
@@ -487,10 +544,14 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         song_mapper: user?.user_metadata.username || "",
         bpm: bpm,
         genre: genre,
+        song_length: Math.floor((songLength- 1) / 16),
         language: language,
         note_count: noteCount,
         description: description,
-        source : source
+        source : source,
+        ytID: ytBackground,
+        ytStart: ytOffset,
+        ytEnd: ytEnd
       },
       song_notes : songNotes
     }
@@ -536,11 +597,15 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         song_artist: songArtist,
         song_mapper: user.user_metadata.username,
         bpm: bpm,
+        song_length: Math.floor((songLength- 1) / 16),
         genre: genre,
         language: language,
         note_count: noteCount,
         description: description,
-        source : source
+        source : source,
+        ytID: ytBackground,
+        ytStart: ytOffset,
+        ytEnd: ytEnd
       },
       song_notes : songNotes
     }
@@ -689,7 +754,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       "song_name": current_metadata.song_name,
       "note_count": current_metadata.note_count,
       "description": current_metadata.description,
-      "song_length": (songLength - 1) / 16
+      "song_length": Math.floor((songLength - 1) / 16)
     }
 
     // console.log("SU", song_metadata_upload)
@@ -845,6 +910,11 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     color: (snapOn)? "#1a1a1a" : "rgb(145, 168, 154)"
   }
 
+  const keybindsStyle = {
+    backgroundColor: (keybindsActive)? "rgb(145, 168, 154)" : "#3a4447",
+    color: (keybindsActive)? "#1a1a1a" : "rgb(145, 168, 154)"
+  }
+
   const [videoPlaying, setVideoPlaying] = useState<boolean>(false)
   const [videoMuted, setVideoMuted] = useState<boolean>(true)
   const [videoDuration, setVideoDuration] = useState<number>(0)
@@ -868,18 +938,18 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
   }
 
-  const handleProgress = (state: any) => {
+  const handleProgress = (state: {playedSeconds : number}) => {
     if (state.playedSeconds >= ytEnd) {
       setVideoPlaying(false)
     }
   }
 
-  const handleDuration = (duration: any) => {
+  const handleDuration = (duration : number) => {
     setVideoDuration(duration)
     if (ytIDRef.current && prevID.current !== ytIDRef.current.value && ytOffsetRef.current && ytEndRef.current) {
       prevID.current = ytIDRef.current.value
       ytOffsetRef.current.value = "0"
-      ytEndRef.current.value = duration
+      ytEndRef.current.value = duration.toString()
       setYTOffset(0)
       setYTEnd(duration)
     }
@@ -1133,6 +1203,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
             </div>
           </div>
           
+          <button style={keybindsStyle} className="styledBtns" onClick={() => {setKeybinds(!keybindsActive)}}>Keybinds {(keybindsActive)? "Active" : "Inactive"}</button>
 
           <button style={snapStyle} className="styledBtns" onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap {snapOn? "On" : "Off"}</button>
           <div id="notes">

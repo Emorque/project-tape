@@ -316,10 +316,11 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
         }
     }
 
+    const [videoLoaded, setVideoLoaded] = useState<boolean>(false)
+
     // Start Map
     useEffect(() => {
         // console.log("Settings Loaded in Map", settings)
-        
         const tempHitsounds: { play: () => void; }[] = []
         for (let i = 0; i < 12; i++) {
           const hitsound  = new Audio('/hitsound.mp3'); // Needed for local 
@@ -372,6 +373,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
                 if (reactPlayerRef.current && songBackground) {
                     reactPlayerRef.current.seekTo(songBackground.ytStart)
                     setVideoVisible(true)
+                    setVideoLoaded(true)
                 }
             }, ((scrollSpeed * 2) + 3000 + offset))
     
@@ -687,14 +689,14 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
     const reactPlayerRef = useRef<ReactPlayer | null>(null)
 
     const [videoVisible, setVideoVisible] = useState<boolean>(false)
-    const handleProgress = (state: any) => {
+    const handleProgress = (state: {playedSeconds : number}) => {
         if (songBackground && state.playedSeconds >= songBackground.ytEnd - 5) {
             setVideoPlaying(false)
             setVideoVisible(false)
         }
     }
 
-    const [backgroundDim, setBackgroundDim] = useState<number>(settings.backgroundDim)
+    const [backgroundDim, setBackgroundDim] = useState<number>(settings.backgroundDim || 0.5)
 
     const circleContainerRef = useRef<HTMLDivElement>(null)
     const handleFirstLane = () => {
@@ -744,8 +746,8 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
     const handleCircleContainer = (event : MouseEvent<HTMLDivElement>) => { //React. not needed because imported at the top
         if (!circleContainerRef.current) return
         const circleContainerInfo = circleContainerRef.current.getBoundingClientRect();
-        let mousePlacement = event.clientX - circleContainerInfo.left
-        let containerWidth = circleContainerInfo.right - circleContainerInfo.left
+        const mousePlacement = event.clientX - circleContainerInfo.left
+        const containerWidth = circleContainerInfo.right - circleContainerInfo.left
 
         if (!mousePlacement || !containerWidth) return;
         const oneFourth = containerWidth * (1/4)
@@ -865,7 +867,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
     return (
     <div>
         {songBackground && 
-        <div id='video_visible' style={{opacity: videoVisible? (1 - backgroundDim) : 0}} className={videoVisible? "showBackground" : "hideBackground"} >
+        <div id='video_visible' style={{opacity: videoVisible? (1 - backgroundDim) : 0}} className={videoLoaded? "showBackground" : "hideBackground"} >
             {/* <div id='yt-cover'> */}
             {/* </div> */}
             <ReactPlayer

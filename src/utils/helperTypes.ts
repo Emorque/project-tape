@@ -51,6 +51,7 @@ export type editorMetadata = {
   note_count: number,
   description: string,
   source: string,
+  song_length: number,
 
   ytID: string,
   ytStart: number,

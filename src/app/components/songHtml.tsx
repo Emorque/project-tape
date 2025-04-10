@@ -293,7 +293,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
             source: song_metadata.source,
             language: song_metadata.language || " ",
             note_count: song_metadata.note_count || 0,
-            song_length: localNotes.length * 62.5, // TODO: add song_length as a key in editorMetadata and update editor save
+            song_length: song_metadata.song_length || 0, // TODO: add song_length as a key in editorMetadata and update editor save
             description: song_metadata.description || " ",
 
             ytID: song_metadata.ytID,
