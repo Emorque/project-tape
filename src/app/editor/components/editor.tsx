@@ -1225,7 +1225,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
 
             <button className="styledBtns" onClick={() => {closeEditor()}}>Return</button>
           </div>
-          <button className="styledBtns" onClick={() => {verifyDeployment()}}>Deploy</button>
+          <button disabled={!user} className="styledBtns" onClick={() => {verifyDeployment()}}>Deploy</button>
         </div>
       
       </div>
