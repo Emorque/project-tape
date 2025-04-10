@@ -47,12 +47,11 @@ export default function AccountForm({ user }: { user: User | null }) {
     avatar_url: string | null
   }) {
     try {
-      const { error } = await supabase.from('profiles').upsert({
-        id: user?.id as string,
-        avatar_url,
-        updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' }
-      )
+      const { error } = await supabase
+      .from('profiles')
+      .update({ "avatar_url": avatar_url, "updated_at": new Date().toISOString() })
+      .eq('id', user?.id)
+    
       if (error) {
         console.error('Supabase Profile error:', error) // Only used for eslint
         throw error
