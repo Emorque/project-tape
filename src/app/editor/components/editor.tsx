@@ -60,19 +60,19 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   // When setting metadata, like description, disable the other buttons being activiated. Like when pressing "P" for the description, don't play the song 
   const [songName, setSongName] = useState<string>(metadata?.song_metadata.song_name || "")
   const [songArtist, setSongArtist] = useState<string>(metadata?.song_metadata.song_artist || "")
-  const [bpm, setBPM] = useState<number>(metadata?.song_metadata.bpm || 0)
+  // const [bpm, setBPM] = useState<number>(metadata?.song_metadata.bpm || 0)
   const [genre, setGenre] = useState<string>(metadata?.song_metadata.genre || "")
   const [language, setLanguage] = useState<string>(metadata?.song_metadata.language || "")
-  const [noteCount, setNoteCount] = useState<number>(metadata?.song_metadata.note_count || 0)
+  const [noteCount, setNoteCount] = useState<number>(metadata?.song_metadata.normal_notes || 0)
   const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
   const [source, setSource] = useState<string>(metadata?.song_metadata.source || "");
-  const [ytBackground, setYTBackground] = useState<string>(metadata?.song_metadata.ytID || ""); //Fix to .ytbg
+  const [ytBackground, setYTBackground] = useState<string>(metadata?.background[0][0] || ""); //Fix to .ytbg
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
   const [deploymentMap, setDeploymentMap] = useState<editorMap | null>(null)
   const [deployMessage, setDeployMessage] = useState<string>("")
 
-  const [ytOffset, setYTOffset] = useState<number>(metadata?.song_metadata.ytStart || 0)
-  const [ytEnd, setYTEnd] = useState<number>(metadata?.song_metadata.ytEnd || 0)
+  const [ytOffset, setYTOffset] = useState<number>(metadata?.background[0][1] || 0)
+  const [ytEnd, setYTEnd] = useState<number>(metadata?.background[0][2] || 0)
   const ytOffsetRef = useRef<HTMLInputElement>(null)
   const ytEndRef = useRef<HTMLInputElement>(null)
   const ytIDRef= useRef<HTMLInputElement>(null)
@@ -80,10 +80,10 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
 
   useEffect(() => {
     if (ytOffsetRef.current && ytEndRef.current && ytIDRef.current){
-      ytOffsetRef.current.value = (metadata?.song_metadata.ytStart || 0).toString()
-      ytEndRef.current.value = (metadata?.song_metadata.ytEnd || 0).toString()
-      ytIDRef.current.value = metadata?.song_metadata.ytID || ""
-      prevID.current = metadata?.song_metadata.ytID || ""
+      ytOffsetRef.current.value = (metadata?.background[0][1] || 0).toString()
+      ytEndRef.current.value = (metadata?.background[0][2] || 0).toString()
+      ytIDRef.current.value = metadata?.background[0][0] || ""
+      prevID.current = metadata?.background[0][0] || ""
     }
   }, [])
 
@@ -135,11 +135,11 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((duration) * 16) + 1)).fill(""));
         console.log(metadata)
         if (metadata) {
-          for (let i = 0; i < metadata.song_notes[0].length; i++) {
-            tempNotes[0][i] = metadata.song_notes[0][i]
-            tempNotes[1][i] = metadata.song_notes[1][i]
-            tempNotes[2][i] = metadata.song_notes[2][i]
-            tempNotes[3][i] = metadata.song_notes[3][i]
+          for (let i = 0; i < metadata.normal_notes[0].length; i++) {
+            tempNotes[0][i] = metadata.normal_notes[0][i]
+            tempNotes[1][i] = metadata.normal_notes[1][i]
+            tempNotes[2][i] = metadata.normal_notes[2][i]
+            tempNotes[3][i] = metadata.normal_notes[3][i]
           }
           setSongNotes(tempNotes)
           setSongLength((duration * 16) + 1);
@@ -205,26 +205,27 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
           song_name: songName,
           song_artist: songArtist,
           song_mapper: user?.user_metadata.username || "",
-          bpm: bpm,
           genre: genre,
-          song_length: Math.floor((songLength- 1) / 16),
+          length: Math.floor((songLength- 1) / 16),
           language: language,
-          note_count: noteCount,
+          normal_notes: noteCount,
+          ex_notes: 0,
           description: description,
           source : source,
-          ytID: ytBackground,
-          ytStart: ytOffset,
-          ytEnd: ytEnd
         },
-        song_notes : songNotes
+        background: [[ytBackground, ytOffset, ytEnd]],
+        normal_notes : songNotes,
+        ex_notes: []
       }
       if (map_id in localMaps) {
         const isEqual = JSON.stringify({
           song_metadata: currentMap.song_metadata,
-          song_notes: currentMap.song_notes
+          song_notes: currentMap.normal_notes,
+          background: currentMap.background
         }) === JSON.stringify({
           song_metadata: localMaps[map_id].song_metadata,
-          song_notes: localMaps[map_id].song_notes
+          song_notes: localMaps[map_id].normal_notes,
+          background: localMaps[map_id].background
         });
         isMapSaved = isEqual
       }
@@ -244,7 +245,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return () => {
         window.removeEventListener('beforeunload', handleUserLeave);
     };
-  }, [metadata, songName, songArtist, user, bpm, genre, songLength, language, noteCount, description, source, ytBackground, ytOffset, ytEnd, map_id, songNotes])
+  }, [metadata, songName, songArtist, user, genre, songLength, language, noteCount, description, source, ytBackground, ytOffset, ytEnd, map_id, songNotes])
 
   const onPlayPause = () => {
     if (wavesurfer) {
@@ -503,18 +504,20 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         song_name: songName,
         song_artist: songArtist,
         song_mapper: user?.user_metadata.username || "",
-        bpm: bpm,
         genre: genre,
-        song_length: Math.floor((songLength- 1) / 16),
+        length: Math.floor((songLength- 1) / 16),
         language: language,
-        note_count: noteCount,
+        normal_notes: noteCount,
+        ex_notes: 0,
         description: description,
         source : source,
-        ytID: ytBackground,
-        ytStart: ytOffset,
-        ytEnd: ytEnd
+        // ytID: ytBackground,
+        // ytStart: ytOffset,
+        // ytEnd: ytEnd
       },
-      song_notes : songNotes
+      background: [[ytBackground, ytOffset, ytEnd]],
+      normal_notes : songNotes,
+      ex_notes: []
     }
     localStorage.setItem("localMaps", JSON.stringify(localMaps));
     updateLocalMaps();
@@ -535,37 +538,46 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       return
     };
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
-
     const currentMap = {
       timestamp: metadata?.timestamp || "",
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
         song_mapper: user?.user_metadata.username || "",
-        bpm: bpm,
         genre: genre,
-        song_length: Math.floor((songLength- 1) / 16),
+        length: Math.floor((songLength- 1) / 16),
         language: language,
-        note_count: noteCount,
+        normal_notes: noteCount,
+        ex_notes: 0,
         description: description,
         source : source,
-        ytID: ytBackground,
-        ytStart: ytOffset,
-        ytEnd: ytEnd
       },
-      song_notes : songNotes
+      background: [[ytBackground, ytOffset, ytEnd]],
+      normal_notes : songNotes,
+      ex_notes: []
     }
-
     if (map_id in localMaps) {
-      console.log(localMaps[map_id])
-      console.log(currentMap)
       const isEqual = JSON.stringify({
         song_metadata: currentMap.song_metadata,
-        song_notes: currentMap.song_notes
+        song_notes: currentMap.normal_notes,
+        background: currentMap.background
       }) === JSON.stringify({
         song_metadata: localMaps[map_id].song_metadata,
-        song_notes: localMaps[map_id].song_notes
+        song_notes: localMaps[map_id].normal_notes,
+        background: localMaps[map_id].background
       });
+
+      console.log(JSON.stringify({
+        song_metadata: currentMap.song_metadata,
+        song_notes: currentMap.normal_notes,
+        background: currentMap.background
+      }))
+      console.log(JSON.stringify({
+        song_metadata: localMaps[map_id].song_metadata,
+        song_notes: localMaps[map_id].normal_notes,
+        background: localMaps[map_id].background
+      }))
+
       
       console.log(isEqual)
       setMapSaved(isEqual)
@@ -595,30 +607,28 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       song_metadata : {
         song_name: songName,
         song_artist: songArtist,
-        song_mapper: user.user_metadata.username,
-        bpm: bpm,
-        song_length: Math.floor((songLength- 1) / 16),
+        song_mapper: user?.user_metadata.username || "",
         genre: genre,
+        length: Math.floor((songLength- 1) / 16),
         language: language,
-        note_count: noteCount,
+        normal_notes: noteCount,
+        ex_notes: 0,
         description: description,
         source : source,
-        ytID: ytBackground,
-        ytStart: ytOffset,
-        ytEnd: ytEnd
       },
-      song_notes : songNotes
+      background: [[ytBackground, ytOffset, ytEnd]],
+      normal_notes : songNotes,
+      ex_notes: []
     }
-
     if (map_id in localMaps) {
-      console.log(localMaps[map_id])
-      console.log(currentMap)
       const isEqual = JSON.stringify({
         song_metadata: currentMap.song_metadata,
-        song_notes: currentMap.song_notes
+        song_notes: currentMap.normal_notes,
+        background: currentMap.background
       }) === JSON.stringify({
         song_metadata: localMaps[map_id].song_metadata,
-        song_notes: localMaps[map_id].song_notes
+        song_notes: localMaps[map_id].normal_notes,
+        background: localMaps[map_id].background
       });
 
       let missingDataString = "Missing fields:"
@@ -629,20 +639,17 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       if (!localMaps[map_id].song_metadata.song_artist) {
         missingDataString += " Song Artist ,"
       }
-      if (!localMaps[map_id].song_metadata.bpm) {
-        missingDataString += " BPM ,"
-      }
       if (!localMaps[map_id].song_metadata.genre) {
         missingDataString += " Genre ,"
       }
       if (!localMaps[map_id].song_metadata.language) {
         missingDataString += " Song Language ,"
       }
-      if (!localMaps[map_id].song_metadata.note_count) {
+      if (!localMaps[map_id].song_metadata.normal_notes) {
         missingDataString += " Note Count ,"
       }
       if (!localMaps[map_id].song_metadata.source) {
-        missingDataString += " YT Source ,"
+        missingDataString += " Audio Source ,"
       }
 
       if (missingDataString.length > 16) {
@@ -739,7 +746,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     // const currentMap = JSON.parse(localMaps)
     console.log("deployMap")
     const current_metadata = deploymentMap.song_metadata
-    const current_notes = deploymentMap.song_notes
+    const current_notes = deploymentMap.normal_notes
     const song_metadata_upload = {
       "song_name" : current_metadata.song_name,
       "song_artist" : current_metadata.song_artist,
@@ -747,14 +754,14 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
 
     const map_metadata_upload = {
-      "bpm": current_metadata.bpm,
       "genre": current_metadata.genre,
       "source": current_metadata.source,
       "language": current_metadata.language,
-      "song_name": current_metadata.song_name,
-      "note_count": current_metadata.note_count,
+      "name": current_metadata.song_name,
+      "normal_notes": current_metadata.normal_notes,
+      "ex_notes": 0,
       "description": current_metadata.description,
-      "song_length": Math.floor((songLength - 1) / 16)
+      "length": Math.floor((songLength - 1) / 16)
     }
 
     // console.log("SU", song_metadata_upload)
@@ -766,7 +773,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
 
       const { data: recentUploads, error: uploadCheckError } = await supabase
       .from("pending_songs")
-      .select("key")
+      .select("id")
       .eq("user_id", user.id)
       .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()); // Check for uploads in the last 24 hours
 
@@ -796,10 +803,11 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       .from('pending_songs')
       .insert([{
         'user_id' : user.id,
-        'song_metadata' : song_metadata_upload,
-        'map_metadata' : map_metadata_upload,
-        "song_map" : final_notes,
-        "song_link" : filePath
+        'header' : song_metadata_upload,
+        'metadata' : map_metadata_upload,
+        'background': [[ytBackground, ytOffset, ytEnd]],
+        "normal_map" : final_notes,
+        "audio_link" : filePath
       }])
 
       if (beatmapUploadError && status === 403) {
@@ -1009,7 +1017,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
               ></input>
             </div>
            
-            <div>
+            {/* <div>
               <label htmlFor="songBPM">BPM:</label>
               <input 
                 className="metadata_input"
@@ -1019,7 +1027,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
                 value={bpm}
                 onChange={(e) => setBPM(parseInt(e.target.value))}
               ></input>
-            </div>
+            </div> */}
            
             <div>
               <label htmlFor="songGenre">Genre:</label>

@@ -7,7 +7,7 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import gsap from 'gsap';
 import { useGSAP } from "@gsap/react";
 
-import { editorMap, keybindsType, localStorageMaps } from "@/utils/helperTypes";
+import { editorMap, keybindsType, localStorageMaps, localStorageEditorMaps, oldEditorMap } from "@/utils/helperTypes";
 import { type User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 import Link from "next/link";
@@ -23,6 +23,22 @@ const formatDateFromMillis = (milliseconds : string) => {
 
   return `${month}/${day}/${year} ${hours}:${minutes}`;
 }
+
+function isOldEditorMap(obj: unknown): obj is oldEditorMap {
+  if (typeof obj !== 'object' || obj === null) return false;
+
+  const o = obj as Record<string, unknown>;
+  return (
+    typeof o.timestamp === 'number' &&
+    typeof o.song_metadata === 'object' &&
+    o.song_metadata !== null &&
+    typeof o.background !== 'object' &&
+    !Array.isArray(o.normal_notes) &&
+    !Array.isArray(o.ex_notes) &&
+    Array.isArray(o.song_notes)
+  );
+}
+
 
 const MaxFileSize = 5.0 * 1024 * 1024; // 5.5MBs converting to Bytes which is what File type uses
 
@@ -58,9 +74,42 @@ export default function EditorPage() {
 
   // Get all maps from Local Storage
   useEffect(() => {
-    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
-    setLocalMaps(localMaps)
-    localStorage.setItem("localMaps", JSON.stringify(localMaps));
+    // type localStorageMapsOld = Record<string, oldEditor | 
+    const localMaps : localStorageEditorMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+    // Clean up maps
+    const sortedMaps : localStorageMaps = {}
+    Object.entries(localMaps).map(([, map], index) => {
+      // console.log(map_id, map, index)
+      // if (isOldEditor(map)) {
+        if (isOldEditorMap(map)) {
+          const updatedMap : editorMap = {
+          timestamp: map.timestamp,
+          song_metadata : {
+            song_name: map.song_metadata.song_name,
+            song_artist: map.song_metadata.song_artist,
+            song_mapper: map.song_metadata.song_mapper,
+            genre: map.song_metadata.genre,
+            language: map.song_metadata.language,
+            normal_notes: parseInt(map.song_metadata.note_count),
+            ex_notes: 0,
+            description: map.song_metadata.description,
+            source: map.song_metadata.source,
+            length: 0,
+          },
+          background: [[map.song_metadata.ytID, map.song_metadata.ytStart, map.song_metadata.ytEnd]],
+          normal_notes: map.song_notes,
+          ex_notes: []
+        }
+        console.log(updatedMap, index)
+        sortedMaps[index + 1] = updatedMap
+      }
+      else {
+        sortedMaps[index + 1] = map
+      }
+    })
+    setLocalMaps(sortedMaps)
+
+    localStorage.setItem("localMaps", JSON.stringify(sortedMaps));
   }, [])
 
   // Get Keybinds from local Storage
@@ -271,7 +320,7 @@ export default function EditorPage() {
               )
             }
 
-            const { timestamp, song_metadata, song_notes } = editorMap;
+            const { timestamp, song_metadata, normal_notes } = editorMap;
             return (
               <div key={map_id} className="beatmap">
                 <div>
@@ -294,7 +343,7 @@ export default function EditorPage() {
                     if (audioFileError) {
                       return;
                     }
-                    console.log(song_notes)
+                    console.log(normal_notes)
                     setSelectedMap(editorMap)
                     setMapID(map_id)
                     setEditorActive(true)

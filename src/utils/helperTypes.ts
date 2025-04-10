@@ -1,68 +1,95 @@
 export type songType = {
   id: number,
-  song_metadata: songMetadata,
+  header: song_header,
 };
 
 export type bookmarkedSongs = {
-  [song_id: string] : {song_metadata : songMetadata } 
+  [song_id: string] : {song_metadata : song_header } 
 }
 
-export type songMetadata = {
+export type song_header = {
   song_name: string,
   song_artist: string,
   song_mapper: string
 }
 
 export type mapMetadata = {
-  song_name: string,
-  bpm: number,
+  name: string,
   genre: string,
   source: string,
   language: string,
-  note_count: number,
-  song_length: number,
+  normal_notes: number,
+  ex_notes: number,
+  length: number,
   description: string,
-
-  ytID: string,
-  ytStart: number,
-  ytEnd: number
 }
 
 export type sMap = [number,string][]
 
 export type localStorageMaps = {
-  [map_id: string] : {timestamp: string, song_metadata : editorMetadata, song_notes: string[][]}
+  [map_id: string] : editorMap
+}
+
+export type localStorageEditorMaps = {
+  [map_id: string] : oldEditorMap | editorMap
+}
+
+export type oldEditorMap = {
+  timestamp: string,
+  song_metadata : oldEditor,
+  background: ytBackgroundType,
+  normal_notes: string[][],
+  ex_notes: string[][],
+  song_notes: string[][]
 }
 
 // Conisder a "last edited key, to help with ordering and it may be a useful bit of info for users"
 export type editorMap = {
-  timestamp: string
+  timestamp: string,
   song_metadata : editorMetadata,
-  song_notes: string[][]
+  background: ytBackgroundType,
+  normal_notes: string[][],
+  ex_notes: string[][]
+}
+
+export type oldEditor = {
+  bpm: number,
+  description: string,
+  genre: string, 
+  language: string, 
+  note_count: string, 
+  song_artist: string, 
+  song_mapper: string, 
+  song_name: string, 
+  normal_notes: number,
+  ex_notes: number
+  source: string, 
+  ytEnd: number, 
+  ytID: string, 
+  ytStart: number
 }
 
 export type editorMetadata = {
   song_name: string,
   song_artist: string,
   song_mapper: string,
-  bpm: number,
+  // bpm: number,
   genre: string,
   language: string,
-  note_count: number,
+  normal_notes: number,
+  ex_notes: number,
   description: string,
   source: string,
-  song_length: number,
+  length: number,
 
-  ytID: string,
-  ytStart: number,
-  ytEnd: number
+  // background : ytBackgroundType
+
+  // ytID: string,
+  // ytStart: number,
+  // ytEnd: number
 }
 
-export type ytBackgroundType = {
-  ytID: string,
-  ytStart: number,
-  ytEnd: number
-}
+export type ytBackgroundType = [ytID: string, ytStart: number,ytEnd: number][]
   
 export type ranking = {
   user_id: string,

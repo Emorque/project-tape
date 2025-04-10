@@ -66,6 +66,8 @@ export default function Home() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioReady, setAudioReady] = useState<boolean>(false);
 
+  const [verifiedSong, setVerifiedSong] = useState<boolean>(false)
+
   const supabase = createClient()
 
   const [user, setUser] = useState<User | null>(null);
@@ -99,14 +101,31 @@ export default function Home() {
     setUserSettings(newSettings)
   }
 
-  const getMap = useCallback(async (selectedSong : number) => {
+  // useEffect(() => {
+
+  // })
+
+  const getMap = useCallback(async (selectedSong : number, verified: boolean) => {
     console.log("called Supabase for Map")
     try {
-      const { data: songMap, error, status } = await supabase
-      .from('verified_songs')
-      .select('song_map, audio_link')
-      .eq('id', selectedSong)
-      .single()
+      // TODO: add loading state hear, if loading is true for too long, have the user return back to songHTML
+      // setMapLoading(true)
+      let songMap, error, status;
+      if (verified) {
+        ({ data: songMap, error, status } = await supabase
+        .from('verified_songs')
+        .select('normal_map, audio_link')
+        .eq('id', selectedSong)
+        .single())
+      }
+      else {
+        ({ data: songMap, error, status } = await supabase
+          .from('pending_songs')
+          .select('normal_map, audio_link')
+          .eq('id', selectedSong)
+          .single())
+      }
+
 
       if (error && status !== 406) {
         console.log(error)
@@ -114,7 +133,7 @@ export default function Home() {
       }
 
       if (songMap) {
-        setGameMap(songMap.song_map)
+        setGameMap(songMap.normal_map)
         try {
           const {data : songFile, error : songFileError} = await supabase.storage.from("songs").download(songMap.audio_link)
           if (songFileError) {
@@ -200,13 +219,15 @@ export default function Home() {
   const [usingLocalMap, setUsingLocalMap] = useState<boolean>(false);
   // const [localNotes, setLocalNotes] = useState<string[][]>([]);
 
-  const handleSelectedSong = (songID: number, song_background : ytBackgroundType | null) => {
+  const handleSelectedSong = (songID: number, song_background : ytBackgroundType | null, verified: boolean) => {
     updateCamera([14,8,34,   14, 7, 26])
     setSongPlaying(true);
     setSelectedSong(songID); 
-    getMap(songID);
+    getMap(songID, verified);
     setUsingLocalMap(false)
     setSongBackground(song_background)
+    setVerifiedSong(verified)
+    console.log("handled", song_background)
   }
 
   const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => {
@@ -215,7 +236,9 @@ export default function Home() {
     setAudioURL(song_url)
     setGameMap(formatNotes(song_notes))
     setUsingLocalMap(true)
+    setVerifiedSong(false)
     setSongBackground(song_background)
+    console.log("handled", song_background)
   }
 
   const handleSongReady = () => {
@@ -515,7 +538,7 @@ export default function Home() {
         }
         {/* Game Component for Online Maps */}
         {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && !usingLocalMap &&
-        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground}/>
+        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong}/>
         }
       </div>
     </div>

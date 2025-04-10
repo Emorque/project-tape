@@ -371,7 +371,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
                     setSongStarted(true)
                 }
                 if (reactPlayerRef.current && songBackground) {
-                    reactPlayerRef.current.seekTo(songBackground.ytStart)
+                    reactPlayerRef.current.seekTo(songBackground[0][1])
                     setVideoVisible(true)
                     setVideoLoaded(true)
                 }
@@ -389,6 +389,12 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
+                    setSongStarted(true)
+                }
+                if (reactPlayerRef.current && songBackground) {
+                    reactPlayerRef.current.seekTo(songBackground[0][1])
+                    setVideoVisible(true)
+                    setVideoLoaded(true)
                 }
             }, ((scrollSpeed * 2) + 3000))
     
@@ -411,7 +417,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
             setSongStarted(false)
         }
         if (reactPlayerRef.current && songBackground) {
-            reactPlayerRef.current.seekTo(songBackground.ytStart)
+            reactPlayerRef.current.seekTo(songBackground[0][1])
             setVideoPlaying(false)
             setVideoVisible(false)
         }
@@ -690,7 +696,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
 
     const [videoVisible, setVideoVisible] = useState<boolean>(false)
     const handleProgress = (state: {playedSeconds : number}) => {
-        if (songBackground && state.playedSeconds >= songBackground.ytEnd - 5) {
+        if (songBackground && state.playedSeconds >= songBackground[0][2] - 5) {
             setVideoPlaying(false)
             setVideoVisible(false)
         }
@@ -874,7 +880,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
                 ref={reactPlayerRef}
                 // https://www.youtube-nocookie.com/embed/eh1r0ZpTrXo?controls=0&rel=0&playsinline=1&disablekb=1&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&origin=https%3A%2F%2Frhythm-plus.com&widgetid=1&forigin=https%3A%2F%2Frhythm-plus.com%2Fgame%2FGyLLbFGVGXJ9TagPGE5dur&aoriginsup=1&vf=1 i found a secret
                 
-                url={`https://www.youtube-nocookie.com/watch?v=${songBackground.ytID}?start=${songBackground.ytStart}&end=${songBackground.ytEnd}&rel=0&nocookie=true`} //&rel=0 means that "more videos" are locked to uploader's channel
+                url={`https://www.youtube-nocookie.com/watch?v=${songBackground[0][0]}?start=${songBackground[0][1]}&end=${songBackground[0][2]}&rel=0&nocookie=true`} //&rel=0 means that "more videos" are locked to uploader's channel
                 loop={false}
                 controls={false}
                 volume={100}
@@ -899,6 +905,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
         </div>
         }
         <div id='game-container'>
+            {!endScreen && 
             <button id='tapePauseBtn' onClick={pauseMap}>
               {(gameState === "Paused")? 
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
@@ -911,8 +918,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
               </svg>
               }
             </button>
-            {/* <div id='cursor-cover-top'></div>
-            <div id='cursor-cover-bottom'></div> */}
+            }
             <div id='lane-container'>
                 <div onClick={handleFirstLane} ref={lane_one} className='lane lane-one'> <div id='cOne' className='circle'></div> </div>
                 <div onClick={handleSecondLane} ref={lane_two} className='lane lane-two'> <div id='cTwo' className='circle'></div> </div>
@@ -955,7 +961,7 @@ export const LocalTape = ({gMap, gameMapProp, settings, audioProp, songBackgroun
 
             {gameState === "Waiting"? 
             <div id='waiting_wrapper'>
-                {songBackground?.ytID !== undefined && <p id='yt_info'>Video Background Powered by Youtube. Video copyright belongs to respective owners.</p>}
+                {songBackground && <p id='yt_info'>Video Background Powered by Youtube. Video copyright belongs to respective owners.</p>}
                 <div id='countdown'>
                     <span>3</span>
                     <span>2</span>

@@ -13,6 +13,7 @@
     padding: 5px;
     background-color: var(--greyTransparent);
     border: 0;
+    z-index: 1;
 }
 
 #video_visible {
@@ -25,6 +26,7 @@
 .showBackground {
     width: 100vw;
     height: 120vh;
+    transform: translate(0);
     top: -10vh;
 }
 

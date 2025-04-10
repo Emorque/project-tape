@@ -1,7 +1,7 @@
 import { ChangeEvent, useCallback, useEffect, useState } from "react"
 import "./songHtml.css"
 import { createClient } from '@/utils/supabase/client'
-import { songType, mapMetadata, ranking, bookmarkedSongs, songMetadata, localStorageMaps, editorMetadata, ytBackgroundType } from "@/utils/helperTypes"
+import { songType, mapMetadata, ranking, bookmarkedSongs, song_header, localStorageMaps, editorMetadata, ytBackgroundType } from "@/utils/helperTypes"
 import Link from 'next/link'
 import HomeAvatar from "./home_avatar"
 import { type User } from '@supabase/supabase-js'
@@ -10,7 +10,7 @@ import gsap from 'gsap';
 import { useGSAP } from "@gsap/react";
 
 interface SongHtmlProps {
-    songToPlay : (songID: number, song_background: ytBackgroundType | null) => void,
+    songToPlay : (songID: number, song_background: ytBackgroundType | null, verified: boolean) => void,
     playLocalSong: (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => void,
     user: User | null,
     role : string | null,
@@ -37,22 +37,21 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     const [pendingSongList, setPendingSongList] = useState<songType[]>([])
     const [localMapsList, setLocalMapsList] = useState<localStorageMaps>({})
     const [songID, setSongID] = useState<number | null>(null)
+    const [pendingID, setPendingID] = useState<number | null>(null)
     const [localID, setLocalID] = useState<number | null>(null)
+    
     const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
     const [selectedSong, setSelectedSong] = useState<mapMetadata>({
-        song_name: "",
-        bpm: 0,
+        name: "",
         genre: "",
         source: "",
         language: "",
-        note_count: 0,
-        song_length: 0,
+        normal_notes: 0,
+        ex_notes: 0,
+        length: 0,
         description: "",
-
-        ytID: "",
-        ytStart: 0,
-        ytEnd: 0
     })
+
     const [songLoading, setSongLoading] = useState<boolean>(true);
 
     const [leaderboardList, setLeaderboardList] = useState<[number, ranking[]]>([0,[]])
@@ -67,7 +66,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
         
         const { data: songs, error } = await supabase
         .from('verified_songs')
-        .select('id,song_metadata')
+        .select('id,header')
     
           if (error) {
             console.log(error)
@@ -96,7 +95,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
         try {
         const { data: songs, error } = await supabase
         .from('pending_songs')
-        .select('id,song_metadata')
+        .select('id,header')
     
           if (error) {
             console.log(error)
@@ -121,14 +120,27 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
         loadPendingSongs()
     }, [role, supabase, loadPendingSongs])
 
-    const updateSong = useCallback(async (song_id : number) => {
+    const updateSong = useCallback(async (song_id : number, verified: boolean) => {
         if (songID === song_id) return;
+        else if (pendingID === song_id) return;
         try {
             setSongLoading(true)
-            const { data: song, error } = await supabase
-            .from('verified_songs')
-            .select('map_metadata')
-            .eq('id', song_id)
+            let song, error;
+            if (verified) {
+                ({ data: song, error } = await supabase
+                .from('verified_songs')
+                .select('metadata, background')
+                .eq('id', song_id)
+                .single())
+            }
+            else {
+                ({ data: song, error } = await supabase
+                .from('pending_songs')
+                .select('metadata, background')
+                .eq('id', song_id)
+                .single())
+            }
+
         
             if (error) {
                 console.log(error)
@@ -136,16 +148,27 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
             }
         
             if (song) {
-                setSelectedSong(song[0].map_metadata)
-                setSongID(song_id)
+                setSelectedSong(song.metadata)
+                if (verified){
+                    setSongID(song_id)
+                    setPendingID(null)
+                }
+                else {
+                    setSongID(null)
+                    setPendingID(song_id)
+                }
                 setLocalID(null)
                 setUsingLocalMap(false);
-                const background : ytBackgroundType = {
-                    ytID: song[0].map_metadata.ytID,
-                    ytStart: song[0].map_metadata.ytStart,
-                    ytEnd: song[0].map_metadata.ytEnd
+                if (song.background) {
+                    console.log("songhtml", song.background)
+                    setSongBackground(song.background)
                 }
-                setSongBackground(background)
+                else {
+                    setSongBackground(null)
+                }
+                // const background : ytBackgroundType = song.background
+                // console.log(background)
+                // setSongBackground(background)
             }
         } catch (error) {
             console.error('Song error:', error) // Only used for eslint
@@ -154,13 +177,13 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
             console.log('Updated Songs')
             setSongLoading(false)
         }
-    }, [supabase, songID])
+    }, [supabase, songID, pendingID])
 
-    const playSong = () => {
-        if (songID) {
-            songToPlay(songID, songBackground)
-        }
-    }
+    // const playSong = () => {
+    //     if (songID) {
+    //         songToPlay(songID, songBackground)
+    //     }
+    // }
 
     const toggleTab = () => {
         if (tab === "songs") {
@@ -222,7 +245,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
         setMenu("Pending")
     }
 
-    const bookmarkSong = (song_id: number, song_metadata: songMetadata) => {
+    const bookmarkSong = (song_id: number, song_header: song_header) => {
         const isBookmarked = bookmarkedSongs.hasOwnProperty(song_id);
       
         // Get the existing local_songs from localStorage
@@ -236,11 +259,11 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
             return updatedState;
           });
         } else {
-          local_songs[song_id] = { song_metadata };
+          local_songs[song_id] = { song_header };
       
           setBookmarkSongs((prevState) => ({
             ...prevState,
-            [song_id]:  { song_metadata }, 
+            [song_id]:  { song_header }, 
           }));
         }
         
@@ -287,18 +310,14 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     const updateLocalSong = (song_metadata : editorMetadata) => {
 
         const extractedMapMetata: mapMetadata = {
-            song_name: song_metadata.song_name || "Untitled Song",
-            bpm: song_metadata.bpm || 0,
+            name: song_metadata.song_name || "Untitled Song",
             genre: song_metadata.genre || " ",
-            source: song_metadata.source,
+            source: song_metadata.source || " ",
             language: song_metadata.language || " ",
-            note_count: song_metadata.note_count || 0,
-            song_length: song_metadata.song_length || 0, // TODO: add song_length as a key in editorMetadata and update editor save
+            normal_notes: song_metadata.normal_notes || 0,
+            ex_notes: 0,
+            length: song_metadata.length || 0, // TODO: add song_length as a key in editorMetadata and update editor save
             description: song_metadata.description || " ",
-
-            ytID: song_metadata.ytID,
-            ytStart: song_metadata.ytStart,
-            ytEnd: song_metadata.ytEnd
         }
         setSelectedSong(extractedMapMetata)
         setUsingLocalMap(true);
@@ -315,7 +334,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                 <div id="title_wrapper">
                     {/* TODO: Make this on only appear on hover, and have links to an account page, and sign in/out */}
                     <h2 id="song_title"> 
-                        {songLoading? "" : selectedSong.song_name}
+                        {songLoading? "" : selectedSong.name}
                     </h2>
                 </div>
                 <div id="account_nav">
@@ -359,7 +378,16 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             Play Local Map
                         </button>
                         :
-                        <button id="play_btn" onClick={playSong} disabled={selectedSong.note_count === 0 || songLoading || !songID}>
+                        <button id="play_btn" onClick={() => {if (songID) {
+                                songToPlay(songID, songBackground, true); 
+                                console.log(songBackground)
+                            }
+                            else if (pendingID) {
+                                songToPlay(pendingID, songBackground, false); 
+                                console.log(songBackground)
+                            }
+                            }}
+                            disabled={selectedSong.normal_notes === 0 || songLoading || (!songID && !pendingID)}>
                             Play
                         </button>
                     }
@@ -368,7 +396,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                     <div id="data">
                         <div className="tooltip_wrapper">
                             <div className="tooltip">
-                                <p>{songLoading? "0:00" : formatTime(selectedSong.song_length)}</p>
+                                <p>{songLoading? "0:00" : formatTime(selectedSong.length)}</p>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-clock" viewBox="0 0 16 16">
                                     <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
                                     <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
@@ -379,18 +407,18 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             </div>
                         </div>
 
-                        <div className="tooltip_wrapper">
+                        {/* <div className="tooltip_wrapper">
                             <div className="tooltip">
                                 <p>{songLoading? "0" : selectedSong.bpm}</p>
                                 <svg fill="#000" height="16" width="16" viewBox="0 0 213.605 213.605"> <g id="SVGRepo_bgCarrier"></g><g id="SVGRepo_tracerCarrier"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M200.203,161.656L143.86,4.962C142.79,1.985,139.966,0,136.803,0h-60c-3.164,0-5.987,1.985-7.058,4.962L13.402,161.656 c-0.292,0.814-0.442,1.672-0.442,2.538v41.912c0,4.142,3.358,7.5,7.5,7.5h172.686c4.142,0,7.5-3.358,7.5-7.5v-41.912 C200.646,163.329,200.496,162.47,200.203,161.656z M82.076,15h49.453l50.949,141.694h-70.676v-4.861h7.5c2.761,0,5-2.239,5-5 s-2.239-5-5-5h-7.5v-7.36h7.5c2.761,0,5-2.239,5-5s-2.239-5-5-5h-7.5v-7.36h7.5c2.761,0,5-2.239,5-5s-2.239-5-5-5h-7.5v-7.361h7.5 c2.761,0,5-2.239,5-5s-2.239-5-5-5h-7.5V47.333c0-2.761-2.239-5-5-5s-5,2.239-5,5v42.418h-7.5c-2.761,0-5,2.239-5,5s2.239,5,5,5 h7.5v7.361h-7.5c-2.761,0-5,2.239-5,5s2.239,5,5,5h7.5v7.36h-7.5c-2.761,0-5,2.239-5,5s2.239,5,5,5h7.5v7.36h-7.5 c-2.761,0-5,2.239-5,5s2.239,5,5,5h7.5v4.861H31.127L82.076,15z M27.96,198.605v-26.912h157.686v26.912H27.96z"></path> </g> </g></svg>
                                 <div className="tooltip_text">Song BPM
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         <div className="tooltip_wrapper">                        
                             <div className="tooltip">
-                                <p>{songLoading? "0" : selectedSong.note_count}</p>
+                                <p>{songLoading? "0" : selectedSong.normal_notes}</p>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-cassette" viewBox="0 0 16 16">
                                     <path d="M4 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2m9-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0M7 6a1 1 0 0 0 0 2h2a1 1 0 1 0 0-2z"/>
                                     <path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2zM1 3.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-.691l-1.362-2.724A.5.5 0 0 0 12 10H4a.5.5 0 0 0-.447.276L2.19 13H1.5a.5.5 0 0 1-.5-.5zM11.691 11l1 2H3.309l1-2z"/>
@@ -422,7 +450,9 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                         {selectedSong.source && 
                             <div id="source_links">
                                 <a href={selectedSong.source} target="blank">Source</a>
-                                <a href={`https://www.youtube.com/watch?v=${selectedSong.ytID}`} target="blank">Background Source</a>
+                                {songBackground && 
+                                <a href={`https://www.youtube.com/watch?v=${songBackground[0]}`} target="blank">Background Source</a>
+                                }
                             </div>
                             }
                             {selectedSong.genre && selectedSong.language && 
@@ -449,7 +479,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                         }
                     </div>
                     {!usingLocalMap && 
-                        <button id="leaderboard_btn" onClick={toggleTab} disabled={selectedSong.note_count === 0 || songLoading}>
+                        <button id="leaderboard_btn" onClick={toggleTab} disabled={selectedSong.normal_notes === 0 || songLoading}>
                             {(tab === "songs")? "Leaderboard" : "Songs"}
                         </button>
                     }
@@ -514,14 +544,14 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             <div className={(currentMenu === "Global")? "song_list active_list" : "song_list"}>
                                 {songlist.map((song : songType, index) => {
                                     return (
-                                        <button key={index} className={(song.id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id); setSongBackground(null) }}>
+                                        <button key={index} className={(song.id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id, true); setSongBackground(null) }}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
-                                                    <h3>{song.song_metadata.song_name}</h3>
+                                                    <h3>{song.header.song_name}</h3>
                                                     <div onClick={(e) => {
                                                         e.stopPropagation(); 
                                                         // console.log(bookmarkedSongs)
-                                                        bookmarkSong(song.id, song.song_metadata)}}
+                                                        bookmarkSong(song.id, song.header)}}
                                                         >
                                                         {((song.id) in bookmarkedSongs) ? 
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="000" className="bi bi-bookmark-fill" viewBox="0 0 16 16">
@@ -534,8 +564,8 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                                         }
                                                     </div>
                                                 </div>
-                                                <h4>by {song.song_metadata.song_artist}</h4>
-                                                <p>mapped by {song.song_metadata.song_mapper}</p>
+                                                <h4>by {song.header.song_artist}</h4>
+                                                <p>mapped by {song.header.song_mapper}</p>
                                             </div>
                                         </button>                                    
                                     )
@@ -546,7 +576,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             <div className={(currentMenu === "Bookmark")? "song_list active_list" : "song_list"}>
                                 {Object.entries(bookmarkedSongs).map(([song_id, metadata]) => {
                                     return (
-                                        <button key={song_id} className={(parseInt(song_id) === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(parseInt(song_id))}}>
+                                        <button key={song_id} className={(parseInt(song_id) === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(parseInt(song_id), true)}}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
                                                     <h3>{metadata.song_metadata.song_name}</h3>
@@ -585,20 +615,17 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                         const editorMap = mapItem;
 
                                         // const { timestamp , song_metadata, song_notes } = editorMap; //Timestamp removed for now b/c I don't have a use atm. Maybe for ordering?
-                                        const { song_metadata, song_notes } = editorMap;
+                                        const { song_metadata, normal_notes, background } = editorMap;
                                         return (
                                             <button key={map_id} className={(localID === parseInt(map_id))? "song_btn active" : "song_btn"} onClick={() => {
-                                                    setLocalNotes(song_notes);
+                                                    setLocalNotes(normal_notes);
                                                     updateLocalSong(song_metadata)
                                                     setSongLoading(false)
                                                     setLocalID(parseInt(map_id))
                                                     setSongID(null)
-                                                    if (song_metadata.ytID !== "" && song_metadata.ytStart !== null && song_metadata.ytEnd !== null) {
-                                                        setSongBackground({
-                                                            ytID: song_metadata.ytID,
-                                                            ytStart: song_metadata.ytStart,
-                                                            ytEnd: song_metadata.ytEnd
-                                                        })
+                                                    console.log("normal_notes", normal_notes)
+                                                    if (background) {
+                                                        setSongBackground(background)
                                                     }
                                                 }}>
                                                 <div className="song_metadata">
@@ -616,13 +643,13 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             <div className={(currentMenu === "Pending")? "song_list active_list" : "song_list"}>
                             {pendingSongList.map((song : songType, index) => {
                                 return (
-                                    <button key={index} className={(song.id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id)}}>
+                                    <button key={index} className={(song.id === pendingID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id, false)}}>
                                         <div className="song_metadata">
                                             <div id="title_bookmark">
-                                                <h3>{song.song_metadata.song_name}</h3>
+                                                <h3>{song.header.song_name}</h3>
                                                 <div onClick={(e) => {
                                                     e.stopPropagation(); 
-                                                    bookmarkSong(song.id, song.song_metadata)}}
+                                                    bookmarkSong(song.id, song.header)}}
                                                     >
                                                     {((song.id) in bookmarkedSongs) ? 
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="000" className="bi bi-bookmark-fill" viewBox="0 0 16 16">
@@ -635,8 +662,8 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                                     }
                                                 </div>
                                             </div>
-                                            <h4>by {song.song_metadata.song_artist}</h4>
-                                            <p>mapped by {song.song_metadata.song_mapper}</p>
+                                            <h4>by {song.header.song_artist}</h4>
+                                            <p>mapped by {song.header.song_mapper}</p>
                                         </div>
                                     </button>                                    
                                 )
