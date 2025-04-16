@@ -7,7 +7,7 @@ import { PSRoom } from "./components/Project-tape-scene"
 import { Tape } from "./components/tape";
 import { Settings } from "./components/settings";
 import "./page.css";
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
 import { sMap, settingsType, ytBackgroundType } from "@/utils/helperTypes"
 
@@ -15,6 +15,7 @@ import { createClient } from '@/utils/supabase/client'
 import { SongHtml } from "./components/songHtml";
 import { type User } from '@supabase/supabase-js'
 import { LocalTape } from "./components/localTape";
+import { LoadingScreen } from "./components/loadingScreen";
 
 const formatNotes = (notes : string[][]) => {
   const finalNotes : [number, string][] = [] 
@@ -53,12 +54,12 @@ export default function Home() {
   const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
 
-  const[selectedSong, setSelectedSong] = useState<number | null>(null)
-  const[gameMap, setGameMap] = useState<sMap | null>(null)
-  const[songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
-  const[menu, setMenu] = useState<string>("main_menu")
-  const[userSettings, setUserSettings] = useState<settingsType | null>(null);
-  const[settingsView, setSettingsView] = useState<boolean>(false);
+  const [selectedSong, setSelectedSong] = useState<number | null>(null)
+  const [gameMap, setGameMap] = useState<sMap | null>(null)
+  const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
+  const [menu, setMenu] = useState<string>("main_menu")
+  const [userSettings, setUserSettings] = useState<settingsType | null>(null);
+  const [settingsView, setSettingsView] = useState<boolean>(false);
 
   const [howtoView, setHowToView] = useState<boolean>(false);
 
@@ -84,14 +85,14 @@ export default function Home() {
 
   const handleGameMap = (currentSong : number | null) => { 
     setSelectedSong(currentSong);
-    updateCamera([14,12,34,   14,12,26]); //Set back to Songs Div 
+    updateCamera([14,12,34,   14,12,26], true); //Set back to Songs Div 
     setSongPlaying(false) 
     setGameMap(null);
   }
 
   const closeLocalMap = () => {
     setSelectedSong(null);
-    updateCamera([14,12,34,   14,12,26]); //Set back to Songs Div 
+    updateCamera([14,12,34,   14,12,26], true); //Set back to Songs Div 
     setSongPlaying(false) 
     setGameMap(null);
     setUsingLocalMap(false)
@@ -100,10 +101,6 @@ export default function Home() {
   const handleNewSettings = (newSettings: settingsType | null) => {
     setUserSettings(newSettings)
   }
-
-  // useEffect(() => {
-
-  // })
 
   const getMap = useCallback(async (selectedSong : number, verified: boolean) => {
     console.log("called Supabase for Map")
@@ -211,16 +208,15 @@ export default function Home() {
     transition: 'left 1s ease, visibility 1s'
   } as React.CSSProperties
 
-  const updateCamera = (newFocus: [number,number,number,number,number,number],) => {
-    cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], true);
+  const updateCamera = (newFocus: [number,number,number,number,number,number], animate: boolean) => {
+    cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], animate);
   }
 
   // Local Songs 
   const [usingLocalMap, setUsingLocalMap] = useState<boolean>(false);
-  // const [localNotes, setLocalNotes] = useState<string[][]>([]);
 
   const handleSelectedSong = (songID: number, song_background : ytBackgroundType | null, verified: boolean) => {
-    updateCamera([14,8,34,   14, 7, 26])
+    updateCamera([14,8,34,   14, 7, 26], true)
     setSongPlaying(true);
     setSelectedSong(songID); 
     getMap(songID, verified);
@@ -231,7 +227,7 @@ export default function Home() {
   }
 
   const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => {
-    updateCamera([14,8,34,   14, 7, 26])
+    updateCamera([14,8,34,   14, 7, 26], true)
     setSongPlaying(true);
     setAudioURL(song_url)
     setGameMap(formatNotes(song_notes))
@@ -277,70 +273,73 @@ export default function Home() {
       } catch (error) {
           console.log(error);
           console.log("Unsigned User");
-      //   alert('Error loading user data!')
       } 
-      // finally {
-          // console.log("User loaded")
-          // setProfileLoading(false)
-      // }
     }, [user, supabase])
   
     useEffect(() => {
       getProfile()
     }, [user, getProfile])
 
+  const [gameLoading, setGameLoading] = useState<boolean>(true)
+
+  // useEffect(() => {
+  //   if (!gameLoading) {
+  //     updateCamera([36,4,40,   32,4,38])
+  //   }
+  // }, [gameLoading])
+
+  const setStage = () => {
+    updateCamera([36,4,40,   32,4,38], false)
+    setTimeout(() => {
+      setGameLoading(false)
+    }, 750)
+  }
+
+  
   return (
     <div id="canvasContainer">
-{/*       
-      {!(loading) && 
-      <div id="temp_play_btn">
-        <button onClick={(() => {
-              updateCamera([14,8,34,   14, 7, 26])
-              setSongPlaying(true);
-        })}>
-          Play
-        </button>
-      </div>
-      }
-       */}
       <Canvas id="canvas_id" camera={{ position: [36,4,40]}}>
-        <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/>
-        <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
-        <PSRoom/>
-        <Html 
-        className="songHTML"
-          position={[14,12,23]}
-          transform
-          occlude
-          rotation={[0, 0, 0]}
-        >
-          <div className="htmlDiv" style={databaseStyle}>
-            <SongHtml songToPlay={handleSelectedSong} playLocalSong={handleLocalMap} user={user} role={role} avatar_url={avatar_url}/>
-          </div>
-        </Html>
+        <Suspense fallback={null}>
+          <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/>
+          <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
+          <PSRoom/>
+          <Html 
+          className="songHTML"
+            position={[14,12,23]}
+            transform
+            occlude
+            rotation={[0, 0, 0]}
+          >
+            <div className="htmlDiv" style={databaseStyle}>
+              <SongHtml songToPlay={handleSelectedSong} playLocalSong={handleLocalMap} user={user} role={role} avatar_url={avatar_url}/>
+            </div>
+          </Html>
 
-        <Html 
-        className="editorHTML"
-          position={[-1.5,7.8,34.73]}
-          transform
-          occlude
-          rotation={[0, Math.PI /2, 0]}
-        >
-          <div className="htmlDiv" style={databaseStyle}>
-            <Link href="/editor">Visit Editor</Link>
-          </div>
-        </Html>
-        <CameraControls 
-          ref={cameraRef}
-          enabled={true} 
-          touches={{one: 0, two: 0, three: 0}} //Both removes touch/mouse controls. Needed to get scroll on HTML to work
-          mouseButtons={{left: 0, right: 0, wheel: 0, middle: 0}}
-        />
+          <Html 
+          className="editorHTML"
+            position={[-1.5,7.8,34.73]}
+            transform
+            occlude
+            rotation={[0, Math.PI /2, 0]}
+          >
+            <div className="htmlDiv" style={databaseStyle}>
+              <Link href="/editor">Visit Editor</Link>
+            </div>
+          </Html>
+          <CameraControls 
+            ref={cameraRef}
+            enabled={true} 
+            touches={{one: 0, two: 0, three: 0}} //Both removes touch/mouse controls. Needed to get scroll on HTML to work
+            mouseButtons={{left: 0, right: 0, wheel: 0, middle: 0}}
+          />
+        </Suspense>
       </Canvas>
 
+      <LoadingScreen loading={gameLoading} setGameReady={() => setStage()}/>
+      
       <div id='menuOptions' className={(menu === "sub_menu")? "activeMenu" : "unactiveMenu"}>
         <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([36,4,40,   32,4,38])
+          updateCamera([36,4,40,   32,4,38], true)
           setPlayerView(false)
           setMenu("main_menu")
           }}>
@@ -350,12 +349,12 @@ export default function Home() {
           </button>
 
         <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([14,12,34,   14,12,26]);
+          updateCamera([14,12,34,   14,12,26], true);
           setPlayerView(true);
           }}><h3>Play</h3>
         </button>
         <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([4,8,34.7,   -1,7,34.7]);
+          updateCamera([4,8,34.7,   -1,7,34.7], true);
           setPlayerView(true);
           }}><h3>Edit</h3>
         </button>
@@ -364,7 +363,7 @@ export default function Home() {
 
       <div id='main_menu' className={(menu === "main_menu")? "activeMenu" : "unactiveMenu"}>
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
-          updateCamera([14,12,34,   14,12,26]);
+          updateCamera([14,12,34,   14,12,26], true);
           setPlayerView(true);
           setMenu("sub_menu")
           }}><h1>Play</h1>
@@ -385,7 +384,7 @@ export default function Home() {
         </button>
 
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
-          updateCamera([4,8,34.7,   -1,7,34.7]);
+          updateCamera([4,8,34.7,   -1,7,34.7], true);
           setPlayerView(true);
           setMenu("sub_menu")
           }}><h1>Edit</h1>

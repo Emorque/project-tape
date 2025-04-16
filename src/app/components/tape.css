@@ -664,7 +664,6 @@
     content: "";
     width: 60%;
     max-width: 320px;
-    /* min-width: 320px; */
     aspect-ratio: 10/6;
     border: 1px solid #eaeaea;
 }
