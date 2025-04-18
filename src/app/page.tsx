@@ -4,7 +4,6 @@ import { Canvas } from "@react-three/fiber";
 import { CameraControls, Html } from '@react-three/drei';
 import Link from 'next/link'
 import { PSRoom } from "./components/Project-tape-scene"
-import { Tape } from "./components/tape";
 import { Settings } from "./components/settings";
 import "./page.css";
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -14,8 +13,8 @@ import { sMap, settingsType, ytBackgroundType } from "@/utils/helperTypes"
 import { createClient } from '@/utils/supabase/client'
 import { SongHtml } from "./components/songHtml";
 import { type User } from '@supabase/supabase-js'
-import { LocalTape } from "./components/localTape";
 import { LoadingScreen } from "./components/loadingScreen";
+import { Game } from "./components/game";
 
 const formatNotes = (notes : string[][]) => {
   const finalNotes : [number, string][] = [] 
@@ -77,25 +76,19 @@ export default function Home() {
     const fetchUser = async () => {
       const { data: { user }, } = await supabase.auth.getUser()
       setUser(user);
-      // console.log("User:", user)
     };
 
     fetchUser();
   }, [supabase]);
 
-  const handleGameMap = (currentSong : number | null) => { 
-    setSelectedSong(currentSong);
-    updateCamera([14,12,34,   14,12,26], true); //Set back to Songs Div 
-    setSongPlaying(false) 
-    setGameMap(null);
-  }
-
-  const closeLocalMap = () => {
+  const handleGameExit = (local : boolean) => { 
     setSelectedSong(null);
     updateCamera([14,12,34,   14,12,26], true); //Set back to Songs Div 
-    setSongPlaying(false) 
+    setSongPlaying(false)
+    if (local) {
+      setUsingLocalMap(false) // might not even need this if usingLocalMap gets set on Play press on songHTML
+    } 
     setGameMap(null);
-    setUsingLocalMap(false)
   }
 
   const handleNewSettings = (newSettings: settingsType | null) => {
@@ -282,12 +275,6 @@ export default function Home() {
 
   const [gameLoading, setGameLoading] = useState<boolean>(true)
 
-  // useEffect(() => {
-  //   if (!gameLoading) {
-  //     updateCamera([36,4,40,   32,4,38])
-  //   }
-  // }, [gameLoading])
-
   const setStage = () => {
     updateCamera([36,4,40,   32,4,38], false)
     setTimeout(() => {
@@ -298,7 +285,7 @@ export default function Home() {
   
   return (
     <div id="canvasContainer">
-      <Canvas id="canvas_id" camera={{ position: [36,4,40]}}>
+      <Canvas id="canvas_id" style={{ background: "black" }} camera={{ position: [36,4,40]}}>
         <Suspense fallback={null}>
           <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/>
           <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
@@ -531,13 +518,14 @@ export default function Home() {
       />
       
       <div id="songScreen" style={stageStyle}>
-        {/* Game Component for Local Maps */}
-        {gameMap && songPlaying && userSettings && audioRef && audioReady && usingLocalMap && 
+        {/* {gameMap && songPlaying && userSettings && audioRef && audioReady && usingLocalMap && 
         <LocalTape gMap={gameMap} gameMapProp={closeLocalMap} settings={userSettings} audioProp={audioRef} songBackground={songBackground}/>
-        }
-        {/* Game Component for Online Maps */}
-        {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && !usingLocalMap &&
+        } */}
+        {/* {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && !usingLocalMap &&
         <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong}/>
+        } */}
+        {gameMap && songPlaying && userSettings && audioRef && audioReady && 
+        <Game gameMap={gameMap} closeGame={handleGameExit} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong} usingLocalMap={usingLocalMap}/>
         }
       </div>
     </div>
