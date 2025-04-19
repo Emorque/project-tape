@@ -68,10 +68,22 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     const [perfectCount, setPerfectCount] = useState<number>(0);
     const [okayCount, setOkayCount] = useState<number>(0)
     const [missCount, setMissCount] = useState<number>(0);
+    const [hp, setHP] = useState<number>(100);
+    const [flow, setFlow] = useState<number>(0);
 
     const [comboCount, setComboCount] = useState<number>(0);
     const [maxCombo, setMaxCombo] = useState<number>(0);
     const [flowState, setFlowState] = useState<boolean>(false)
+    
+    const flowStateAnimation = useRef(gsap.timeline({paused: true}))
+
+    const [songLength, setSongLength] = useState<number>(0);
+
+    useEffect(() => {
+        flowStateAnimation.current.to("#flow_bar_cover", {width: "15%", duration: 10, ease: "none", onComplete: () => {setFlowState(false)}})
+    }, [])
+
+    const [hitsToRecover, setHitsToRecover] = useState<number>(0)
 
     useEffect(() => {
         if (comboCount > maxCombo) {
@@ -81,6 +93,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     // Screens
     const [endScreen, setEndScreen] = useState<boolean>(false);
+    const [gameOverScreen, setGameOverScreen] = useState<boolean>(false);
+
 
     // Game Map
     const leftNotes = useRef<[number,string][]>([])
@@ -291,17 +305,20 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         setDirection("Right");
     })
 
-    const exMode = contextSafe(() => {
-        gsap.timeline()
-        .to("#lane-selection", {transform: "scale(0.1)", duration: "0.15"})
-        .to("#lane-selection", {transform: "scale(1)", duration: "0.15"})
-        setFlowState(true)
-    })
+    // const exMode = contextSafe(() => {
+    //     gsap.timeline()
+    //     .to("#lane-selection", {transform: "scale(0.1)", duration: "0.15"})
+    //     .to("#lane-selection", {transform: "scale(1)", duration: "0.15"})
+    //     setFlowState(true)
+    // })
     
     const missAnimation = contextSafe((circle : string) => {
         gsap.timeline()
         .to(`#${circle}`, {rotation: "-=90", borderColor: "red", duration: "0.1"})
         .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
+        gsap.timeline()
+        .to("#bc_left", {transform: "scale(0.95)", duration: "0.1"})
+        .to("#bc_left", {transform: "scale(1)", duration: "0.1"})
     })
 
     const defaultAnimation = contextSafe((circle : string) => {
@@ -334,6 +351,9 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             .to(`#${circle}`, {rotation: "+=40", borderColor: "blue", duration: "0.1"})
             .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
         }
+        gsap.timeline()
+        .to("#bc_right", {transform: "scale(1.05)", duration: "0.1"})
+        .to("#bc_right", {transform: "scale(1)", duration: "0.1"})
     })
 
     const perfectAnimation = contextSafe((circle : string) => {
@@ -347,10 +367,13 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             .to(`#${circle}`, {rotation: "+=40", borderColor: "green", duration: "0.1"})
             .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
         }
+        gsap.timeline()
+        .to("#bc_right", {transform: "scale(1.05)", duration: "0.1"})
+        .to("#bc_right", {transform: "scale(1)", duration: "0.1"})
     })
 
     const startingAnimation = contextSafe(() => {
-        gsap.to("#lil_game_guy", {transform: "translateY(-50%) translateX(0%)", duration: "2", delay: "1"})
+        gsap.to("#lil_game_guy", {transform: "translateY(-50%) translateX(0%)", opacity: "1", duration: "2", delay: "1"})
         gsap.timeline()
         .to("#game_left_eye", {left: "15%", transform: "scaleY(0)", duration: "0.2", delay: "1"})
         .to("#game_left_eye", {transform: "scaleY(1)", duration: "0.2", delay:"1.5"})
@@ -387,9 +410,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 setScore((score) => score + 150);
             }
             setPerfectCount((perfect) => perfect + 1);
-            if (flowState && comboCount === 19) exMode()
             setComboCount((combo) => combo + 1);
-            if (combo_bar.current) combo_bar.current.style.transition = "width 1s ease";
+            // if (combo_bar.current) combo_bar.current.style.transition = "width 1s ease";
             if (note === "FL") perfectAnimation("lc_one")
             else if (note === "FR") perfectAnimation("lc_two")
             else if (note === "SL") perfectAnimation("lc_three")
@@ -401,6 +423,23 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             else if (note === "ST") {
                 perfectAnimation("lc_three")
                 perfectAnimation("lc_four")
+            }
+            if (flow >= 98 && !flowState) {
+                setFlowState(true)
+                setFlow(0)
+                flowStateAnimation.current.restart()
+                // setFlow(100)
+            } 
+            else if (!flowState) {
+                setFlow(prevFlow => Math.min(prevFlow + 1, 100))
+            }
+
+            if (hitsToRecover >= 4) {
+                setHP(prevHP => Math.min(prevHP + 1, 100))
+                setHitsToRecover(0)
+            }
+            else {
+                setHitsToRecover(prevHit => prevHit + 1)
             }
             setNoteIndex((index) => index + 1);
         }
@@ -416,7 +455,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 setScore((score) => score + 100);
             }
             setOkayCount((okay) => okay + 1); 
-            if (flowState && comboCount === 19) exMode()
             setComboCount((combo) => combo + 1);
             if (combo_bar.current) combo_bar.current.style.transition = "width 0.5s ease";
             if (note === "FL") hitAnimation("lc_one")
@@ -431,9 +469,29 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 hitAnimation("lc_three")
                 hitAnimation("lc_four")
             }
+            if (flow >= 99 && !flowState) {
+                setFlowState(true)
+                setFlow(0)
+                flowStateAnimation.current.restart()
+                // setFlow(100)
+            } 
+            else if (!flowState) {
+                setFlow(prevFlow => Math.min(prevFlow + 1, 100))
+            }
+            if (hitsToRecover >= 4) {
+                setHP(prevHP => Math.min(prevHP + 1, 100))
+                setHitsToRecover(0)
+            }
+            else {
+                setHitsToRecover(prevHit => prevHit + 1)
+            }
             setNoteIndex((index) => index + 1); 
         }
     };
+
+    const enterFlowState = () => {
+
+    }
 
     useEffect(() => {
         const handleKeyDown = (event: { key: string; repeat : boolean}) => {
@@ -503,7 +561,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     // TODO: Remove this handleEnd and replace this by adding 1 or 2 classes in css file and adjusting class list for lane-container based on states
     const handleEnd = contextSafe(() => {
-        gsap.to("#lane-container", {
+        gsap.to("#lane_container", {
             opacity: 0,
             duration: 1,
             onComplete: () => {
@@ -514,6 +572,20 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             }
         })
     })
+    
+    const gameOver = () => {
+        gsap.to("#lane_container", {
+            opacity: 0,
+            duration: 1,
+            onComplete: () => {
+                setGameState("End")
+                setGameOverScreen(true)
+                setStopwatchActive(false)
+                setVideoVisible(false)
+                setVideoPlaying(false)
+            }
+        })
+    }
 
     // Ends the game once the audio file ends 
     useEffect(() => {
@@ -560,6 +632,9 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "running";
             }
         }
+        if (flowState) {
+            flowStateAnimation.current.play()
+        }
         if (reactPlayerRef.current){
             setVideoPlaying(true)
         }
@@ -577,6 +652,11 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 (curves[i] as HTMLParagraphElement).style.animationPlayState = "paused";
             }
         }
+        if (flowState) {
+            flowStateAnimation.current.pause()
+        }
+        console.log(flowStateAnimation.current)
+        // flowStateAnimation.current.paused(true)
         if (reactPlayerRef.current){
             setVideoPlaying(false)
         }
@@ -593,7 +673,11 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         hitsoundsRef.current = tempHitsounds;
 
         const res = (gameMap.sort((firstItem: [number,string], secondItem: [number,string]) => firstItem[0] - secondItem[0]))
-  
+        // console.log(res)
+        // console.log()
+        setSongLength(res[res.length - 1][0])
+
+        // setSongLength(res[-1])
         const lTiming: [number,string][] = [];
         const rTiming: [number,string][] = [];
         const tTiming: [number,string][] = [];
@@ -672,6 +756,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
     }, [])
 
+
     // Restart Map
     const restartMap = () => {
         if (audioProp.current) {
@@ -695,6 +780,12 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         setComboCount(0);
         setMaxCombo(0);
         setEndScreen(false);
+        setGameOverScreen(false)
+
+        setHP(100)
+        setFlow(0)
+
+        setHitsToRecover(0)
 
         // setScoreUploading(true)
 
@@ -753,12 +844,13 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
 
         // Same here, just tie the animation to a class for lane-container's classlist 
-        gsap.to("#lane-container", {
+        gsap.to("#lane_container", {
             opacity: 1,
             duration: 1,
         }) //FIXXXXXX to a contextSafe. Have restart and first playing of a song be different functions. No need to reinitialize a lot of the stuff
-        setFlowState(false)
-
+        if (flowState) {
+            gsap.to("#flow_bar_cover", {width: "15%", duration: 1, onComplete: () => {setFlowState(false)}})
+        }
         document.querySelectorAll(".bar").forEach(e => e.remove());
 
     }
@@ -865,8 +957,11 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     
         setMissCount((count) => count + 1);
         setComboCount(0)
+        if (hp <= 1) {
+            gameOver();
+        }
+        setHP(prevHP => prevHP -= 2)
         if (combo_bar.current) combo_bar.current.style.transition = "none";
-        setFlowState(false)
         setNoteIndex((index) => index + 1)
     }
 
@@ -963,7 +1058,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
         if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 250){
             setComboCount(0);
-            setFlowState(false)
             earlyAnimation("lc_one")
         }
         else {
@@ -978,7 +1072,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
         if (rightTiming.current[rightTimingIndex][1] === "FR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
             setComboCount(0);
-            setFlowState(false)
             earlyAnimation("lc_two")
         }
         else {
@@ -993,7 +1086,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
         if (leftTiming.current[leftTimingIndex][1] === "SL" && leftTiming.current[leftTimingIndex][0] <= time + 250) {
             setComboCount(0);
-            setFlowState(false)
             earlyAnimation("lc_three")   
         }
         else {
@@ -1008,7 +1100,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
         if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
             setComboCount(0);
-            setFlowState(false)
             earlyAnimation("lc_four")
         }
         else {
@@ -1164,7 +1255,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             }
         </div> */}
         <div id='game_container'>
-            {!endScreen && 
+            {(!endScreen || !gameOverScreen) && 
             <button id='pause_btn' onClick={pauseMap}>
               {(gameState === "Paused")? 
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
@@ -1178,20 +1269,21 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
               }
             </button>
             }
-            <div id='progress_bar'></div>
+
+            <div id='progress_bar' style={{width: `${(time/songLength) * 100}%`}}></div>
             <div id='stats_div'>
                 <h1>{score}</h1>
                 <h1>{comboCount} Combo!</h1>
             </div>
             <div id='lane_container'>
                 <div id='lil_game_guy'>
-                    <div id='game_left_eye' className="loading_eye">
-                        </div>
-                        <div id='game_right_eye' className="loading_eye">
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
-                        </div>
+                    <div id='flow_crown' style={{opacity: flowState? 1 : 0}}></div>
+                    <div id='game_left_eye' className="loading_eye"></div>
+                    <div id='game_right_eye' className="loading_eye">
+                        <span className="cas_teeth_loading"></span>
+                        <span className="cas_teeth_loading"></span>
+                        <span className="cas_teeth_loading"></span>
+                    </div>
                 </div>
                 <div className='lane_section'>
                     <div onClick={handleFirstLane} ref={lane_one} className='lane lane-one'> 
@@ -1246,11 +1338,22 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     <div style={combo_style} ref={combo_bar} id='combo-bar-fill'></div>
                 </div> */}
             </div> 
-            <div id='hp_flow_container'>
-                
-                <div className='hpflow_circle'></div>
 
-            </div>
+                <div id='boombox'>
+                    {/* Because state changes happen while end/game over screen pop opp, hp state could be in the negatives. Using Math._ is a good way to clamp values for the player */}
+                    <p id='hp_count'>{Math.max(hp, 0)}/100</p>
+                    <p id='flow_count' style={{opacity: flowState? "0" : 1}}>{Math.min(flow, 100)}/100</p>
+                    <div id='bc_left' className='boombox_circle'></div>
+                    <div id="bc_right" className='boombox_circle'></div>
+                    <div id='hp_container'>
+                        <div id='hp_bar' style={{width: `${(hp / 100) * 85}%`}}></div>
+                    </div>
+                    <div id='flow_container'>
+                        <div id='flow_bar' style={{width: `${15 + (flow / 100) * 85}%`}}></div>
+                        <div id='flow_bar_cover' style={{opacity: flowState? 1 : 0}}></div>
+                    </div>
+                </div>
+
 
             <div id='pause_wrapper' className={(gameState === "Paused")? "pause_active" : 'pause_unactive'}>
                 <div id="pause_screen">
@@ -1327,6 +1430,16 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                         </div>
                         <h2>{scoreUploading? "Checking server..." : leaderboardText}</h2>
                     </div>                    
+                </div>
+            }
+
+            {gameOverScreen && 
+                <div id='game_over_screen_wrapper'>
+                    <div id="game_over_screen">
+                        <h1>Game Over</h1>
+                        <button onClick={() => restartMap()}>Retry</button>
+                        <button onClick={() => {closeGame(usingLocalMap)}}>Main Menu</button>
+                    </div>
                 </div>
             }
         </div>
