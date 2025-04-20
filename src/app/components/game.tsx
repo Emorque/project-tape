@@ -280,8 +280,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     // All animations
     const moveLeft = contextSafe(() => {
         gsap.timeline()
-        .to("#lil_game_guy", {top: "25%", transform: " scaleY(0.8)", duration: "0.2"})
-        .to("#lil_game_guy", {transform: " scaleY(1)", duration: "0.2"})
+        .to("#lil_game_guy", {top: "25%", transform: " scaleY(0.8) translateY(-50%)", duration: "0.2"})
+        .to("#lil_game_guy", {transform: " scaleY(1) translateY(-50%)", duration: "0.2"})
         gsap.timeline()
         .to("#game_left_eye", {top: "0%", duration: "0.2"})
         .to("#game_left_eye", {top: "30%", duration: "0.2"})
@@ -294,8 +294,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     const moveRight = contextSafe(() => {
         gsap.timeline()
-        .to("#lil_game_guy", {top: "75%", transform: " scaleY(0.8)", duration: "0.2"})
-        .to("#lil_game_guy", {transform: " scaleY(1)", duration: "0.2"})
+        .to("#lil_game_guy", {top: "75%", transform: " scaleY(0.8) translateY(-50%)", duration: "0.2"})
+        .to("#lil_game_guy", {transform: " scaleY(1) translateY(-50%)", duration: "0.2"})
         gsap.timeline()
         .to("#game_left_eye", {top: "60%", duration: "0.2"})
         .to("#game_left_eye", {top: "30%", duration: "0.2"})
@@ -965,14 +965,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         setNoteIndex((index) => index + 1)
     }
 
-    const player_style = {
-        borderBottomColor: flowState? "green" : "white"
-    }
-
-    const combo_style = {
-        width: `${((Math.min(comboCount, 20))/20) * 100}%`
-    }
-
     const circleContainerRef = useRef<HTMLDivElement>(null)
     const handleFirstLane = () => {
         if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
@@ -1014,51 +1006,47 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
     }
 
-    const handleCircleContainer = (event : MouseEvent<HTMLDivElement>) => { //React. not needed because imported at the top
-        if (!circleContainerRef.current) return
-        const circleContainerInfo = circleContainerRef.current.getBoundingClientRect();
-        const mousePlacement = event.clientX - circleContainerInfo.left
-        const containerWidth = circleContainerInfo.right - circleContainerInfo.left
+    // const handleCircleContainer = (event : MouseEvent<HTMLDivElement>) => { //React. not needed because imported at the top
+    //     if (!circleContainerRef.current) return
+    //     const circleContainerInfo = circleContainerRef.current.getBoundingClientRect();
+    //     const mousePlacement = event.clientX - circleContainerInfo.left
+    //     const containerWidth = circleContainerInfo.right - circleContainerInfo.left
 
-        if (!mousePlacement || !containerWidth) return;
-        const oneFourth = containerWidth * (1/4)
-        const twoFourths = containerWidth * (2/4)
-        const threeFourths = containerWidth * (3/4)
+    //     if (!mousePlacement || !containerWidth) return;
+    //     const oneFourth = containerWidth * (1/4)
+    //     const twoFourths = containerWidth * (2/4)
+    //     const threeFourths = containerWidth * (3/4)
         
-        if (0 < mousePlacement && mousePlacement <= oneFourth) { // First Bar
-            console.log("First Circle")
-            if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
-                checkFirstLane()
-            }
-          }
-          else if (oneFourth < mousePlacement && mousePlacement <= twoFourths) { // Second Bar
-            console.log("Second Circle")
-            if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
-                checkSecondLane()              
-            }
-          }
-          else if (twoFourths < mousePlacement && mousePlacement <= threeFourths) { // Third Bar
-            console.log("Third Circle")
-            if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
-                checkThirdLane()
-            }
-          }
-          else if (threeFourths < mousePlacement && mousePlacement <= containerWidth) { // Fourth Bar
-            console.log("Fourth Circle")
-            if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
-                checkFourthLane()
-            }
-          }
-    }
+    //     if (0 < mousePlacement && mousePlacement <= oneFourth) { // First Bar
+    //         console.log("First Circle")
+    //         if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
+    //             checkFirstLane()
+    //         }
+    //       }
+    //       else if (oneFourth < mousePlacement && mousePlacement <= twoFourths) { // Second Bar
+    //         console.log("Second Circle")
+    //         if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
+    //             checkSecondLane()              
+    //         }
+    //       }
+    //       else if (twoFourths < mousePlacement && mousePlacement <= threeFourths) { // Third Bar
+    //         console.log("Third Circle")
+    //         if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
+    //             checkThirdLane()
+    //         }
+    //       }
+    //       else if (threeFourths < mousePlacement && mousePlacement <= containerWidth) { // Fourth Bar
+    //         console.log("Fourth Circle")
+    //         if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
+    //             checkFourthLane()
+    //         }
+    //       }
+    // }
 
     const checkFirstLane = () => {
         if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 150) {
             handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "FL")
             return;
-        }
-        if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 250){
-            setComboCount(0);
-            earlyAnimation("lc_one")
         }
         else {
             defaultAnimation("lc_one")
@@ -1070,10 +1058,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "FR")
             return
         }
-        if (rightTiming.current[rightTimingIndex][1] === "FR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
-            setComboCount(0);
-            earlyAnimation("lc_two")
-        }
         else {
             defaultAnimation("lc_two")
         }      
@@ -1084,10 +1068,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             handleInput(leftTiming.current, setLeftTimingIndex, leftTimingIndex, "SL")
             return
         }
-        if (leftTiming.current[leftTimingIndex][1] === "SL" && leftTiming.current[leftTimingIndex][0] <= time + 250) {
-            setComboCount(0);
-            earlyAnimation("lc_three")   
-        }
         else {
             defaultAnimation("lc_three")
         }
@@ -1097,10 +1077,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 150){
             handleInput(rightTiming.current, setRightTimingIndex, rightTimingIndex, "SR")
             return
-        }
-        if (rightTiming.current[rightTimingIndex][1] === "SR" && rightTiming.current[rightTimingIndex][0] <= time + 250) {
-            setComboCount(0);
-            earlyAnimation("lc_four")
         }
         else {
             defaultAnimation("lc_four")
@@ -1272,14 +1248,14 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
             <div id='progress_bar' style={{width: `${(time/songLength) * 100}%`}}></div>
             <div id='stats_div'>
-                <h1>{score}</h1>
-                <h1>{comboCount} Combo!</h1>
+                <h1 id='score_text'>{score}</h1>
+                {(comboCount > 5) && <h1 id="combo_text">{comboCount} Combo</h1>}
             </div>
             <div id='lane_container'>
                 <div id='lil_game_guy'>
                     <div id='flow_crown' style={{opacity: flowState? 1 : 0}}></div>
                     <div id='game_left_eye' className="loading_eye"></div>
-                    <div id='game_right_eye' className="loading_eye">
+                    <div id='game_right_eye' className={flowState? "loading_eye flow_eye" : "loading_eye"}>
                         <span className="cas_teeth_loading"></span>
                         <span className="cas_teeth_loading"></span>
                         <span className="cas_teeth_loading"></span>
@@ -1339,21 +1315,20 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 </div> */}
             </div> 
 
-                <div id='boombox'>
-                    {/* Because state changes happen while end/game over screen pop opp, hp state could be in the negatives. Using Math._ is a good way to clamp values for the player */}
-                    <p id='hp_count'>{Math.max(hp, 0)}/100</p>
-                    <p id='flow_count' style={{opacity: flowState? "0" : 1}}>{Math.min(flow, 100)}/100</p>
-                    <div id='bc_left' className='boombox_circle'></div>
-                    <div id="bc_right" className='boombox_circle'></div>
-                    <div id='hp_container'>
-                        <div id='hp_bar' style={{width: `${(hp / 100) * 85}%`}}></div>
-                    </div>
-                    <div id='flow_container'>
-                        <div id='flow_bar' style={{width: `${15 + (flow / 100) * 85}%`}}></div>
-                        <div id='flow_bar_cover' style={{opacity: flowState? 1 : 0}}></div>
-                    </div>
+            <div id='boombox'>
+                {/* Because state changes happen while end/game over screen pop opp, hp state could be in the negatives. Using Math._ is a good way to clamp values for the player */}
+                <p id='hp_count'>{Math.max(hp, 0)}/100</p>
+                <p id='flow_count' style={{opacity: flowState? "0" : 1}}>{Math.min(flow, 100)}/100</p>
+                <div id='bc_left' className='boombox_circle'></div>
+                <div id="bc_right" className='boombox_circle'></div>
+                <div id='hp_container'>
+                    <div id='hp_bar' style={{width: `${(hp / 100) * 85}%`}}></div>
                 </div>
-
+                <div id='flow_container'>
+                    <div id='flow_bar' style={{width: `${15 + (flow / 100) * 85}%`}}></div>
+                    <div id='flow_bar_cover' style={{opacity: flowState? 1 : 0}}></div>
+                </div>
+            </div>
 
             <div id='pause_wrapper' className={(gameState === "Paused")? "pause_active" : 'pause_unactive'}>
                 <div id="pause_screen">
