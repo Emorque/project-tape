@@ -12,7 +12,6 @@
 
 #main_menu {
     height: 100%;
-    /* background-color: red; */
     position: absolute;
     top:0%;
     z-index: 200;
@@ -235,16 +234,9 @@
     color: white
 }
 
-.songHTML {
-    width: 100vw;
-    height: 200vh;
-    max-width: 1300px;
-    max-height: 500px;
-}
-
 .editorHTML {
-    width: 176px;
-    height: 122px;
+    width: 172px;
+    height: 130px;
     div {
         display: flex;
         justify-content: center;
@@ -257,8 +249,40 @@
 }
 
 .htmlDiv {
-    width: 100%; /* 100% of the parent (Html) */
-    height: 100%; /* 100% of the parent (Html) */
+    width: 90%; /* 100% of the parent (Html) */
+    height: 90%; /* 100% of the parent (Html) */
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+}
+
+#editHTML {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+#songHTML {
+    width: 100%;
+    height: 100%;
+    padding-top: 30px;
+    transition: all 0.2s ease;
+}
+
+.activeHTML {
+    transform: scaleY(1);
+}
+
+.inactiveHTML {
+    transform: scaleY(0);
 }
 
 .annotation {
@@ -276,46 +300,5 @@
         font-size: 2rem;
         padding: 5px;
         border-radius: 6px;
-    }
-}
-
-@media (min-height: 650px) {
-    .songHTML {
-        width: 90vw;
-    }
-}
-
-@media (min-height: 740px) {
-    .songHTML {
-        width: 80vw;
-    }
-}
-
-@media (min-height: 800px) {
-    .songHTML {
-        width: 75vw;
-    }
-}
-
-@media (min-height: 900px) {
-    .songHTML {
-        width: 60vw;
-    }
-}
-@media (min-height: 1000px) {
-    .songHTML {
-        width: 55vw;
-    }
-}
-
-@media (min-height: 1200px) {
-    .songHTML {
-        width: 50vw;
-    }
-}
-
-@media (min-height: 1300px) {
-    .songHTML {
-        width: 45vw;
     }
 }

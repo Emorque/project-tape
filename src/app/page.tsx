@@ -57,6 +57,7 @@ export default function Home() {
   const [gameMap, setGameMap] = useState<sMap | null>(null)
   const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
   const [menu, setMenu] = useState<string>("main_menu")
+  const [htmlDiv, setHTMLDiv] = useState<string>("")
   const [userSettings, setUserSettings] = useState<settingsType | null>(null);
   const [settingsView, setSettingsView] = useState<boolean>(false);
 
@@ -177,10 +178,16 @@ export default function Home() {
 
   }, [])
 
-  const databaseStyle = {
-    opacity: playerView ? 1 : 0, 
-    visibility: playerView ? "visible" : "hidden",
-    transition: 'opacity 1s ease, visibility 1s' 
+  const songDivStyle = {
+    // opacity: (htmlDiv === "songDiv")? 1 : 0, 
+    visibility: (htmlDiv === "songDiv")? "visible" : "hidden",
+    // transition: 'opacity 1s ease, visibility 1s' 
+    }as React.CSSProperties;
+
+  const editDivStyle = {
+    // opacity: (htmlDiv === "editDiv")? 1 : 0, 
+    visibility: (htmlDiv === "editDiv")? "visible" : "hidden",
+    // transition: 'opacity 1s ease, visibility 1s' 
   } as React.CSSProperties;
   
   const stageStyle = {
@@ -216,7 +223,7 @@ export default function Home() {
     setUsingLocalMap(false)
     setSongBackground(song_background)
     setVerifiedSong(verified)
-    console.log("handled", song_background)
+    // console.log("handled", song_background)
   }
 
   const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => {
@@ -227,7 +234,7 @@ export default function Home() {
     setUsingLocalMap(true)
     setVerifiedSong(false)
     setSongBackground(song_background)
-    console.log("handled", song_background)
+    // console.log("handled", song_background)
   }
 
   const handleSongReady = () => {
@@ -282,6 +289,58 @@ export default function Home() {
     }, 750)
   }
 
+  const backtoMainMenu = () => {
+    setMenu("main_menu")
+    setHTMLDiv("")
+    setTimeout(() => {
+      updateCamera([36,4,40,   32,4,38], true)
+    }, 400)
+  }
+
+  const gotoEditMenu = (from_main_menu: boolean) => {
+    if (htmlDiv === "editDiv") return;
+    if (from_main_menu) {
+      setMenu("sub_menu")
+      updateCamera([3,7.7,34.75,   -1,7.7,34.75], true);
+      setTimeout(() => {
+        setPlayerView(true);
+        setHTMLDiv("editDiv")
+      }, 750)
+    }
+    else {
+      setHTMLDiv("")
+      setTimeout(() => {
+        updateCamera([3,7.7,34.75,   -1,7.7,34.75], true);
+      }, 300)
+      setTimeout(() => {
+        setPlayerView(true);
+        setHTMLDiv("editDiv")
+      }, 900) 
+    }
+  }
+
+  const gotoSongMenu = (from_main_menu: boolean) => {
+    if (htmlDiv === "songDiv") return;
+    if (from_main_menu) {
+      setMenu("sub_menu")
+      updateCamera([14,12,34,   14,12,26], true);
+      setTimeout(() => {
+        setPlayerView(true);
+        setHTMLDiv("songDiv")
+      }, 750)
+    }
+
+    else {
+      setHTMLDiv("")
+      setTimeout(() => {
+        updateCamera([14,12,34,   14,12,26], true);
+      }, 300)
+      setTimeout(() => {
+        setPlayerView(true);
+        setHTMLDiv("songDiv")
+      }, 900) 
+    }
+  }
   
   return (
     <div id="canvasContainer">
@@ -291,27 +350,17 @@ export default function Home() {
           <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
           <PSRoom/>
           <Html 
-          className="songHTML"
-            position={[14,12,23]}
-            transform
-            occlude
-            rotation={[0, 0, 0]}
-          >
-            <div className="htmlDiv" style={databaseStyle}>
-              <SongHtml songToPlay={handleSelectedSong} playLocalSong={handleLocalMap} user={user} role={role} avatar_url={avatar_url}/>
-            </div>
-          </Html>
-
-          <Html 
           className="editorHTML"
-            position={[-1.5,7.8,34.73]}
+            position={[-1.5,7.7,34.74]}
             transform
             occlude
             rotation={[0, Math.PI /2, 0]}
           >
-            <div className="htmlDiv" style={databaseStyle}>
-              <Link href="/editor">Visit Editor</Link>
-            </div>
+            {/* <div className="htmlDiv" style={editDivStyle}> */}
+              <div id="editHTML" className={htmlDiv === "editDiv"? "activeHTML" : "inactiveHTML"}>
+                <Link href="/editor">Visit Editor</Link>
+              </div>
+            {/* </div> */}
           </Html>
           <CameraControls 
             ref={cameraRef}
@@ -322,27 +371,30 @@ export default function Home() {
         </Suspense>
       </Canvas>
 
+      <div className="htmlDiv" style={songDivStyle}>
+        <div id="songHTML" className={htmlDiv === "songDiv"? "activeHTML" : "inactiveHTML"}>
+          <SongHtml songToPlay={handleSelectedSong} playLocalSong={handleLocalMap} user={user} role={role} avatar_url={avatar_url}/>
+        </div>
+      </div>
+
       <LoadingScreen loading={gameLoading} setGameReady={() => setStage()}/>
       
       <div id='menuOptions' className={(menu === "sub_menu")? "activeMenu" : "unactiveMenu"}>
-        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([36,4,40,   32,4,38], true)
+        <button className="menuBtn" disabled={(menu !== "sub_menu") || (htmlDiv === "")} onClick={() => {
           setPlayerView(false)
-          setMenu("main_menu")
+          backtoMainMenu()
           }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
               <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
             </svg>
           </button>
 
-        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([14,12,34,   14,12,26], true);
-          setPlayerView(true);
+        <button className="menuBtn" disabled={(menu !== "sub_menu") || (htmlDiv === "")} onClick={() => {
+          gotoSongMenu(false)
           }}><h3>Play</h3>
         </button>
-        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([4,8,34.7,   -1,7,34.7], true);
-          setPlayerView(true);
+        <button className="menuBtn" disabled={(menu !== "sub_menu") || (htmlDiv === "")} onClick={() => {
+          gotoEditMenu(false)
           }}><h3>Edit</h3>
         </button>
       </div>
@@ -350,9 +402,7 @@ export default function Home() {
 
       <div id='main_menu' className={(menu === "main_menu")? "activeMenu" : "unactiveMenu"}>
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
-          updateCamera([14,12,34,   14,12,26], true);
-          setPlayerView(true);
-          setMenu("sub_menu")
+          gotoSongMenu(true)
           }}><h1>Play</h1>
           <div className="cas_bottom">
           </div>
@@ -371,9 +421,7 @@ export default function Home() {
         </button>
 
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
-          updateCamera([4,8,34.7,   -1,7,34.7], true);
-          setPlayerView(true);
-          setMenu("sub_menu")
+          gotoEditMenu(true)
           }}><h1>Edit</h1>
           <div className="cas_bottom">
           </div>
@@ -518,12 +566,6 @@ export default function Home() {
       />
       
       <div id="songScreen" style={stageStyle}>
-        {/* {gameMap && songPlaying && userSettings && audioRef && audioReady && usingLocalMap && 
-        <LocalTape gMap={gameMap} gameMapProp={closeLocalMap} settings={userSettings} audioProp={audioRef} songBackground={songBackground}/>
-        } */}
-        {/* {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && !usingLocalMap &&
-        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong}/>
-        } */}
         {gameMap && songPlaying && userSettings && audioRef && audioReady && 
         <Game gameMap={gameMap} closeGame={handleGameExit} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong} usingLocalMap={usingLocalMap}/>
         }
