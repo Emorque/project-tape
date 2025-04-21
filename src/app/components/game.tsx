@@ -61,6 +61,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     }
     const scrollSpeed = settings.scrollSpd;
     const offset = settings.offset
+    const mobileControls = settings.mobileControls
 
     const combo_bar = useRef<HTMLDivElement>(null);
     // Game States
@@ -204,7 +205,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         if (!user || gameState !== "End") return; // Error without this. Likely because it would query profiles with a null id without it
         try {
             setScoreUploading(true)
-
             const { data, error, status } = await supabase
             .from('leaderboard')
             .select(`score`)
@@ -222,7 +222,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     try {
                         const { error : uploadError } = await supabase
                         .from('leaderboard')
-                        .update({ score: score })
+                        .update({ score: score, accuracy: getAccuracy(perfectCount, okayCount, missCount), perfect_count: perfectCount, okay_count: okayCount})
                         .eq('user_id', user?.id)
                         .eq('song_id', song_id)
 
@@ -250,7 +250,9 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     .insert([
                     { 'song_id' : song_id, 'user_id': user?.id, 
                         'score': score, 
-                        'accuracy': getAccuracy(perfectCount, okayCount, missCount), 
+                        'accuracy': getAccuracy(perfectCount, okayCount, missCount),
+                        'perfect_count': perfectCount,
+                        'okay_count': okayCount, 
                         'username' : user.user_metadata.username, 
                         'max_combo': maxCombo},
                     ])
@@ -946,83 +948,40 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         setNoteIndex((index) => index + 1)
     }
 
-    // const circleContainerRef = useRef<HTMLDivElement>(null)
-    const handleFirstLane = () => {
+    // Mobile Controls
+    const handleLeftTurn = () => {
+        if (direction === "Left") return
+        moveLeft();
+        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
+            handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "FT")
+        }
+    }
+
+    const handleRightTurn = () => {
+        if (direction === "Right") return
+        moveRight();
+        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
+            handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "ST")
+        }
+    }
+
+    const handleTopLane = () => {
         if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
             checkFirstLane()
         }
-    }
-
-    const handleSecondLane = () => {
-        if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
-            checkSecondLane()              
-        }
-    }
-
-    const handleThirdLane = () => {
-        if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
+        else if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
             checkThirdLane()
         }
     }
 
-    const handleFourthLane = () => {
-        if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
+    const handleBottomLane = () => {
+        if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
+            checkSecondLane()              
+        }
+        else if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
             checkFourthLane()
         }
     }
-
-    // const handleLeftTurn = () => {
-    //     if (direction === "Left") return
-    //     moveLeft();
-    //     if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
-    //         handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "FT")
-    //     }
-    // }
-
-    // const handleRightTurn = () => {
-    //     if (direction === "Right") return
-    //     moveRight();
-    //     if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
-    //         handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "ST")
-    //     }
-    // }
-
-    // const handleCircleContainer = (event : MouseEvent<HTMLDivElement>) => { //React. not needed because imported at the top
-    //     if (!circleContainerRef.current) return
-    //     const circleContainerInfo = circleContainerRef.current.getBoundingClientRect();
-    //     const mousePlacement = event.clientX - circleContainerInfo.left
-    //     const containerWidth = circleContainerInfo.right - circleContainerInfo.left
-
-    //     if (!mousePlacement || !containerWidth) return;
-    //     const oneFourth = containerWidth * (1/4)
-    //     const twoFourths = containerWidth * (2/4)
-    //     const threeFourths = containerWidth * (3/4)
-        
-    //     if (0 < mousePlacement && mousePlacement <= oneFourth) { // First Bar
-    //         console.log("First Circle")
-    //         if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
-    //             checkFirstLane()
-    //         }
-    //       }
-    //       else if (oneFourth < mousePlacement && mousePlacement <= twoFourths) { // Second Bar
-    //         console.log("Second Circle")
-    //         if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
-    //             checkSecondLane()              
-    //         }
-    //       }
-    //       else if (twoFourths < mousePlacement && mousePlacement <= threeFourths) { // Third Bar
-    //         console.log("Third Circle")
-    //         if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
-    //             checkThirdLane()
-    //         }
-    //       }
-    //       else if (threeFourths < mousePlacement && mousePlacement <= containerWidth) { // Fourth Bar
-    //         console.log("Fourth Circle")
-    //         if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
-    //             checkFourthLane()
-    //         }
-    //       }
-    // }
 
     const checkFirstLane = () => {
         if (leftTiming.current[leftTimingIndex][1] === "FL" && leftTiming.current[leftTimingIndex][0] <= time + 150) {
@@ -1064,7 +1023,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }    
     }
 
-    
     return (
     <div>
         {songBackground && 
@@ -1112,6 +1070,15 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             </button>
             }
 
+            {mobileControls &&
+            <div id='mobile_controls'>
+                <div id='top_staff_btn' onClick={() => handleLeftTurn()}></div>
+                <div id='bottom_staff_btn' onClick={() => handleRightTurn()}></div>
+                <div id='top_lane_btn' onClick={() => handleTopLane()}></div>
+                <div id='bottom_lane_btn' onClick={() => handleBottomLane()}></div>
+            </div>
+            }
+
             <div id='progress_bar' style={{width: `${(time/songLength) * 100}%`, opacity: (gameState === "End")? 0 : 1 }}></div>
             <div id='stats_div' style={{opacity: (gameState === "End")? 0 : 1 }}>
                 <h1 id='score_text'>{score}</h1>
@@ -1128,7 +1095,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     </div>
                 </div>
                 <div className='lane_section'>
-                    <div onClick={handleFirstLane} ref={lane_one} className='lane lane-one'> 
+                    <div ref={lane_one} className='lane lane-one'> 
                     <div className='lane_circle_tape lct_left'></div>
                         <div id='lc_one' className='lane_circle'>
                             <span className="cas_teeth_loading"></span>
@@ -1136,7 +1103,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                             <span className="cas_teeth_loading"></span>
                         </div>
                     </div>
-                    <div onClick={handleSecondLane} ref={lane_two} className='lane lane-two'>  
+                    <div ref={lane_two} className='lane lane-two'>  
                         <div className='lane_circle_tape lct_right'></div>
                         <div id='lc_two' className='lane_circle'>
                             <span className="cas_teeth_loading"></span>
@@ -1146,7 +1113,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     </div>    
                 </div>
                 <div className='lane_section'>
-                    <div onClick={handleThirdLane} ref={lane_three} className='lane lane-three'>  
+                    <div ref={lane_three} className='lane lane-three'>  
                         <div className='lane_circle_tape lct_left'></div>
                         <div id='lc_three' className='lane_circle'>
                             <span className="cas_teeth_loading"></span>
@@ -1154,7 +1121,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                             <span className="cas_teeth_loading"></span>
                         </div>
                     </div>
-                    <div onClick={handleFourthLane} ref={lane_four} className='lane lane-four'>
+                    <div ref={lane_four} className='lane lane-four'>
                         <div className='lane_circle_tape lct_right'></div>
                         <div id='lc_four' className='lane_circle'>
                             <span className="cas_teeth_loading"></span>

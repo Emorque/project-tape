@@ -115,7 +115,8 @@ export type settingsType = {
 
     offset: number,
 
-    backgroundDim: number
+    backgroundDim: number,
+    mobileControls: boolean
 }
 
 export type keybindsType = {

@@ -12,6 +12,7 @@
     width: 100%;
     background-color: white;
     height: 4px;
+    z-index: 2;
 }
 
 #pause_btn {
@@ -22,7 +23,35 @@
     padding: 5px;
     background-color: transparent;
     border: 0;
+    z-index: 20;
+}
+
+#mobile_controls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;    
+}
+
+#top_staff_btn {
+    /* background-color: rgba(255, 0, 0, 0.103); */
+}
+
+#bottom_staff_btn {
+    /* background-color: rgba(0, 0, 255, 0.151); */
+}
+
+#top_lane_btn {
+    /* background-color: rgba(0, 128, 0, 0.137); */
+}
+
+#bottom_lane_btn {
+    /* background-color: rgba(128, 0, 128, 0.158); */
 }
 
 #stats_div {
@@ -30,6 +59,7 @@
     top: 4px;
     left: 0;
     width: 100%;
+    z-index: 2;
 }
 
 #score_text {
@@ -79,7 +109,7 @@
     /* background-color: red; */
     display: flex;
     flex-direction: column;
-    z-index: 1;
+    z-index: 0;
     transition: transform 0.5s ease;
     /* transform: translate(-50%, 0); */
 }
@@ -604,6 +634,7 @@
 
 #game_over_screen_wrapper{
     padding-top: 0;
+    justify-content: center;
 }
 
 @keyframes initiateEndScreen  {

@@ -166,7 +166,8 @@ export default function Home() {
 
             offset: 0,
 
-            backgroundDim: 0.5
+            backgroundDim: 0.5,
+            mobileControls: false
         }
       }
       else{
@@ -338,8 +339,8 @@ export default function Home() {
     <div id="canvasContainer">
       <Canvas id="canvas_id" style={{ background: "black" }} camera={{ position: [36,4,40]}}>
         <Suspense fallback={null}>
-          <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/>
-          <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
+          {/* <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/> */}
+          {/* <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/> */}
           <PSRoom/>
           <Html 
           className="editorHTML"
