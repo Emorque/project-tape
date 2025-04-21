@@ -50,7 +50,7 @@ const formatNotes = (notes : string[][]) => {
 
 export default function Home() {
   const cameraRef = useRef<CameraControls | null>(null);
-  const [playerView, setPlayerView] = useState<boolean>(false);
+  // const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
 
   const [selectedSong, setSelectedSong] = useState<number | null>(null)
@@ -179,16 +179,8 @@ export default function Home() {
   }, [])
 
   const songDivStyle = {
-    // opacity: (htmlDiv === "songDiv")? 1 : 0, 
     visibility: (htmlDiv === "songDiv")? "visible" : "hidden",
-    // transition: 'opacity 1s ease, visibility 1s' 
     }as React.CSSProperties;
-
-  const editDivStyle = {
-    // opacity: (htmlDiv === "editDiv")? 1 : 0, 
-    visibility: (htmlDiv === "editDiv")? "visible" : "hidden",
-    // transition: 'opacity 1s ease, visibility 1s' 
-  } as React.CSSProperties;
   
   const stageStyle = {
     opacity: songPlaying ? 1 : 0, 
@@ -216,7 +208,7 @@ export default function Home() {
   const [usingLocalMap, setUsingLocalMap] = useState<boolean>(false);
 
   const handleSelectedSong = (songID: number, song_background : ytBackgroundType | null, verified: boolean) => {
-    updateCamera([14,8,34,   14, 7, 26], true)
+    // updateCamera([14,8,34,   14, 7, 26], true)
     setSongPlaying(true);
     setSelectedSong(songID); 
     getMap(songID, verified);
@@ -227,7 +219,7 @@ export default function Home() {
   }
 
   const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => {
-    updateCamera([14,8,34,   14, 7, 26], true)
+    // updateCamera([14,8,34,   14, 7, 26], true)
     setSongPlaying(true);
     setAudioURL(song_url)
     setGameMap(formatNotes(song_notes))
@@ -303,7 +295,7 @@ export default function Home() {
       setMenu("sub_menu")
       updateCamera([3,7.7,34.75,   -1,7.7,34.75], true);
       setTimeout(() => {
-        setPlayerView(true);
+        // setPlayerView(true);
         setHTMLDiv("editDiv")
       }, 750)
     }
@@ -313,7 +305,7 @@ export default function Home() {
         updateCamera([3,7.7,34.75,   -1,7.7,34.75], true);
       }, 300)
       setTimeout(() => {
-        setPlayerView(true);
+        // setPlayerView(true);
         setHTMLDiv("editDiv")
       }, 900) 
     }
@@ -325,7 +317,7 @@ export default function Home() {
       setMenu("sub_menu")
       updateCamera([14,12,34,   14,12,26], true);
       setTimeout(() => {
-        setPlayerView(true);
+        // setPlayerView(true);
         setHTMLDiv("songDiv")
       }, 750)
     }
@@ -336,7 +328,7 @@ export default function Home() {
         updateCamera([14,12,34,   14,12,26], true);
       }, 300)
       setTimeout(() => {
-        setPlayerView(true);
+        // setPlayerView(true);
         setHTMLDiv("songDiv")
       }, 900) 
     }
@@ -381,7 +373,7 @@ export default function Home() {
       
       <div id='menuOptions' className={(menu === "sub_menu")? "activeMenu" : "unactiveMenu"}>
         <button className="menuBtn" disabled={(menu !== "sub_menu") || (htmlDiv === "")} onClick={() => {
-          setPlayerView(false)
+          // setPlayerView(false)
           backtoMainMenu()
           }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
@@ -539,7 +531,7 @@ export default function Home() {
 
             <h1>There is a combo bar that fills near the bottom.</h1>
             <h2>A combo bar fills at the bottom after each successful hit.</h2>
-            <h2>Once filled, you'll enter &quot;Flow State&quot;.</h2>
+            <h2>Once filled, you&quot;ll enter &quot;Flow State&quot;.</h2>
             <h2>While in flow state, you earn more points.</h2>
           </div>
         </>

@@ -4,7 +4,7 @@
     // Visible score and combo 
     // Update UI to best match something like Taiko
 
-import React, { MouseEvent,RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import React, { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import "./game.css";
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -473,10 +473,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
     };
 
-    const enterFlowState = () => {
-
-    }
-
     useEffect(() => {
         const handleKeyDown = (event: { key: string; repeat : boolean}) => {
             if (event.repeat) return;
@@ -563,6 +559,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             duration: 1,
             onComplete: () => {
                 setGameState("End")
+                audioProp.current?.pause()
                 setGameOverScreen(true)
                 setStopwatchActive(false)
                 setVideoVisible(false)
@@ -949,7 +946,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         setNoteIndex((index) => index + 1)
     }
 
-    const circleContainerRef = useRef<HTMLDivElement>(null)
+    // const circleContainerRef = useRef<HTMLDivElement>(null)
     const handleFirstLane = () => {
         if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
             checkFirstLane()
@@ -974,21 +971,21 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
     }
 
-    const handleLeftTurn = () => {
-        if (direction === "Left") return
-        moveLeft();
-        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
-            handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "FT")
-        }
-    }
+    // const handleLeftTurn = () => {
+    //     if (direction === "Left") return
+    //     moveLeft();
+    //     if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
+    //         handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "FT")
+    //     }
+    // }
 
-    const handleRightTurn = () => {
-        if (direction === "Right") return
-        moveRight();
-        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
-            handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "ST")
-        }
-    }
+    // const handleRightTurn = () => {
+    //     if (direction === "Right") return
+    //     moveRight();
+    //     if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
+    //         handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "ST")
+    //     }
+    // }
 
     // const handleCircleContainer = (event : MouseEvent<HTMLDivElement>) => { //React. not needed because imported at the top
     //     if (!circleContainerRef.current) return
@@ -1074,9 +1071,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         <div id='video_visible' style={{opacity: videoVisible? (1 - backgroundDim) : 0}} className={videoLoaded? "showBackground" : "hideBackground"} >
             {/* <div id='yt-cover'> */}
             {/* </div> */}
-            // https://www.youtube-nocookie.com/embed/eh1r0ZpTrXo?controls=0&rel=0&playsinline=1&disablekb=1&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&origin=https%3A%2F%2Frhythm-plus.com&widgetid=1&forigin=https%3A%2F%2Frhythm-plus.com%2Fgame%2FGyLLbFGVGXJ9TagPGE5dur&aoriginsup=1&vf=1 i found a secret
-
-            {/* <ReactPlayer
+            {/* // https://www.youtube-nocookie.com/embed/eh1r0ZpTrXo?controls=0&rel=0&playsinline=1&disablekb=1&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&origin=https%3A%2F%2Frhythm-plus.com&widgetid=1&forigin=https%3A%2F%2Frhythm-plus.com%2Fgame%2FGyLLbFGVGXJ9TagPGE5dur&aoriginsup=1&vf=1 i found a secret */}
+            <ReactPlayer
                 ref={reactPlayerRef}
                 
                 url={`https://www.youtube-nocookie.com/watch?v=${songBackground[0][0]}?start=${songBackground[0][1]}&end=${songBackground[0][2]}&rel=0&nocookie=true`} //&rel=0 means that "more videos" are locked to uploader's channel
@@ -1097,126 +1093,12 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                         disablekb: 1
                     }
                 }}
-            /> */}
+            />
         </div>
         }
-        {/* <div id='game-container'>
-            {!endScreen && 
-            <button id='tapePauseBtn' onClick={pauseMap}>
-              {(gameState === "Paused")? 
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z"/>
-              </svg>
-              :<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-play-circle" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445"/>
-              </svg>
-              }
-            </button>
-            }
-            <div id='lane-container'>
-                <div onClick={handleFirstLane} ref={lane_one} className='lane lane-one'> <div id='cOne' className='circle'></div> </div>
-                <div onClick={handleSecondLane} ref={lane_two} className='lane lane-two'> <div id='cTwo' className='circle'></div> </div>
-                <div onClick={handleThirdLane} ref={lane_three} className='lane lane-three'> <div id='cThree' className='circle'></div> </div>
-                <div onClick={handleFourthLane} ref={lane_four} className='lane lane-four'> <div id='cFour' className='circle'></div> </div>
-                <div ref={circleContainerRef} onClick={handleCircleContainer} id='circle-container'></div>
-                <div style={player_style} id='lane-selection'>
-                    <div id='lane-selection-inner'></div>
-                    {flowState && 
-                        <div id='ex-lane'></div>
-                    }
-                </div>
-                <div id='turnBtns_container'>
-                    <div onClick={handleLeftTurn} className='turnBtn'>{"<<"}</div>
-                    <div onClick={handleRightTurn} className='turnBtn'>{">>"}</div>
-                </div>
-                <div id='combo-bar'>
-                    <div style={combo_style} ref={combo_bar} id='combo-bar-fill'></div>
-                </div>
-            </div> 
-
-            <div id='pause_wrapper' className={(gameState === "Paused")? "pause_active" : 'pause_unactive'}>
-                <div id="pause_screen">
-                    <label id='bg_label' htmlFor='bg_slider'>Background Dim</label>
-                    <input 
-                        id='bg_slider'
-                        className="slider-dim"
-                        type="range"
-                        min={0}
-                        max={1}
-                        value={backgroundDim}
-                        onChange={e => setBackgroundDim(parseFloat(e.target.value))}
-                        step={0.1}
-                    ></input>
-                    <button onClick={() => resumeMap()}>Resume</button>
-                    <button onClick={() => restartMap()}>Retry</button>
-                    <button onClick={() => {closeGame(usingLocalMap)}}>Main Menu</button>
-                </div>
-            </div>
-
-            {gameState === "Waiting"? 
-            <div id='waiting_wrapper'>
-                {songBackground && <p id='yt_info'>Video Background Powered by Youtube. Video copyright belongs to respective owners.</p>}
-                <div id='countdown'>
-                    <span>3</span>
-                    <span>2</span>
-                    <span>1</span>
-                    <span>0</span>
-                </div>
-            </div>
-            :
-            <>
-            </>
-            }
-
-            {endScreen && 
-                <div id='end_screen_wrapper'>
-                    <div>
-                        <h1 id='score_text'>0</h1>
-                    </div>
-                    <div id='cassette-tape'>
-                        <div id='lil_guy_container'>
-                            <div id='lil_guy'>
-                                <div className='eyes' id='left_eye'></div>
-                                <div className='eyes' id='right_eye'></div>
-                            </div>
-                        </div>
-                        <div id='inner-cassette'></div>
-                    </div>
-                    <div id='score_div'>
-                        <div id='hit_stats'>
-                            <div>
-                                <h2>{perfectCount}</h2>
-                                <h2>Perfect</h2>    
-                            </div>
-                            <div>
-                                <h2>{okayCount}</h2>
-                                <h2>Okay</h2>    
-                            </div>
-                            <div>
-                                <h2>{missCount}</h2>
-                                <h2>Miss</h2>    
-                            </div>
-                        </div>
-                        <div>
-                            <h2>{maxCombo}</h2>
-                            <h2>Max Combo</h2>    
-                        </div>
-                    </div>
-                    <div id='scoreUpload_menu'>
-                        <div id='menu_div'>
-                            <button onClick={restartMap} className='gameBtns'>Retry</button>
-                            <button onClick={() => {closeGame(usingLocalMap)}} className='gameBtns'>Main Menu</button>
-                        </div>
-                        <h2>{scoreUploading? "Checking server..." : leaderboardText}</h2>
-                    </div>                    
-                </div>
-            }
-        </div> */}
         <div id='game_container'>
             {(!endScreen || !gameOverScreen) && 
-            <button id='pause_btn' onClick={pauseMap}>
+            <button id='pause_btn' onClick={pauseMap} disabled={(gameState === "End") || (gameState === "Paused")} style={{opacity: (gameState === "End")? 0 : 1 }}>
               {(gameState === "Paused")? 
               <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -1230,8 +1112,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             </button>
             }
 
-            <div id='progress_bar' style={{width: `${(time/songLength) * 100}%`}}></div>
-            <div id='stats_div'>
+            <div id='progress_bar' style={{width: `${(time/songLength) * 100}%`, opacity: (gameState === "End")? 0 : 1 }}></div>
+            <div id='stats_div' style={{opacity: (gameState === "End")? 0 : 1 }}>
                 <h1 id='score_text'>{score}</h1>
                 {(comboCount > 5) && <h1 id="combo_text">{comboCount} Combo</h1>}
             </div>
@@ -1281,25 +1163,9 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                         </div>
                     </div>    
                 </div>
-
-                
-                {/* <div ref={circleContainerRef} onClick={handleCircleContainer} id='circle-container'></div> */}
-                {/* <div style={player_style} id='lane-selection'>
-                    <div id='lane-selection-inner'></div>
-                    {flowState && 
-                        <div id='ex-lane'></div>
-                    }
-                </div> */}
-                {/* <div id='turnBtns_container'>
-                    <div onClick={handleLeftTurn} className='turnBtn'>{"<<"}</div>
-                    <div onClick={handleRightTurn} className='turnBtn'>{">>"}</div>
-                </div> */}
-                {/* <div id='combo-bar'>
-                    <div style={combo_style} ref={combo_bar} id='combo-bar-fill'></div>
-                </div> */}
             </div> 
 
-            <div id='boombox'>
+            <div id='boombox' style={{opacity: (gameState === "End")? 0 : 1 }}>
                 {/* Because state changes happen while end/game over screen pop opp, hp state could be in the negatives. Using Math._ is a good way to clamp values for the player */}
                 <p id='hp_count'>{Math.max(hp, 0)}/100</p>
                 <p id='flow_count' style={{opacity: flowState? "0" : 1}}>{Math.min(flow, 100)}/100</p>

@@ -183,10 +183,10 @@
 }
 
 .left {
-    background: repeating-linear-gradient(135deg, var(--gameWhite) 0%, var(--gameWhite) 10%, black 10%, black 20%), 
-        repeating-linear-gradient(225deg, black 0%, black 10%, var(--gameWhite) 10%, var(--gameWhite) 20%);
-    background-size: 150% 50%, 150% 50%;
-    background-position: 0% 0%, 0% 100%;
+    background: repeating-linear-gradient(45deg, var(--gameWhite) 0%, var(--gameWhite) 10%, black 10%, black 20%), 
+        repeating-linear-gradient(-45deg, var(--gameWhite) 0%, var(--gameWhite) 10%, black 10%, black 20%);
+    background-size: 50% 150%, 50% 150%;
+    background-position: 100% 0%, 0% 0%;
     background-repeat: no-repeat; 
     height: 200%;
 }
@@ -194,22 +194,23 @@
 @keyframes leftAnimation {
     0% {
         top: 100%;
-        background-position: 0% 0%, 0% 100%;
+        background-position: 100% 0%, 0% 0%;
     }
     20% {
         top: 0;
     }
     100% {
-        background-position: 90% 0%, 90% 100%;
+        background-position: 100% 90%, 0% 90%;
     }
 }
 
 .right {
-    background: repeating-linear-gradient(45deg, var(--gameWhite) 0%, var(--gameWhite) 10%, black 10%, black 20%), 
-        repeating-linear-gradient(315deg, black 0%, black 10%, var(--gameWhite) 10%, var(--gameWhite) 20%);
-    background-size: 150% 50%, 150% 50%;
+    background: repeating-linear-gradient(135deg, var(--gameWhite) 0%, var(--gameWhite) 10%, black 10%, black 20%), 
+        repeating-linear-gradient(-135deg, var(--gameWhite) 0%, var(--gameWhite) 10%, black 10%, black 20%);
+    background-size: 50% 150%, 50% 150%;
     /* background-position: 0% 0%, 0% 100%; */
-    background-position: 130% 0%, 130% 100%;
+    /* background-position: 130% 0%, 130% 100%; */
+    background-position: 100% 130%, 0% 130%;
     background-repeat: no-repeat; 
     height: 200%;
 }
@@ -217,13 +218,13 @@
 @keyframes rightAnimation {
     0% {
         bottom: 100%;
-        background-position: 130% 0%, 130% 100%;
+        background-position: 100% 130%, 0% 130%;
     }
     20% {
         bottom: -100%;   
     }
     100% {
-        background-position: 40% 0%, 40% 100%;
+        background-position: 100% 40%, 0% 40%;
     }
 }
 
@@ -601,6 +602,10 @@
     animation: initiateEndScreen 0.5s ease 1;
 }
 
+#game_over_screen_wrapper{
+    padding-top: 0;
+}
+
 @keyframes initiateEndScreen  {
     0% {
         opacity: 0;
@@ -680,8 +685,12 @@
 #yt_info {
     position: absolute;
     bottom: 0;
+    width: 100%;
     left: 50%;
     transform: translateX(-50%);
+    padding: 10px 0;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.767);
     color: white
 }
 
