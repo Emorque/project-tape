@@ -138,17 +138,6 @@
     }
 }
 
-.cas_bar {
-    position: absolute;
-    width: 50%;
-    aspect-ratio: 5/1;
-    top:15%;
-    left: 25%;
-    content: "";
-    background-color: var(--black);
-}
-
-
 .cas_teeth_loading {
     position:absolute;
     left:50%; 

@@ -406,7 +406,7 @@ export default function Home() {
           }}><h1>Play</h1>
           <div className="cas_bottom">
           </div>
-          <div className="cas_bar">
+          <div className="cas_bar menu">
             <div className="cas_circle">
               <span className="cas_teeth"></span>
               <span className="cas_teeth"></span>
@@ -481,7 +481,6 @@ export default function Home() {
             </div>
           </div>
         </button>
-
       </div>
 
 
@@ -519,38 +518,29 @@ export default function Home() {
           <div>
             <h1>View Settings to Refernece Keybinds</h1>
             <br/>
-            <h1>A stage consists of 4 lanes</h1>
-            <h2>Lanes 1-2 are in the Left Section <br/> Lanes 3-4 are in the Right Section.</h2>
+            <h1>Each stage consists of 4 lanes.</h1>
+            <h2>Lanes 1-2 are on the Top Staff. <br/> Lanes 3-4 are on the Bottom Staff.</h2>
 
-            <h2>Press the Turn Key to set your side (Left or Right).</h2>
+            <h2>Press the Up/Down Button to switch your current Staff.</h2>
             <br/>
 
-            <h2>Press the corresponding Left/Right button to hit the approaching note on that side.</h2>
-            <h3>Ex: If a note is approaching Lane 3, set your side to Right and press the Left button.</h3>
+            <h2>Press the corresponding Top/Bottom Lane button to hit the approaching note on that Staff.</h2>
+            <h3>Ex: If a note is approaching Lane 3, go to the Bottom Staff and press the Top Lane Button.</h3>
 
             <br/>
             <br/>
             <h1>There is one more note called a &quot;Turn Note&quot;</h1>
-            <h2>A Turn Note can only be hit with the Turn Key and when approaching from the opposite side.</h2>
-            <h2>Ex: If a Turn Note is approaching the Left Side, set your side to Right, then hit the Left Turn Key when it approaches.</h2>
+            <h2>A Turn Note can only be hit with the Up/Down Button and when approaching from the opposite Staff.</h2>
+            <h2>Ex: If a Turn Note is approaching the Top Staff, start from the Bottom Staff, then press the Up Button when it approaches.</h2>
             <h2>All notes have the same timing window.</h2>
 
             <br/>
             <br/>
 
-            <h1>There is a combo bar that fills near the bottom</h1>
+            <h1>There is a combo bar that fills near the bottom.</h1>
             <h2>A combo bar fills at the bottom after each successful hit.</h2>
-            <h2>After 20 hits, you enter Flow State, where points are doubled.</h2>
-            <h2>You exit Flow State by missing a note or hitting too early.</h2>
-
-            <br/>
-            <br/>
-
-            <h1>Green feedback is a Perfect Hit</h1>
-            <h1>Blue feedback is a Normal Hit</h1>
-            <h1>Yellow feedback is an Early Hit</h1>
-            <h1>Shake feedback is a Missed Note</h1>
-            <h1>Red feedback means Nothing</h1>
+            <h2>Once filled, you'll enter &quot;Flow State&quot;.</h2>
+            <h2>While in flow state, you earn more points.</h2>
           </div>
         </>
           }

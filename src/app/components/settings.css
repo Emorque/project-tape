@@ -2,8 +2,8 @@
     width: 90%;
     height: 100%;
     margin: 0 auto;
-    background-color: var(--grey);
-    color: white;
+    background-color: var(--screenBlack);
+    color: var(--white);
     letter-spacing: 1px;
     display: flex;
     flex-direction: column;
@@ -96,6 +96,8 @@
         font-size: 2rem;
         text-align: center;
         font-family: 'Poppins';
+        background-color: var(--black);
+        color: white;
     }
     div {
         display: flex;
@@ -173,16 +175,21 @@
     -webkit-appearance: none;
     appearance: none;
     width: 35px;
-    border-radius: 5px;
+    border-radius: 50%;
+    border: 3px solid var(--white);
+    background-color: var(--screenBlack);
     aspect-ratio: 1;
-    background: var(--white);
+    /* background: var(--white); */
     cursor: pointer;
 }
   
 .slider::-moz-range-thumb {
     width: 15px;
+    border-radius: 50%;
+    border: 3px solid var(--white);
+    background-color: var(--screenBlack);
     aspect-ratio: 1;
-    background: var(--grey);
+    /* background: var(--white); */
     cursor: pointer;
 }
 

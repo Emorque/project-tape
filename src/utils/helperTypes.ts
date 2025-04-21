@@ -4,7 +4,7 @@ export type songType = {
 };
 
 export type bookmarkedSongs = {
-  [song_id: string] : {song_metadata : song_header } 
+  [song_id: string] : {song_header : song_header } 
 }
 
 export type song_header = {

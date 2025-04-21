@@ -25,6 +25,8 @@ interface gameInterface {
     usingLocalMap: boolean
 }
 
+const gameWhite = "#def0e5"
+
 const getKeyMapping = (key : string) => {
     const res = [(key === "Spacebar") ? " " : key.charAt(0).toUpperCase() + key.slice(1), (key === "Spacebar") ? " " : key.charAt(0).toLowerCase() + key.slice(1)]
     return res
@@ -70,6 +72,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     const [missCount, setMissCount] = useState<number>(0);
     const [hp, setHP] = useState<number>(100);
     const [flow, setFlow] = useState<number>(0);
+
+    const [flippedScreen, setFlippedScreen] = useState<boolean>(false)
 
     const [comboCount, setComboCount] = useState<number>(0);
     const [maxCombo, setMaxCombo] = useState<number>(0);
@@ -305,17 +309,10 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         setDirection("Right");
     })
 
-    // const exMode = contextSafe(() => {
-    //     gsap.timeline()
-    //     .to("#lane-selection", {transform: "scale(0.1)", duration: "0.15"})
-    //     .to("#lane-selection", {transform: "scale(1)", duration: "0.15"})
-    //     setFlowState(true)
-    // })
-    
     const missAnimation = contextSafe((circle : string) => {
         gsap.timeline()
         .to(`#${circle}`, {rotation: "-=90", borderColor: "red", duration: "0.1"})
-        .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
+        .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         gsap.timeline()
         .to("#bc_left", {transform: "scale(0.95)", duration: "0.1"})
         .to("#bc_left", {transform: "scale(1)", duration: "0.1"})
@@ -324,32 +321,19 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     const defaultAnimation = contextSafe((circle : string) => {
         gsap.timeline()
         .to(`#${circle}`, {borderColor: "#707070", duration: "0.1"})
-        .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
-    })
-
-    const earlyAnimation = contextSafe((circle : string) => {
-        if (circle === "lc_one" || circle == "lc_three") {
-            gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: "yellow", duration: "0.1"})
-            .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
-        }
-        else {
-            gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: "yellow", duration: "0.1"})
-            .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
-        }
+        .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
     })
 
     const hitAnimation = contextSafe((circle : string) => {
         if (circle === "lc_one" || circle == "lc_three") {
             gsap.timeline()
             .to(`#${circle}`, {rotation: "+=40", borderColor: "blue", duration: "0.1"})
-            .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
+            .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         }
         else {
             gsap.timeline()
             .to(`#${circle}`, {rotation: "+=40", borderColor: "blue", duration: "0.1"})
-            .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
+            .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         }
         gsap.timeline()
         .to("#bc_right", {transform: "scale(1.05)", duration: "0.1"})
@@ -360,12 +344,12 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         if (circle === "lc_one" || circle == "lc_three") {
             gsap.timeline()
             .to(`#${circle}`, {rotation: "+=40", borderColor: "green", duration: "0.1"})
-            .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
+            .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         }
         else {
             gsap.timeline()
             .to(`#${circle}`, {rotation: "+=40", borderColor: "green", duration: "0.1"})
-            .to(`#${circle}`, {borderColor: "#eaeaea", duration: "0.1"})
+            .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         }
         gsap.timeline()
         .to("#bc_right", {transform: "scale(1.05)", duration: "0.1"})
@@ -1234,11 +1218,11 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             {(!endScreen || !gameOverScreen) && 
             <button id='pause_btn' onClick={pauseMap}>
               {(gameState === "Paused")? 
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
+              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                 <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z"/>
               </svg>
-              :<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-play-circle" viewBox="0 0 16 16">
+              :<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" className="bi bi-play-circle" viewBox="0 0 16 16">
                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                 <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445"/>
               </svg>
@@ -1251,11 +1235,11 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 <h1 id='score_text'>{score}</h1>
                 {(comboCount > 5) && <h1 id="combo_text">{comboCount} Combo</h1>}
             </div>
-            <div id='lane_container'>
+            <div id='lane_container' className={flippedScreen? "flipped" : "unflipped"}>
                 <div id='lil_game_guy'>
                     <div id='flow_crown' style={{opacity: flowState? 1 : 0}}></div>
                     <div id='game_left_eye' className="loading_eye"></div>
-                    <div id='game_right_eye' className={flowState? "loading_eye flow_eye" : "loading_eye"}>
+                    <div id='game_right_eye' className={(flowState && (gameState !== "Paused"))? "loading_eye flow_eye" : "loading_eye"}>
                         <span className="cas_teeth_loading"></span>
                         <span className="cas_teeth_loading"></span>
                         <span className="cas_teeth_loading"></span>
@@ -1345,6 +1329,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     ></input>
                     <button onClick={() => resumeMap()}>Resume</button>
                     <button onClick={() => restartMap()}>Retry</button>
+                    <button onClick={() => setFlippedScreen(!flippedScreen)}>Flip Screen</button>
                     <button onClick={() => {closeGame(usingLocalMap)}}>Main Menu</button>
                 </div>
             </div>

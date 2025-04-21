@@ -346,14 +346,14 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 </div>
 
                 <div className="horizontal_div">                    
-                    <h2>Left Turn Button</h2>
+                    <h2>Staff Up Button</h2>
                     <button id="leftTurnBtn" className="action_btn" style={leftTurnStyle} onClick={() => {
                         newActionKey("LT")
                     }}>{leftTurn}</button>
                 </div>
 
                 <div className="horizontal_div">                    
-                    <h2>Right Turn Button</h2>
+                    <h2>Staff Down Button</h2>
                     <button id="rightTurnBtn" className="action_btn" style={rightTurnStyle} onClick={() => {
                         newActionKey("RT")
                     }}>{rightTurn}
@@ -361,14 +361,14 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 </div>
 
                 <div className="horizontal_div">
-                    <h2>Left Lane Button</h2>
+                    <h2>Top Lane Button</h2>
                     <button id="leftLaneBtn" className="action_btn" style={leftLaneStyle} onClick={() => {
                         newActionKey("LL")
                     }}>{leftAction}</button>
                 </div>
 
                 <div className="horizontal_div">                    
-                    <h2>Right Lane Button</h2>
+                    <h2>Bottom Lane Button</h2>
                     <button id="rightLaneBtn" className="action_btn" style={rightLaneStyle} onClick={() => {
                         newActionKey("RL")
                     }}>{rightAction}</button>
@@ -405,7 +405,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                         className="slider"
                         type="range"
                         min={100}
-                        max={2000}
+                        max={2500}
                         value={scrollSpeed}
                         onChange={handleScrollSpdChange}
                         step={100}
