@@ -2,8 +2,8 @@
     width: 90%;
     height: 100%;
     margin: 0 auto;
-    background-color: var(--grey);
-    color: white;
+    background-color: var(--screenBlack);
+    color: var(--white);
     letter-spacing: 1px;
     display: flex;
     flex-direction: column;
@@ -96,6 +96,8 @@
         font-size: 2rem;
         text-align: center;
         font-family: 'Poppins';
+        background-color: var(--black);
+        color: white;
     }
     div {
         display: flex;
@@ -132,6 +134,41 @@
 .action_btn {
     font-size: 2rem;
     /* Background Color handled in TSX */
+}
+
+.mobile_btn {
+    background-color: #1a1a1a;
+    border-radius: 10px;
+}
+
+#mobile_settings {
+    /* position: absolute;
+    top: 0;
+    left: 0; */
+    width: 100%;
+    aspect-ratio: 2/1;
+    z-index: 1;
+    max-width: 550px;
+    background-color: var(--screenBlack);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    div {
+        height: 100%;
+        width: 100%;
+        /* align-self: center; */
+        /* justify-self: center; */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid var(--green)
+    }
+    h2 {
+        position: absolute;
+        bottom: 100%;
+        left: 0%;
+        background-color:  var(--screenBlack);
+    }    
 }
 
 .subtitle {
@@ -173,16 +210,21 @@
     -webkit-appearance: none;
     appearance: none;
     width: 35px;
-    border-radius: 5px;
+    border-radius: 50%;
+    border: 3px solid var(--white);
+    background-color: var(--screenBlack);
     aspect-ratio: 1;
-    background: var(--white);
+    /* background: var(--white); */
     cursor: pointer;
 }
   
 .slider::-moz-range-thumb {
     width: 15px;
+    border-radius: 50%;
+    border: 3px solid var(--white);
+    background-color: var(--screenBlack);
     aspect-ratio: 1;
-    background: var(--grey);
+    /* background: var(--white); */
     cursor: pointer;
 }
 

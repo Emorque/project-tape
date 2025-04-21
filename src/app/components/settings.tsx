@@ -25,6 +25,8 @@ export const Settings = ({saveSettings} : settingsInterface) => {
     const [hitsoundVolume, setHitsoundVolume] = useState<number>(1);
     const [backgroundDim, setBackgroundDim] = useState<number>(0.5);
 
+    const [mobileControlsActive, setMobileControls] = useState<boolean>(false);
+
     const [offset, setOffset] = useState<number | null>(0);
 
     const { contextSafe } = useGSAP(); // we can pass in a config object as the 1st parameter to make scoping simple
@@ -161,7 +163,8 @@ export const Settings = ({saveSettings} : settingsInterface) => {
 
                 offset: 0,
 
-                backgroundDim: 0.5
+                backgroundDim: 0.5,
+                mobileControls: false
             }
         }
         else{
@@ -185,6 +188,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
 
         setOffset(updateSettings.offset)
         setBackgroundDim(updateSettings.backgroundDim)
+        setMobileControls(updateSettings.mobileControls)
 
         saveSettings(updateSettings)
 
@@ -257,7 +261,8 @@ export const Settings = ({saveSettings} : settingsInterface) => {
 
             offset: boundedOffset,
 
-            backgroundDim: backgroundDim
+            backgroundDim: backgroundDim,
+            mobileControls: mobileControlsActive
         }
         setOffset(boundedOffset)
         bottomAnimation("#save_tooltip_text")
@@ -286,7 +291,8 @@ export const Settings = ({saveSettings} : settingsInterface) => {
 
             offset: 0,
 
-            backgroundDim: 0.5
+            backgroundDim: 0.5,
+            mobileControls: false
         }
 
         setLeftAction(defaultSettings.lLane);
@@ -303,6 +309,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
         setHitsoundVolume(defaultSettings.hsVolume);
 
         setOffset(defaultSettings.offset)
+        setMobileControls(defaultSettings.mobileControls)
 
         bottomAnimation("#reset_tooltip_text")
 
@@ -346,14 +353,14 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 </div>
 
                 <div className="horizontal_div">                    
-                    <h2>Left Turn Button</h2>
+                    <h2>Staff Up Button</h2>
                     <button id="leftTurnBtn" className="action_btn" style={leftTurnStyle} onClick={() => {
                         newActionKey("LT")
                     }}>{leftTurn}</button>
                 </div>
 
                 <div className="horizontal_div">                    
-                    <h2>Right Turn Button</h2>
+                    <h2>Staff Down Button</h2>
                     <button id="rightTurnBtn" className="action_btn" style={rightTurnStyle} onClick={() => {
                         newActionKey("RT")
                     }}>{rightTurn}
@@ -361,14 +368,14 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 </div>
 
                 <div className="horizontal_div">
-                    <h2>Left Lane Button</h2>
+                    <h2>Top Lane Button</h2>
                     <button id="leftLaneBtn" className="action_btn" style={leftLaneStyle} onClick={() => {
                         newActionKey("LL")
                     }}>{leftAction}</button>
                 </div>
 
                 <div className="horizontal_div">                    
-                    <h2>Right Lane Button</h2>
+                    <h2>Bottom Lane Button</h2>
                     <button id="rightLaneBtn" className="action_btn" style={rightLaneStyle} onClick={() => {
                         newActionKey("RL")
                     }}>{rightAction}</button>
@@ -405,7 +412,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                         className="slider"
                         type="range"
                         min={100}
-                        max={2000}
+                        max={2500}
                         value={scrollSpeed}
                         onChange={handleScrollSpdChange}
                         step={100}
@@ -470,7 +477,22 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                         step={0.1}
                     ></input>
                 </div>
+            </div>
 
+            <div className="settings_div">
+                <h1>Mobile Controls</h1>
+                <div id="mobile_settings" className="setting_tooltip_text">
+                    <div>Staff Up Button</div>
+                    <div>Staff Down Button</div>
+                    <div>Top Lane Button</div>
+                    <div>Bottom Lane Button</div>
+                    <h2>
+                        Below is overlayed on top of the game
+                    </h2>
+                </div>
+                {/* <div> */}
+                    <button className="action_btn mobile_btn" onClick={() => setMobileControls(!mobileControlsActive)}>{(mobileControlsActive)? "On" : "Off"}</button>
+                {/* </div> */}
             </div>
 
             <div className="settings_div">

@@ -20,6 +20,12 @@
   --green: #0b7033;
   --white: #91a89a;
   --whiteTransparent: #91a89a27; 
+
+  --screenBlack: #000000;
+  --screenWhite: #0f251a;
+  --screenGrey: rgb(53, 53, 53);
+
+  --gameWhite: #def0e5;
 }
 
 html,

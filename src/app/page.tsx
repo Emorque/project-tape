@@ -4,17 +4,17 @@ import { Canvas } from "@react-three/fiber";
 import { CameraControls, Html } from '@react-three/drei';
 import Link from 'next/link'
 import { PSRoom } from "./components/Project-tape-scene"
-import { Tape } from "./components/tape";
 import { Settings } from "./components/settings";
 import "./page.css";
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 
 import { sMap, settingsType, ytBackgroundType } from "@/utils/helperTypes"
 
 import { createClient } from '@/utils/supabase/client'
 import { SongHtml } from "./components/songHtml";
 import { type User } from '@supabase/supabase-js'
-import { LocalTape } from "./components/localTape";
+import { LoadingScreen } from "./components/loadingScreen";
+import { Game } from "./components/game";
 
 const formatNotes = (notes : string[][]) => {
   const finalNotes : [number, string][] = [] 
@@ -50,15 +50,16 @@ const formatNotes = (notes : string[][]) => {
 
 export default function Home() {
   const cameraRef = useRef<CameraControls | null>(null);
-  const [playerView, setPlayerView] = useState<boolean>(false);
+  // const [playerView, setPlayerView] = useState<boolean>(false);
   const [songPlaying, setSongPlaying] = useState<boolean>(false)
 
-  const[selectedSong, setSelectedSong] = useState<number | null>(null)
-  const[gameMap, setGameMap] = useState<sMap | null>(null)
-  const[songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
-  const[menu, setMenu] = useState<string>("main_menu")
-  const[userSettings, setUserSettings] = useState<settingsType | null>(null);
-  const[settingsView, setSettingsView] = useState<boolean>(false);
+  const [selectedSong, setSelectedSong] = useState<number | null>(null)
+  const [gameMap, setGameMap] = useState<sMap | null>(null)
+  const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
+  const [menu, setMenu] = useState<string>("main_menu")
+  const [htmlDiv, setHTMLDiv] = useState<string>("")
+  const [userSettings, setUserSettings] = useState<settingsType | null>(null);
+  const [settingsView, setSettingsView] = useState<boolean>(false);
 
   const [howtoView, setHowToView] = useState<boolean>(false);
 
@@ -76,34 +77,24 @@ export default function Home() {
     const fetchUser = async () => {
       const { data: { user }, } = await supabase.auth.getUser()
       setUser(user);
-      // console.log("User:", user)
     };
 
     fetchUser();
   }, [supabase]);
 
-  const handleGameMap = (currentSong : number | null) => { 
-    setSelectedSong(currentSong);
-    updateCamera([14,12,34,   14,12,26]); //Set back to Songs Div 
-    setSongPlaying(false) 
-    setGameMap(null);
-  }
-
-  const closeLocalMap = () => {
+  const handleGameExit = (local : boolean) => { 
     setSelectedSong(null);
-    updateCamera([14,12,34,   14,12,26]); //Set back to Songs Div 
-    setSongPlaying(false) 
+    updateCamera([14,12,34,   14,12,26], true); //Set back to Songs Div 
+    setSongPlaying(false)
+    if (local) {
+      setUsingLocalMap(false) // might not even need this if usingLocalMap gets set on Play press on songHTML
+    } 
     setGameMap(null);
-    setUsingLocalMap(false)
   }
 
   const handleNewSettings = (newSettings: settingsType | null) => {
     setUserSettings(newSettings)
   }
-
-  // useEffect(() => {
-
-  // })
 
   const getMap = useCallback(async (selectedSong : number, verified: boolean) => {
     console.log("called Supabase for Map")
@@ -175,7 +166,8 @@ export default function Home() {
 
             offset: 0,
 
-            backgroundDim: 0.5
+            backgroundDim: 0.5,
+            mobileControls: false
         }
       }
       else{
@@ -187,11 +179,9 @@ export default function Home() {
 
   }, [])
 
-  const databaseStyle = {
-    opacity: playerView ? 1 : 0, 
-    visibility: playerView ? "visible" : "hidden",
-    transition: 'opacity 1s ease, visibility 1s' 
-  } as React.CSSProperties;
+  const songDivStyle = {
+    visibility: (htmlDiv === "songDiv")? "visible" : "hidden",
+    }as React.CSSProperties;
   
   const stageStyle = {
     opacity: songPlaying ? 1 : 0, 
@@ -211,34 +201,33 @@ export default function Home() {
     transition: 'left 1s ease, visibility 1s'
   } as React.CSSProperties
 
-  const updateCamera = (newFocus: [number,number,number,number,number,number],) => {
-    cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], true);
+  const updateCamera = (newFocus: [number,number,number,number,number,number], animate: boolean) => {
+    cameraRef.current?.setLookAt(newFocus[0], newFocus[1], newFocus[2], newFocus[3], newFocus[4], newFocus[5], animate);
   }
 
   // Local Songs 
   const [usingLocalMap, setUsingLocalMap] = useState<boolean>(false);
-  // const [localNotes, setLocalNotes] = useState<string[][]>([]);
 
   const handleSelectedSong = (songID: number, song_background : ytBackgroundType | null, verified: boolean) => {
-    updateCamera([14,8,34,   14, 7, 26])
+    // updateCamera([14,8,34,   14, 7, 26], true)
     setSongPlaying(true);
     setSelectedSong(songID); 
     getMap(songID, verified);
     setUsingLocalMap(false)
     setSongBackground(song_background)
     setVerifiedSong(verified)
-    console.log("handled", song_background)
+    // console.log("handled", song_background)
   }
 
   const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => {
-    updateCamera([14,8,34,   14, 7, 26])
+    // updateCamera([14,8,34,   14, 7, 26], true)
     setSongPlaying(true);
     setAudioURL(song_url)
     setGameMap(formatNotes(song_notes))
     setUsingLocalMap(true)
     setVerifiedSong(false)
     setSongBackground(song_background)
-    console.log("handled", song_background)
+    // console.log("handled", song_background)
   }
 
   const handleSongReady = () => {
@@ -277,86 +266,128 @@ export default function Home() {
       } catch (error) {
           console.log(error);
           console.log("Unsigned User");
-      //   alert('Error loading user data!')
       } 
-      // finally {
-          // console.log("User loaded")
-          // setProfileLoading(false)
-      // }
     }, [user, supabase])
   
     useEffect(() => {
       getProfile()
     }, [user, getProfile])
 
+  const [gameLoading, setGameLoading] = useState<boolean>(true)
+
+  const setStage = () => {
+    updateCamera([36,4,40,   32,4,38], false)
+    setTimeout(() => {
+      setGameLoading(false)
+    }, 750)
+  }
+
+  const backtoMainMenu = () => {
+    setMenu("main_menu")
+    setHTMLDiv("")
+    setTimeout(() => {
+      updateCamera([36,4,40,   32,4,38], true)
+    }, 400)
+  }
+
+  const gotoEditMenu = (from_main_menu: boolean) => {
+    if (htmlDiv === "editDiv") return;
+    if (from_main_menu) {
+      setMenu("sub_menu")
+      updateCamera([3,7.7,34.75,   -1,7.7,34.75], true);
+      setTimeout(() => {
+        // setPlayerView(true);
+        setHTMLDiv("editDiv")
+      }, 750)
+    }
+    else {
+      setHTMLDiv("")
+      setTimeout(() => {
+        updateCamera([3,7.7,34.75,   -1,7.7,34.75], true);
+      }, 300)
+      setTimeout(() => {
+        // setPlayerView(true);
+        setHTMLDiv("editDiv")
+      }, 900) 
+    }
+  }
+
+  const gotoSongMenu = (from_main_menu: boolean) => {
+    if (htmlDiv === "songDiv") return;
+    if (from_main_menu) {
+      setMenu("sub_menu")
+      updateCamera([14,12,34,   14,12,26], true);
+      setTimeout(() => {
+        // setPlayerView(true);
+        setHTMLDiv("songDiv")
+      }, 750)
+    }
+
+    else {
+      setHTMLDiv("")
+      setTimeout(() => {
+        updateCamera([14,12,34,   14,12,26], true);
+      }, 300)
+      setTimeout(() => {
+        // setPlayerView(true);
+        setHTMLDiv("songDiv")
+      }, 900) 
+    }
+  }
+  
   return (
     <div id="canvasContainer">
-{/*       
-      {!(loading) && 
-      <div id="temp_play_btn">
-        <button onClick={(() => {
-              updateCamera([14,8,34,   14, 7, 26])
-              setSongPlaying(true);
-        })}>
-          Play
-        </button>
-      </div>
-      }
-       */}
-      <Canvas id="canvas_id" camera={{ position: [36,4,40]}}>
-        <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/>
-        <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/>
-        <PSRoom/>
-        <Html 
-        className="songHTML"
-          position={[14,12,23]}
-          transform
-          occlude
-          rotation={[0, 0, 0]}
-        >
-          <div className="htmlDiv" style={databaseStyle}>
-            <SongHtml songToPlay={handleSelectedSong} playLocalSong={handleLocalMap} user={user} role={role} avatar_url={avatar_url}/>
-          </div>
-        </Html>
-
-        <Html 
-        className="editorHTML"
-          position={[-1.5,7.8,34.73]}
-          transform
-          occlude
-          rotation={[0, Math.PI /2, 0]}
-        >
-          <div className="htmlDiv" style={databaseStyle}>
-            <Link href="/editor">Visit Editor</Link>
-          </div>
-        </Html>
-        <CameraControls 
-          ref={cameraRef}
-          enabled={true} 
-          touches={{one: 0, two: 0, three: 0}} //Both removes touch/mouse controls. Needed to get scroll on HTML to work
-          mouseButtons={{left: 0, right: 0, wheel: 0, middle: 0}}
-        />
+      <Canvas id="canvas_id" style={{ background: "black" }} camera={{ position: [36,4,40]}}>
+        <Suspense fallback={null}>
+          {/* <pointLight color={'#ffd1b7'} position={[7,13,34]} intensity={200}/> */}
+          {/* <pointLight color={'#ffd1b7'} position={[34,13,34]} intensity={200}/> */}
+          <PSRoom/>
+          <Html 
+          className="editorHTML"
+            position={[-1.5,7.7,34.74]}
+            transform
+            occlude
+            rotation={[0, Math.PI /2, 0]}
+          >
+            {/* <div className="htmlDiv" style={editDivStyle}> */}
+              <div id="editHTML" className={htmlDiv === "editDiv"? "activeHTML" : "inactiveHTML"}>
+                <Link href="/editor">Visit Editor</Link>
+              </div>
+            {/* </div> */}
+          </Html>
+          <CameraControls 
+            ref={cameraRef}
+            enabled={true} 
+            touches={{one: 0, two: 0, three: 0}} //Both removes touch/mouse controls. Needed to get scroll on HTML to work
+            mouseButtons={{left: 0, right: 0, wheel: 0, middle: 0}}
+          />
+        </Suspense>
       </Canvas>
 
+      <div className="htmlDiv" style={songDivStyle}>
+        <div id="songHTML" className={htmlDiv === "songDiv"? "activeHTML" : "inactiveHTML"}>
+          <SongHtml songToPlay={handleSelectedSong} playLocalSong={handleLocalMap} user={user} role={role} avatar_url={avatar_url}/>
+        </div>
+      </div>
+
+      <LoadingScreen loading={gameLoading} setGameReady={() => setStage()}/>
+      
       <div id='menuOptions' className={(menu === "sub_menu")? "activeMenu" : "unactiveMenu"}>
-        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([36,4,40,   32,4,38])
-          setPlayerView(false)
-          setMenu("main_menu")
+        <button className="menuBtn" disabled={(menu !== "sub_menu") || (htmlDiv === "")} onClick={() => {
+          // setPlayerView(false)
+          backtoMainMenu()
           }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
               <path d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
             </svg>
           </button>
 
-        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([14,12,34,   14,12,26]);
-          setPlayerView(true);
+        <button className="menuBtn" disabled={(menu !== "sub_menu") || (htmlDiv === "")} onClick={() => {
+          gotoSongMenu(false)
           }}><h3>Play</h3>
         </button>
-        <button className="menuBtn" disabled={(menu !== "sub_menu")} onClick={() => {
-          updateCamera([4,8,34.7,   -1,7,34.7]);
-          setPlayerView(true);
+        <button className="menuBtn" disabled={(menu !== "sub_menu") || (htmlDiv === "")} onClick={() => {
+          gotoEditMenu(false)
           }}><h3>Edit</h3>
         </button>
       </div>
@@ -364,13 +395,11 @@ export default function Home() {
 
       <div id='main_menu' className={(menu === "main_menu")? "activeMenu" : "unactiveMenu"}>
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
-          updateCamera([14,12,34,   14,12,26]);
-          setPlayerView(true);
-          setMenu("sub_menu")
+          gotoSongMenu(true)
           }}><h1>Play</h1>
           <div className="cas_bottom">
           </div>
-          <div className="cas_bar">
+          <div className="cas_bar menu">
             <div className="cas_circle">
               <span className="cas_teeth"></span>
               <span className="cas_teeth"></span>
@@ -385,9 +414,7 @@ export default function Home() {
         </button>
 
         <button className="cas_btn" disabled={(menu !== "main_menu")} onClick={() => {
-          updateCamera([4,8,34.7,   -1,7,34.7]);
-          setPlayerView(true);
-          setMenu("sub_menu")
+          gotoEditMenu(true)
           }}><h1>Edit</h1>
           <div className="cas_bottom">
           </div>
@@ -447,7 +474,6 @@ export default function Home() {
             </div>
           </div>
         </button>
-
       </div>
 
 
@@ -485,38 +511,29 @@ export default function Home() {
           <div>
             <h1>View Settings to Refernece Keybinds</h1>
             <br/>
-            <h1>A stage consists of 4 lanes</h1>
-            <h2>Lanes 1-2 are in the Left Section <br/> Lanes 3-4 are in the Right Section.</h2>
+            <h1>Each stage consists of 4 lanes.</h1>
+            <h2>Lanes 1-2 are on the Top Staff. <br/> Lanes 3-4 are on the Bottom Staff.</h2>
 
-            <h2>Press the Turn Key to set your side (Left or Right).</h2>
+            <h2>Press the Up/Down Button to switch your current Staff.</h2>
             <br/>
 
-            <h2>Press the corresponding Left/Right button to hit the approaching note on that side.</h2>
-            <h3>Ex: If a note is approaching Lane 3, set your side to Right and press the Left button.</h3>
+            <h2>Press the corresponding Top/Bottom Lane button to hit the approaching note on that Staff.</h2>
+            <h3>Ex: If a note is approaching Lane 3, go to the Bottom Staff and press the Top Lane Button.</h3>
 
             <br/>
             <br/>
             <h1>There is one more note called a &quot;Turn Note&quot;</h1>
-            <h2>A Turn Note can only be hit with the Turn Key and when approaching from the opposite side.</h2>
-            <h2>Ex: If a Turn Note is approaching the Left Side, set your side to Right, then hit the Left Turn Key when it approaches.</h2>
+            <h2>A Turn Note can only be hit with the Up/Down Button and when approaching from the opposite Staff.</h2>
+            <h2>Ex: If a Turn Note is approaching the Top Staff, start from the Bottom Staff, then press the Up Button when it approaches.</h2>
             <h2>All notes have the same timing window.</h2>
 
             <br/>
             <br/>
 
-            <h1>There is a combo bar that fills near the bottom</h1>
+            <h1>There is a combo bar that fills near the bottom.</h1>
             <h2>A combo bar fills at the bottom after each successful hit.</h2>
-            <h2>After 20 hits, you enter Flow State, where points are doubled.</h2>
-            <h2>You exit Flow State by missing a note or hitting too early.</h2>
-
-            <br/>
-            <br/>
-
-            <h1>Green feedback is a Perfect Hit</h1>
-            <h1>Blue feedback is a Normal Hit</h1>
-            <h1>Yellow feedback is an Early Hit</h1>
-            <h1>Shake feedback is a Missed Note</h1>
-            <h1>Red feedback means Nothing</h1>
+            <h2>Once filled, you&quot;ll enter &quot;Flow State&quot;.</h2>
+            <h2>While in flow state, you earn more points.</h2>
           </div>
         </>
           }
@@ -532,13 +549,8 @@ export default function Home() {
       />
       
       <div id="songScreen" style={stageStyle}>
-        {/* Game Component for Local Maps */}
-        {gameMap && songPlaying && userSettings && audioRef && audioReady && usingLocalMap && 
-        <LocalTape gMap={gameMap} gameMapProp={closeLocalMap} settings={userSettings} audioProp={audioRef} songBackground={songBackground}/>
-        }
-        {/* Game Component for Online Maps */}
-        {selectedSong && gameMap && songPlaying && userSettings && audioRef && audioReady && !usingLocalMap &&
-        <Tape gMap={gameMap} gameMapProp={handleGameMap} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong}/>
+        {gameMap && songPlaying && userSettings && audioRef && audioReady && 
+        <Game gameMap={gameMap} closeGame={handleGameExit} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong} usingLocalMap={usingLocalMap}/>
         }
       </div>
     </div>

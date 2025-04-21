@@ -1,0 +1,162 @@
+#loading_screen {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 1000;
+    color: white;
+    background-color: black;
+    top: 0;
+    left: 0;
+    transition: opacity 250ms ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 10px;
+    h1 {
+        text-align: center;
+    }
+}
+
+#loading_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;    
+    width: 75%;
+    max-width: 500px;
+    gap: 20px;
+}
+
+
+#loading_cas {
+    width: 100%;
+    max-width: 50vh;
+    aspect-ratio: 12/6;
+    position: relative;
+    border: 7.5px solid white;
+    cursor: pointer;
+}
+
+#loading_bar {
+    height: 4px;
+    position: absolute;
+    bottom: 0;
+    background-color: white;
+}
+
+#loading_btn {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    animation: btnReady 2s ease 1 forwards;
+    button {
+        background-color: black;
+        color: white;
+        border: 2px solid white;
+        padding: 5px 10px;
+        font-size: 2rem;
+    }
+}
+
+@keyframes btnReady {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.loading_eye {
+    position: absolute;
+    content: "";
+    aspect-ratio: 1;
+    border-radius: 50%;
+}
+
+.l_left {
+    top: 28%;
+    left: 15%;
+    width: 20%;
+    background-color: #eaeaea;
+}
+
+.l_right {
+    top: 18%;
+    right: 10%;
+    width: 30%;
+    border: 5px solid #eaeaea;
+    animation: leaderboard_loading 12s linear infinite;
+}
+
+@media screen and (min-height : 750px) and (min-width: 300px) {
+    .l_right {
+        border: 10px solid #eaeaea;
+    }
+}
+
+.eye_lids {
+    background-color: black;
+    position: absolute;
+    height: 1%;
+    content: ""
+}
+
+.left_lid {
+    left: 15%;
+    width: 20%;
+}
+
+.right_lid {
+    right: 10%;
+    width: 30%;
+    z-index: 10;
+}
+
+
+.top_lid {
+    top: 0%;
+    animation: lid_animation 4s linear infinite;
+}
+
+.bottom_lid {
+    bottom: 0%;
+    transform: scaleY(-1);
+    animation: lid_animation 4s linear infinite;
+}
+
+@keyframes lid_animation {
+    0% {
+        height: 0%
+    }
+    50% {
+        height: 0%
+    }
+
+    55% {
+        height: 55%
+    }
+    60% {
+        height: 0%
+    }
+    100% {
+        height: 0%;
+    }
+}
+
+.cas_teeth_loading {
+    position:absolute;
+    left:50%; 
+    top:50%; 
+    transform: translate(-50%, -50%);
+    width: 105%;
+    aspect-ratio: 9/1;
+    background: linear-gradient(to right, #eaeaea 15%,transparent 15%, transparent 85%, #eaeaea 85%);
+    &:nth-of-type(2){
+        transform: translate(-50%, -50%) rotate(60deg);
+    }
+    &:nth-of-type(3){
+        transform: translate(-50%, -50%) rotate(-60deg);
+    }
+}
