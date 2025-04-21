@@ -85,13 +85,15 @@ export default function Avatar({
       console.error('Avatar error:', error) // Only used for eslint
       alert('Error uploading avatar!')
     } finally {
-      setUploading(false)
+      setTimeout(() => {
+        setUploading(false)
+      }, 1000) //Temporary fix. Without this, loading cas appears, then old avatar loads, finally the new avatar loads. (not good UX)
     }
   }
 
   return (
-    <div>
-      {avatarUrl ? (
+    <div id='avatar_div'>
+      {(avatarUrl && !uploading) ? (
         <Image
           width={size}
           height={size}
@@ -101,11 +103,21 @@ export default function Avatar({
           style={{ height: size, width: size }}
         />
       ) : (
-        <div className="avatar no-image" style={{ height: size, width: size }} />
+        <div id='avatar_cas_wrapper' style={{width: size, height: size}}>
+          <div id='avatar_cas'>
+            <div className="l_left loading_eye">
+              </div>
+              <div className="l_right loading_eye">
+                <span className="cas_teeth_loading"></span>
+                <span className="cas_teeth_loading"></span>
+                <span className="cas_teeth_loading"></span>
+            </div>
+          </div>
+        </div>
       )}
       <div style={{ width: size }}>
-        <label className="button primary block" htmlFor="single">
-          {uploading ? 'Uploading ...' : 'Upload'}
+        <label className="button primary block" style={{cursor: "pointer"}} htmlFor="single">
+          {uploading ? 'Uploading ...' : 'Click to Upload'}
         </label>
         <input
           style={{

@@ -33,7 +33,7 @@
     max-width: 50vh;
     aspect-ratio: 12/6;
     position: relative;
-    border: 5px solid white;
+    border: 7.5px solid white;
     cursor: pointer;
 }
 
@@ -76,18 +76,24 @@
 }
 
 .l_left {
-    top: 30%;
+    top: 28%;
     left: 15%;
     width: 20%;
     background-color: #eaeaea;
 }
 
 .l_right {
-    top: 20%;
+    top: 18%;
     right: 10%;
     width: 30%;
     border: 5px solid #eaeaea;
     animation: leaderboard_loading 12s linear infinite;
+}
+
+@media screen and (min-height : 750px) and (min-width: 300px) {
+    .l_right {
+        border: 10px solid #eaeaea;
+    }
 }
 
 .eye_lids {

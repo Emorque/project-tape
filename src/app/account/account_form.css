@@ -1,7 +1,7 @@
 #account_form {
     position: relative;
-    background-color: var(--black);
-    color: #eaeaea;
+    background-color: var(--screenBlack);
+    color: var(--gameWhite);
     width: 100%;
     height: 100%;
     display: flex;
@@ -15,6 +15,71 @@
     position: absolute;
     top: 0;
     left: 0;
+}
+
+#account_div {
+    border: 5px solid var(--screenWhite);
+}
+
+#avatar_cas_wrapper {
+    display: flex;
+    align-items: center;
+}
+
+#avatar_cas {
+    width: 100%;
+    aspect-ratio: 12/6;
+    position: relative;
+    border: 5px solid white;
+    cursor: pointer;
+}
+
+
+.loading_eye {
+    position: absolute;
+    content: "";
+    aspect-ratio: 1;
+    border-radius: 50%;
+}
+
+.l_left {
+    top: 30%;
+    left: 15%;
+    width: 20%;
+    background-color: #eaeaea;
+}
+
+.l_right {
+    top: 20%;
+    right: 10%;
+    width: 30%;
+    border: 5px solid #eaeaea;
+    animation: leaderboard_loading 12s linear infinite;
+}
+
+.cas_teeth_loading {
+    position:absolute;
+    left:50%; 
+    top:50%; 
+    transform: translate(-50%, -50%);
+    width: 105%;
+    aspect-ratio: 9/1;
+    background: linear-gradient(to right, #eaeaea 15%,transparent 15%, transparent 85%, #eaeaea 85%);
+    &:nth-of-type(2){
+        transform: translate(-50%, -50%) rotate(60deg);
+    }
+    &:nth-of-type(3){
+        transform: translate(-50%, -50%) rotate(-60deg);
+    }
+}
+
+@keyframes leaderboard_loading {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .account_div {
@@ -33,6 +98,8 @@
     flex-direction: column;
     button {
         width: 100%;
+        background-color: var(--gameWhite);
+        color: var(--screenBlack);
     }
 }
 

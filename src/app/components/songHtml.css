@@ -9,6 +9,7 @@
 #songHTML_header {
     height: 45px;
     padding: 2px;
+    border-bottom: 2px solid var(--white);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -251,9 +252,9 @@
 
 #data {
     height: fit-content;
-    width: clamp(60px, 80%, 300px);
+    width: clamp(60px, 70%, 300px);
     border-radius: 3px;
-    padding: 5px 20px;
+    padding: 5px;
     margin: 0 auto;
     background-color: var(--white);
     color: var(--screenBlack);
@@ -501,6 +502,10 @@ input::file-selector-button {
     width: 30px;
     margin-right: 5px;
     position: relative;
+    .no-image {
+        padding-top: 3px;
+        padding-left: 3px;
+    }
 }
 
 .active_list {
