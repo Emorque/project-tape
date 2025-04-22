@@ -39,7 +39,7 @@ export const LoadingScreen = ({loading, setGameReady} : loadingScreenInterface) 
                 {(progress >= 100) &&
                     <div id="loading_btn">
                         <h2>Click Start to Begin</h2>
-                        <button disabled={progress < 100} onClick={() => {setLoaderClosed(true); setGameReady()}}>Start</button>
+                        <button disabled={progress < 100} onClick={() => {setLoaderClosed(true); setGameReady()}}>Start Game</button>
                     </div>
                 }
             </div>

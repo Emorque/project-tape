@@ -50,6 +50,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
         ex_notes: 0,
         length: 0,
         description: "",
+        difficulty: [1,0],
     })
 
     const [songLoading, setSongLoading] = useState<boolean>(true);
@@ -166,9 +167,6 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                 else {
                     setSongBackground(null)
                 }
-                // const background : ytBackgroundType = song.background
-                // console.log(background)
-                // setSongBackground(background)
             }
         } catch (error) {
             console.error('Song error:', error) // Only used for eslint
@@ -312,15 +310,12 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
             ex_notes: 0,
             length: song_metadata.length || 0, // TODO: add song_length as a key in editorMetadata and update editor save
             description: song_metadata.description || " ",
+            difficulty: song_metadata.difficulty || [1,0]
         }
         setSelectedSong(extractedMapMetata)
         setUsingLocalMap(true);
         setSongID(0)
     }
-
-    useEffect(() => {
-        console.log(selectedSong)
-    }, [selectedSong])
 
     return (
         <div id="songHtml">
@@ -431,9 +426,9 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                                 <h3>by {song.header.song_artist}</h3>
                                                 <h4>mapped by {song.header.song_mapper}</h4>
                                                 <div className="song_spinner">
-                                                    <span className="cas_teeth"></span>
-                                                    <span className="cas_teeth"></span>
-                                                    <span className="cas_teeth"></span>
+                                                    <span className={((song.header.difficulty?.[0] ?? 0) >= 5 )? "cas_teeth active_teeth" : ((song.header.difficulty?.[0] ?? 0) >= 2)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                                    <span className={((song.header.difficulty?.[0] ?? 0) === 6 )? "cas_teeth active_teeth" : ((song.header.difficulty?.[0] ?? 0) >= 3)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                                    <span className={((song.header.difficulty?.[0] ?? 0) >= 4 )?"cas_teeth active_teeth" : "cas_teeth half_active_teeth"}></span>
                                                 </div>
                                             </div>
                                         </button>                                    
@@ -448,7 +443,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                         <button key={song_id} className={(parseInt(song_id) === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(parseInt(song_id), true)}}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
-                                                    <h2>{metadata.song_header.song_artist}</h2>
+                                                    <h2>{metadata.song_header.song_name}</h2>
                                                     <div onClick={(e) => {
                                                         e.stopPropagation(); 
                                                         bookmarkSong(parseInt(song_id), metadata.song_header)}}
@@ -467,9 +462,9 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                                 <h3>by {metadata.song_header.song_artist}</h3>
                                                 <h4>mapped by {metadata.song_header.song_mapper}</h4>
                                                 <div className="song_spinner">
-                                                    <span className="cas_teeth"></span>
-                                                    <span className="cas_teeth"></span>
-                                                    <span className="cas_teeth"></span>
+                                                    <span className={((metadata.song_header.difficulty?.[0] ?? 0) >= 5 )? "cas_teeth active_teeth" : ((metadata.song_header.difficulty?.[0] ?? 0) >= 2)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                                    <span className={((metadata.song_header.difficulty?.[0] ?? 0) === 6 )? "cas_teeth active_teeth" : ((metadata.song_header.difficulty?.[0] ?? 0) >= 3)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                                    <span className={((metadata.song_header.difficulty?.[0] ?? 0) >= 4 )?"cas_teeth active_teeth" : "cas_teeth half_active_teeth"}></span>
                                                 </div>
                                             </div>
                                         </button>                                    
@@ -494,7 +489,6 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                                     setSongLoading(false)
                                                     setLocalID(parseInt(map_id))
                                                     setSongID(null)
-                                                    console.log("normal_notes", normal_notes)
                                                     if (background) {
                                                         setSongBackground(background)
                                                     }
@@ -503,9 +497,9 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                                     <h2>{song_metadata.song_name || 'Untitled Song'}</h2>
                                                     <h3>by {song_metadata.song_artist || "Untitled Artist"}</h3>
                                                     <div className="song_spinner">
-                                                        <span className="cas_teeth"></span>
-                                                        <span className="cas_teeth"></span>
-                                                        <span className="cas_teeth"></span>
+                                                        <span className={((song_metadata.difficulty?.[0] ?? 0) >= 5 )? "cas_teeth active_teeth" : ((song_metadata.difficulty?.[0] ?? 0) >= 2)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                                        <span className={((song_metadata.difficulty?.[0] ?? 0) === 6 )? "cas_teeth active_teeth" : ((song_metadata.difficulty?.[0] ?? 0) >= 3)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                                        <span className={((song_metadata.difficulty?.[0] ?? 0) >= 4 )?"cas_teeth active_teeth" : "cas_teeth half_active_teeth"}></span>
                                                     </div>
                                                 </div>
                                             </button>
@@ -620,9 +614,9 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                     <div id="description_container">
                         <div id="description_header">
                             <div className="description_spinner">
-                                <span className="cas_teeth"></span>
-                                <span className="cas_teeth"></span>
-                                <span className="cas_teeth"></span>
+                                <span className={((selectedSong.difficulty?.[0] ?? 0) >= 5 )? "cas_teeth active_teeth" : ((selectedSong.difficulty?.[0] ?? 0) >= 2)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                <span className={((selectedSong.difficulty?.[0] ?? 0) === 6 )? "cas_teeth active_teeth" : ((selectedSong.difficulty?.[0] ?? 0) >= 3)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                <span className={((selectedSong.difficulty?.[0] ?? 0) >= 4 )?"cas_teeth active_teeth" : "cas_teeth half_active_teeth"}></span>    
                             </div>
                             <div id="data">
                                 <div className="tooltip_wrapper">
@@ -652,9 +646,9 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                 </div>
                             </div>
                             <div className="description_spinner">
-                                <span className="cas_teeth"></span>
-                                <span className="cas_teeth"></span>
-                                <span className="cas_teeth"></span>
+                                <span className={((selectedSong.difficulty?.[0] ?? 0) >= 5 )? "cas_teeth active_teeth" : ((selectedSong.difficulty?.[0] ?? 0) >= 2)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                <span className={((selectedSong.difficulty?.[0] ?? 0) === 6 )? "cas_teeth active_teeth" : ((selectedSong.difficulty?.[0] ?? 0) >= 3)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                <span className={((selectedSong.difficulty?.[0] ?? 0) >= 4 )?"cas_teeth active_teeth" : "cas_teeth half_active_teeth"}></span>    
                             </div>
                         </div>
 

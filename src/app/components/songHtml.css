@@ -163,9 +163,6 @@
     &:nth-of-type(3){
         animation: leaderboard_loading_reverse 12s linear infinite;
     }
-    .cas_teeth {
-        background: linear-gradient(to right, var(--white) 15%,transparent 15%, transparent 85%, var(--white) 85%);
-    }
 }
 
 .song_spinner {
@@ -178,9 +175,6 @@
     bottom: -2px;
     right: -2px;
     transition: transform 1s ease;
-    .cas_teeth {
-        background: linear-gradient(to right, var(--white) 15%,transparent 15%, transparent 85%, var(--white) 85%);
-    }
 }
 
 .song_btn.active .song_spinner{
@@ -189,6 +183,18 @@
 
 .song_btn:hover .song_spinner{
     animation: leaderboard_loading 12s linear infinite;
+}
+
+.active_teeth {
+    background: linear-gradient(to right, var(--white) 20%,transparent 20%, transparent 80%, var(--white) 80%);
+}
+
+.half_active_teeth {
+    background: linear-gradient(to right, transparent 20%,transparent 20%, transparent 80%, var(--white) 80%);
+}
+
+.unactive_teeth {
+    background: linear-gradient(to right, transparent 20%,transparent 20%, transparent 80%, transparent 80%);
 }
 
 #title_bookmark {
@@ -221,15 +227,25 @@
 
 #song_title {
     padding: 0px 0px 5px 0px;
-    text-align: center;
-    white-space: nowrap;
     text-overflow: ellipsis;
+    overflow: hidden;    
+    white-space: nowrap;
+    margin: 0 auto;
+    text-align: center;
+    width: calc(100% - 160px);
+}
+
+@media screen and (max-width: 500px) {
+    #song_title {
+        margin: 0;
+        width: calc(100% - 90px);
+    }
 }
 
 #song_btns {
     position: absolute;
     top: -5px;
-    right: -5px;
+    right: 0px;
     display: flex;
     justify-content: flex-end;
     width: 100%;
@@ -242,7 +258,12 @@
     padding: 8px 4px 4px 4px;
     margin: 0;
     background-color: var(--screenBlack);
+    transition: all 0.2s ease;
 }
+
+#song_btns button:hover {
+    background-color: var(--black);
+} 
 
 #song_btns button svg{
     height: 20px;
@@ -404,7 +425,12 @@
     a {
         font-size: 2rem;
         width: fit-content;
+        transition: all 0.2s ease;
     }
+}
+
+#source_links a:hover {
+    color: var(--white)
 }
 
 #genre_language {

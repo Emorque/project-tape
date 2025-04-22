@@ -96,6 +96,7 @@ export default function EditorPage() {
             description: map.song_metadata.description,
             source: map.song_metadata.source,
             length: 0,
+            difficulty: map.song_metadata.difficulty
           },
           background: [[map.song_metadata.ytID, map.song_metadata.ytStart, map.song_metadata.ytEnd]],
           normal_notes: map.song_notes,
@@ -150,13 +151,14 @@ export default function EditorPage() {
   })
 
   const keybindsWrapperStyle = {
-    visibility: (menu === "keybinds")? "visible" : "hidden",
-    transition: 'visibility 1s'
+    visibility: (keybindsView)? "visible" : "hidden",
+    opacity: (keybindsView)? 1 : 0,
+    transition: 'opacity 0.5s ease, visibility 1s'
   } as React.CSSProperties
 
   const keybindsStyle = {
     left: (menu === "keybinds")? "0%" : "-100%",
-    transition: 'left 1s'
+    transition: 'left 1s ease'
   } as React.CSSProperties
 
 
