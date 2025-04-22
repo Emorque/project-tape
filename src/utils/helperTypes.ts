@@ -68,7 +68,8 @@ export type oldEditor = {
   source: string, 
   ytEnd: number, 
   ytID: string, 
-  ytStart: number
+  ytStart: number,
+  difficulty: [number, number]
 }
 
 export type editorMetadata = {
