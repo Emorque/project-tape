@@ -37,6 +37,18 @@ const getAccuracy = (perfect: number, okay: number, miss: number) => {
     return accuracy.toFixed(2)
 }
 
+const getComboMultiplier = (combo: number) => {
+    if (combo < 10) {
+        return 0
+    }
+    else if (combo >= 50) {
+        return 0.5
+    } 
+
+    const tenthDigit = Math.floor(combo / 10) % 10
+    return (Math.min(tenthDigit, 5))/10
+}
+
 export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, songBackground, verified, usingLocalMap} : gameInterface) => {   
     const supabase = createClient() // Maybe both of these can work outside of the Game function
     const { contextSafe } = useGSAP(); 
@@ -86,20 +98,20 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     const [songLength, setSongLength] = useState<number>(0);
 
-    useEffect(() => {
+    useEffect(() => {        
         flowStateAnimation.current.to("#flow_bar_cover", {width: "15%", duration: 10, ease: "none", onComplete: () => {setFlowState(false)}})
         perfectTextTimeline.current
             .to(`#perfect_text`, { scale: "2", duration: "0.2" })
             .to(`#perfect_text`, { scale: "1.75", duration: "0.2" })
-            .to(`#perfect_text`, { opacity: 0, duration: "0.2", delay: "5" });
+            .to(`#perfect_text`, { opacity: 0, duration: "0.2", delay: "3" });
         okayTextTimeline.current
             .to(`#okay_text`, {scale: "2", duration: "0.2"})
             .to(`#okay_text`, {scale: "1.75", duration: "0.2"})
-            .to(`#okay_text`, {opacity: 0, duration: "0.2", delay: "5"})
+            .to(`#okay_text`, {opacity: 0, duration: "0.2", delay: "3"})
         missTextTimeline.current
             .to(`#miss_text`, {scale: "2", duration: "0.2"})
             .to(`#miss_text`, {scale: "1.75", duration: "0.2"})
-            .to(`#miss_text`, {opacity: 0, duration: "0.2", delay: "5"})
+            .to(`#miss_text`, {opacity: 0, duration: "0.2", delay: "3"})
     }, [])
 
     const [hitsToRecover, setHitsToRecover] = useState<number>(0)
@@ -411,11 +423,13 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         if (timingList[noteIndex][0] + 75 >= time && time > timingList[noteIndex][0] - 75 && timingList[noteIndex][1] === note) {
             hitsoundsRef.current[hitsoundIndex].play();
             setHitsoundIndex((index) => (index + 1) % 12); 
+            const baseScore = (note === "FT" || note === "ST")? 250 : 200
+            // base score * (1 + combo multiplier) * (1 + bonues) //flowstate bonus is 0.5, timingBonus is 1 for perfect, and 0.5 for okay 
             if (flowState){
-                setScore((score) => score + 300);
+                setScore((score) => score + (baseScore * (1 + getComboMultiplier(comboCount)) * (1 + 0.5)));
             }
             else {
-                setScore((score) => score + 150);
+                setScore((score) => score + (baseScore * (1 + getComboMultiplier(comboCount)) * (1)));
             }
             setPerfectCount((perfect) => perfect + 1);
             setComboCount((combo) => combo + 1);
@@ -456,11 +470,13 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         else if (timingList[noteIndex][0] + 150 >= time && time > timingList[noteIndex][0] - 150 && timingList[noteIndex][1] === note) {
             hitsoundsRef.current[hitsoundIndex].play();
             setHitsoundIndex((index) => (index + 1) % 12); 
+            const baseScore = (note === "FT" || note === "ST")? 250 : 200
+            // base score * (1 + combo multiplier) * (1 + bonues) //flowstate bonus is 0.5, timingBonus is 1 for perfect, and -0.5 for okay 
             if (flowState){
-                setScore((score) => score + 200);
+                setScore((score) => score + (baseScore * (1 + getComboMultiplier(comboCount)) * (1 + 0.5 - 0.5)));
             }
             else {
-                setScore((score) => score + 100);
+                setScore((score) => score + (baseScore * (1 + getComboMultiplier(comboCount)) * (1 - 0.5)));
             }
             setOkayCount((okay) => okay + 1); 
             setComboCount((combo) => combo + 1);
@@ -1111,10 +1127,12 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 {(comboCount > 5) && <h1 id="combo_text">{comboCount} Combo</h1>}
             </div>
             <div id='lane_container' className={flippedScreen? "flipped" : "unflipped"}>
-                <h1 style={{transform: flippedScreen? "scaleX(-1) translate(-50%, 50%)" : "translate(-50%, 50%)"}} className='hit_text' id='perfect_text'>Perfect</h1>
-                <h1 style={{transform: flippedScreen? "scaleX(-1) translate(-50%, 50%)" : "translate(-50%, 50%)"}} className='hit_text' id='okay_text'>Okay</h1>
-                <h1 style={{transform: flippedScreen? "scaleX(-1) translate(-50%, 50%)" : "translate(-50%, 50%)"}} className='hit_text' id='miss_text'>Miss</h1>
-
+                <div id='text_wrapper' style={{transform: flippedScreen? "scaleX(-1)" : ""}}>
+                    <h1 className='hit_text' id='perfect_text'>Perfect</h1>
+                    <h1 className='hit_text' id='okay_text'>Okay</h1>
+                    <h1 className='hit_text' id='miss_text'>Miss</h1>
+                </div>
+            
                 <div id='lil_game_guy'>
                     <div id='flow_crown' style={{opacity: flowState? 1 : 0}}></div>
                     <div id='game_left_eye' className="loading_eye"></div>
