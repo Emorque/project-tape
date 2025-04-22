@@ -163,9 +163,6 @@
     &:nth-of-type(3){
         animation: leaderboard_loading_reverse 12s linear infinite;
     }
-    .cas_teeth {
-        background: linear-gradient(to right, var(--white) 15%,transparent 15%, transparent 85%, var(--white) 85%);
-    }
 }
 
 .song_spinner {
@@ -178,9 +175,6 @@
     bottom: -2px;
     right: -2px;
     transition: transform 1s ease;
-    .cas_teeth {
-        background: linear-gradient(to right, var(--white) 15%,transparent 15%, transparent 85%, var(--white) 85%);
-    }
 }
 
 .song_btn.active .song_spinner{
@@ -189,6 +183,18 @@
 
 .song_btn:hover .song_spinner{
     animation: leaderboard_loading 12s linear infinite;
+}
+
+.active_teeth {
+    background: linear-gradient(to right, var(--white) 20%,transparent 20%, transparent 80%, var(--white) 80%);
+}
+
+.half_active_teeth {
+    background: linear-gradient(to right, transparent 20%,transparent 20%, transparent 80%, var(--white) 80%);
+}
+
+.unactive_teeth {
+    background: linear-gradient(to right, transparent 20%,transparent 20%, transparent 80%, transparent 80%);
 }
 
 #title_bookmark {

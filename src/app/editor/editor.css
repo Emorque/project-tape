@@ -122,11 +122,6 @@ input::file-selector-button {
     top:0;
 }
 
-
-
-
-
-
 /* Editor */
 #editor_page {
     padding: 5px 10px;
@@ -188,13 +183,11 @@ input::file-selector-button {
 }
 
 #waveform_container {
-    
     width: 100%;
     height: calc(100% - 14px);
     pointer-events: none;
     z-index: 10;
     pointer-events: none;
-
 }
 
 #waveform_bars{
@@ -206,15 +199,10 @@ input::file-selector-button {
     height: 100%;
     background-color: transparent;
     content: "";
-    border-left: 1px solid var(--white);
+    border-left: 5px solid var(--white);
     border-right: 1px solid var(--white);
-    scrollbar-color: var(--gameWhite) transparent;
+    scrollbar-color: var(--gameWhite) var(--screenBlack);
     scrollbar-width: thin;
-}
-
-  
-.no_scrollbar {
-    /* scrollbar-width: none; */
 }
 
 .no_scroll {
@@ -341,45 +329,6 @@ input::file-selector-button {
     background: linear-gradient(to right, transparent 25%,transparent 25%, transparent 75%, transparent 75%);
 }
 
-#hero_section {
-    padding-top: 25px;
-    width: 90%;
-    height: calc(80% - 20px);
-    margin: 0 auto;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-}
-
-#hero_list {
-    width: 80%;
-    transform: scaleY(-1);
-}
-
-#hero_editor {
-    position: relative;
-    max-width: 400px;
-    margin: 0 auto;
-    height: 100%;
-}
-
-#current_bar {
-    background-color: rgba(119, 114, 114, 0.384);
-    z-index: 10;
-    position: absolute;
-    width: calc(100% - 10px);
-    height: 4px;
-    content: "";
-    top:0;
-    left: 0;
-}
-
-.hero_bar {
-    border-top: 0.01px solid rgba(255, 255, 255, 0.25); 
-    /* width: 100%; */
-    /* height: 100%; */
-}
-
 a {
     font-size: 2rem;
     padding-bottom: 10px;
@@ -387,21 +336,14 @@ a {
 
 #youtube_frame {
     justify-self: center;
-    /* position: absolute; */
-    /* top: 0; */
-    /* left: 0; */
     /* width: 480px;
     height: 270px;
     These specific values were chosen as they can be found in .player-wrapper in https://github.com/cookpete/react-player/blob/master/examples/react/public/App.css
     And according to https://github.com/CookPete/react-player/issues/587 , it seems that once the player gets to a certain size, "more videos" overlay appears
     */
-    /* z-index: 20; */
-    /* opacity: 0.5; */
     width: 100%;
     max-width: 500px;
-    /* height: 270px; */
     aspect-ratio: 16/9;
-    /* pointer-events: none; */
 }
 
 @media screen and (max-width: 1000px) {
@@ -428,32 +370,6 @@ label {
     gap: 20px;
 }
 
-#left_hero {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 20%;
-    height: 100%;
-    overflow-y: auto;   
-    button {
-        background-color: var(--white);
-        border: 0;
-        padding: 5px;
-        color: var(--black);
-        cursor: pointer;
-    }
-}
-
-#right_hero {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 20%;
-    height: 100%;
-    overflow-y: auto;   
-}
-
-
 #return_wrapper, #delete_wrapper {
     position: absolute;
     top: 0;
@@ -478,12 +394,6 @@ label {
 #notes {
     display: flex;
     flex-direction: row;
-}
-
-.scrollbar {
-    scrollbar-color: rgba(128, 128, 128, 0.50) transparent;
-    scrollbar-width: thin;
-    overflow: hidden;
 }
 
 #beatmap_save_btn {
@@ -542,8 +452,6 @@ label {
     }
 }
 
-
-
 /* Keybinds Component */
 #keybinds_wrapper {
     background-color: rgba(59, 59, 59, 0.6);
@@ -577,9 +485,6 @@ label {
     height: calc(100% - 45px);
     margin: 0 auto;
     overflow: auto;
-
-    /* 45 px comes from back height from back button*/
-    /* color: white; */
     letter-spacing: 1px;
     display: flex;
     flex-direction: column;
@@ -634,21 +539,6 @@ label {
     }
 }
 
-#divWrapper {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: 100px;
-    padding: 20px;
-    padding-top: 60px;
-}
-
-.divContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
 #save_reset_btns {
     display: flex;
     flex-direction: row;
@@ -658,9 +548,7 @@ label {
 }
 .action_btn {
     font-size: 2rem;
-    /* Background Color handled in TSX */
 }
-
 
 #keybinds_back_btn {
     background-color: var(--black);
@@ -677,39 +565,6 @@ label {
     color: var(--white);
     position: relative;
     border-radius: 6px;
-}
-
-
-#exportDiv {
-    display: flex;
-    justify-content: center;
-    padding: 20px;
-    button {
-        padding: 10px;
-    }
-}
-
-#timeline {
-    width: 100%;
-}
-
-#pr_btn_container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: space-between; /* This ensures buttons are evenly spaced */
-    div {
-        display: flex;
-    }
-}
-
-.playrate_btns {
-    width: 3em;
-}
-
-.playrate_btns:hover {
-    background-color: #ddd; /* Optional: Add hover effect */
 }
 
 /* This is affecting the waveform slider?? Why is the scroll bar green  */

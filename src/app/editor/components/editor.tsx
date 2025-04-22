@@ -66,6 +66,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const [noteCount, setNoteCount] = useState<number>(metadata?.song_metadata.normal_notes || 0)
   const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
   const [source, setSource] = useState<string>(metadata?.song_metadata.source || "");
+  const [difficulty, setDifficulty] = useState<number>(metadata?.song_metadata.difficulty[0] || 1)
   const [ytBackground, setYTBackground] = useState<string>(metadata?.background[0][0] || ""); //Fix to .ytbg
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
   const [deploymentMap, setDeploymentMap] = useState<editorMap | null>(null)
@@ -117,7 +118,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     url: songAudio,
     waveColor: '#0b7033',
     progressColor: 'rgb(87, 77, 97)',
-    cursorColor: 'rgb(223, 0, 0)',
+    cursorWidth: 0,
     autoCenter: false,
     autoScroll: false,
     minPxPerSec: 256,
@@ -481,6 +482,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         ex_notes: 0,
         description: description,
         source : source,
+        difficulty: [difficulty, 0]
+        
         // ytID: ytBackground,
         // ytStart: ytOffset,
         // ytEnd: ytEnd
@@ -491,7 +494,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
     localStorage.setItem("localMaps", JSON.stringify(localMaps));
     updateLocalMaps();
-    console.log("Updated Map")
     setDisabledSave(true)
     setTimestamp(localMaps[map_id].timestamp)
     saveAnimation();
@@ -521,6 +523,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         ex_notes: 0,
         description: description,
         source : source,
+        difficulty: [difficulty, 0]
       },
       background: [[ytBackground, ytOffset, ytEnd]],
       normal_notes : songNotes,
@@ -585,6 +588,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         ex_notes: 0,
         description: description,
         source : source,
+        difficulty: [difficulty, 0]
       },
       background: [[ytBackground, ytOffset, ytEnd]],
       normal_notes : songNotes,
@@ -620,6 +624,9 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
       if (!localMaps[map_id].song_metadata.source) {
         missingDataString += " Audio Source ,"
+      }
+      if (!localMaps[map_id].song_metadata.difficulty) {
+        missingDataString += " Difficulty ,"
       }
 
       if (missingDataString.length > 16) {
@@ -720,7 +727,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     const song_metadata_upload = {
       "song_name" : current_metadata.song_name,
       "song_artist" : current_metadata.song_artist,
-      "song_mapper" : user.user_metadata.username
+      "song_mapper" : user.user_metadata.username,
+      "difficulty": [current_metadata.difficulty, 0]
     }
 
     const map_metadata_upload = {
@@ -731,12 +739,10 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       "normal_notes": current_metadata.normal_notes,
       "ex_notes": 0,
       "description": current_metadata.description,
-      "length": Math.floor((songLength - 1) / 16)
+      "length": Math.floor((songLength - 1) / 16),
+      "difficulty" : [current_metadata.difficulty, 0],
     }
 
-    // console.log("SU", song_metadata_upload)
-    // console.log("MU", map_metadata_upload)
-    // return 
     const final_notes = formatNotes(current_notes)
     try {
       setDeployMessage("Beatmap Uploading...");
@@ -1003,9 +1009,26 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
                   value={source}
                   onChange={(e) => setSource(e.target.value)}
                 ></input>
+              </div>       
+
+              <div className="metadata_div">
+                <label htmlFor="songDifficulty">Difficulty:</label>
+                <select 
+                  className="metadata_input"
+                  name="songDifficulty" 
+                  id="songDifficulty"
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(parseInt(e.target.value))}
+                >
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                  <option value={5}>5</option>
+                  <option value={6}>6</option>
+                </select>
               </div>          
             </div>
-
 
             <div className="metadata_inputs">
               <div className="metadata_div">

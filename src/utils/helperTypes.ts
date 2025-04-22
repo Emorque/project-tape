@@ -10,7 +10,8 @@ export type bookmarkedSongs = {
 export type song_header = {
   song_name: string,
   song_artist: string,
-  song_mapper: string
+  song_mapper: string,
+  difficulty: [number, number]
 }
 
 export type mapMetadata = {
@@ -22,6 +23,7 @@ export type mapMetadata = {
   ex_notes: number,
   length: number,
   description: string,
+  difficulty: [number, number]
 }
 
 export type sMap = [number,string][]
@@ -81,6 +83,7 @@ export type editorMetadata = {
   description: string,
   source: string,
   length: number,
+  difficulty: [number, number]
 
   // background : ytBackgroundType
 
