@@ -67,10 +67,10 @@
         aspect-ratio: 1;
     }
 }
-
+/* 
 #search_container {
 
-}
+} */
 
 #songHTML_content {
     height: calc(100% - 45px);

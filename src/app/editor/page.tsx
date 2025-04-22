@@ -271,7 +271,7 @@ export default function EditorPage() {
       <div id="beatmap_wrapper">
         <div id="audio_select">
           <Link href={"/"}>Back to Project Tape</Link>
-          <h2 id="audio_tooltip_text">{(audioFileError === 1)? "Audio File exceeds 5MB" : (audioFileError === 2)? "Max 10 Maps Allowed" : "Enter Your Audio File" }</h2>
+          <h2 id="audio_tooltip_text">{(audioFileError === 1)? "Audio File exceeds 5MB" : (audioFileError === 2)? "5 Beatmap Limit" : "Enter Your Audio File" }</h2>
           <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>
         </div>
 
@@ -293,7 +293,7 @@ export default function EditorPage() {
             const localMaps : localStorageEditorMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
             const localMapsCount = Object.entries(localMaps)
             // console.log(localMapsCount.length)
-            if (localMapsCount.length >= 10) {
+            if (localMapsCount.length >= 5) {
               audioNeeded();
               setDisabledCreateButton(true)
               setAudioFileError(2)

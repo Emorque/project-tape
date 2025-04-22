@@ -79,12 +79,27 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     const [maxCombo, setMaxCombo] = useState<number>(0);
     const [flowState, setFlowState] = useState<boolean>(false)
     
-    const flowStateAnimation = useRef(gsap.timeline({paused: true}))
+    const flowStateAnimation = useRef(gsap.timeline({paused: true}))    
+    const perfectTextTimeline = useRef(gsap.timeline({ paused: true }))
+    const okayTextTimeline = useRef(gsap.timeline({ paused: true }))
+    const missTextTimeline = useRef(gsap.timeline({ paused: true }))
 
     const [songLength, setSongLength] = useState<number>(0);
 
     useEffect(() => {
         flowStateAnimation.current.to("#flow_bar_cover", {width: "15%", duration: 10, ease: "none", onComplete: () => {setFlowState(false)}})
+        perfectTextTimeline.current
+            .to(`#perfect_text`, { scale: "2", duration: "0.2" })
+            .to(`#perfect_text`, { scale: "1.75", duration: "0.2" })
+            .to(`#perfect_text`, { opacity: 0, duration: "0.2", delay: "5" });
+        okayTextTimeline.current
+            .to(`#okay_text`, {scale: "2", duration: "0.2"})
+            .to(`#okay_text`, {scale: "1.75", duration: "0.2"})
+            .to(`#okay_text`, {opacity: 0, duration: "0.2", delay: "5"})
+        missTextTimeline.current
+            .to(`#miss_text`, {scale: "2", duration: "0.2"})
+            .to(`#miss_text`, {scale: "1.75", duration: "0.2"})
+            .to(`#miss_text`, {opacity: 0, duration: "0.2", delay: "5"})
     }, [])
 
     const [hitsToRecover, setHitsToRecover] = useState<number>(0)
@@ -314,9 +329,17 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         gsap.timeline()
         .to(`#${circle}`, {rotation: "-=90", borderColor: missColor, duration: "0.1"})
         .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
+        
         gsap.timeline()
         .to("#bc_left", {transform: "scale(0.95)", duration: "0.1"})
         .to("#bc_left", {transform: "scale(1)", duration: "0.1"})
+
+        gsap.set(`#miss_text`, {opacity: 1})
+        gsap.set(`#okay_text`, {opacity: 0})
+        gsap.set(`#perfect_text`, {opacity: 0})
+
+        missTextTimeline.current.restart();
+
     })
 
     const defaultAnimation = contextSafe((circle : string) => {
@@ -326,32 +349,32 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     })
 
     const hitAnimation = contextSafe((circle : string) => {
-        if (circle === "lc_one" || circle == "lc_three") {
-            gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: hitColor, duration: "0.1"})
-            .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
-        }
-        else {
-            gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: hitColor, duration: "0.1"})
-            .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
-        }
+        gsap.timeline()
+        .to(`#${circle}`, {rotation: "+=40", borderColor: hitColor, duration: "0.1"})
+        .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
+
+        gsap.set(`#miss_text`, {opacity: 0})
+        gsap.set(`#okay_text`, {opacity: 1})
+        gsap.set(`#perfect_text`, {opacity: 0})
+
+        okayTextTimeline.current.restart(); 
+
         gsap.timeline()
         .to("#bc_right", {transform: "scale(1.05)", duration: "0.1"})
         .to("#bc_right", {transform: "scale(1)", duration: "0.1"})
     })
 
+
     const perfectAnimation = contextSafe((circle : string) => {
-        if (circle === "lc_one" || circle == "lc_three") {
-            gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: perfectColor, duration: "0.1"})
-            .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
-        }
-        else {
-            gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: perfectColor, duration: "0.1"})
-            .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
-        }
+        gsap.timeline()
+        .to(`#${circle}`, {rotation: "+=40", borderColor: perfectColor, duration: "0.1"})
+        .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
+        gsap.set(`#miss_text`, {opacity: 0})
+        gsap.set(`#okay_text`, {opacity: 0})
+        gsap.set(`#perfect_text`, {opacity: 1})
+
+        perfectTextTimeline.current.restart();
+
         gsap.timeline()
         .to("#bc_right", {transform: "scale(1.05)", duration: "0.1"})
         .to("#bc_right", {transform: "scale(1)", duration: "0.1"})
@@ -827,6 +850,9 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
 
         // Same here, just tie the animation to a class for lane-container's classlist 
+        gsap.set("#okay_text", {opacity: 0})
+        gsap.set("#perfect_text", {opacity: 0})
+        gsap.set("#miss_text", {opacity: 0})
         gsap.to("#lane_container", {
             opacity: 1,
             duration: 1,
@@ -1085,6 +1111,10 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 {(comboCount > 5) && <h1 id="combo_text">{comboCount} Combo</h1>}
             </div>
             <div id='lane_container' className={flippedScreen? "flipped" : "unflipped"}>
+                <h1 style={{transform: flippedScreen? "scaleX(-1) translate(-50%, 50%)" : "translate(-50%, 50%)"}} className='hit_text' id='perfect_text'>Perfect</h1>
+                <h1 style={{transform: flippedScreen? "scaleX(-1) translate(-50%, 50%)" : "translate(-50%, 50%)"}} className='hit_text' id='okay_text'>Okay</h1>
+                <h1 style={{transform: flippedScreen? "scaleX(-1) translate(-50%, 50%)" : "translate(-50%, 50%)"}} className='hit_text' id='miss_text'>Miss</h1>
+
                 <div id='lil_game_guy'>
                     <div id='flow_crown' style={{opacity: flowState? 1 : 0}}></div>
                     <div id='game_left_eye' className="loading_eye"></div>
