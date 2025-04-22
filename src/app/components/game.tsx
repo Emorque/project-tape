@@ -20,7 +20,11 @@ interface gameInterface {
     usingLocalMap: boolean
 }
 
-const gameWhite = "#def0e5"
+const gameWhite = "#def0e5";
+const missColor = "#db2e24";
+const defaultColor = "#679798";
+const hitColor = "#257eda";
+const perfectColor = "#36c963"
 
 const getKeyMapping = (key : string) => {
     const res = [(key === "Spacebar") ? " " : key.charAt(0).toUpperCase() + key.slice(1), (key === "Spacebar") ? " " : key.charAt(0).toLowerCase() + key.slice(1)]
@@ -308,7 +312,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     const missAnimation = contextSafe((circle : string) => {
         gsap.timeline()
-        .to(`#${circle}`, {rotation: "-=90", borderColor: "red", duration: "0.1"})
+        .to(`#${circle}`, {rotation: "-=90", borderColor: missColor, duration: "0.1"})
         .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         gsap.timeline()
         .to("#bc_left", {transform: "scale(0.95)", duration: "0.1"})
@@ -317,19 +321,19 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     const defaultAnimation = contextSafe((circle : string) => {
         gsap.timeline()
-        .to(`#${circle}`, {borderColor: "#707070", duration: "0.1"})
+        .to(`#${circle}`, {borderColor: defaultColor, duration: "0.1"})
         .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
     })
 
     const hitAnimation = contextSafe((circle : string) => {
         if (circle === "lc_one" || circle == "lc_three") {
             gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: "blue", duration: "0.1"})
+            .to(`#${circle}`, {rotation: "+=40", borderColor: hitColor, duration: "0.1"})
             .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         }
         else {
             gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: "blue", duration: "0.1"})
+            .to(`#${circle}`, {rotation: "+=40", borderColor: hitColor, duration: "0.1"})
             .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         }
         gsap.timeline()
@@ -340,12 +344,12 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     const perfectAnimation = contextSafe((circle : string) => {
         if (circle === "lc_one" || circle == "lc_three") {
             gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: "green", duration: "0.1"})
+            .to(`#${circle}`, {rotation: "+=40", borderColor: perfectColor, duration: "0.1"})
             .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         }
         else {
             gsap.timeline()
-            .to(`#${circle}`, {rotation: "+=40", borderColor: "green", duration: "0.1"})
+            .to(`#${circle}`, {rotation: "+=40", borderColor: perfectColor, duration: "0.1"})
             .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
         }
         gsap.timeline()
@@ -546,6 +550,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 setGameState("End")
                 setVideoVisible(false)
                 setVideoPlaying(false)
+                setStopwatchActive(false)
             }
         })
     })
@@ -1084,26 +1089,26 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     <div id='flow_crown' style={{opacity: flowState? 1 : 0}}></div>
                     <div id='game_left_eye' className="loading_eye"></div>
                     <div id='game_right_eye' className={(flowState && (gameState !== "Paused"))? "loading_eye flow_eye" : "loading_eye"}>
-                        <span className="cas_teeth_loading"></span>
-                        <span className="cas_teeth_loading"></span>
-                        <span className="cas_teeth_loading"></span>
+                        <span className="lane_circle_teeth"></span>
+                        <span className="lane_circle_teeth"></span>
+                        <span className="lane_circle_teeth"></span>
                     </div>
                 </div>
                 <div className='lane_section'>
                     <div ref={lane_one} className='lane lane-one'> 
                     <div className='lane_circle_tape lct_left'></div>
                         <div id='lc_one' className='lane_circle'>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
                         </div>
                     </div>
                     <div ref={lane_two} className='lane lane-two'>  
                         <div className='lane_circle_tape lct_right'></div>
                         <div id='lc_two' className='lane_circle'>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
                         </div>
                     </div>    
                 </div>
@@ -1111,17 +1116,17 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     <div ref={lane_three} className='lane lane-three'>  
                         <div className='lane_circle_tape lct_left'></div>
                         <div id='lc_three' className='lane_circle'>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
                         </div>
                     </div>
                     <div ref={lane_four} className='lane lane-four'>
                         <div className='lane_circle_tape lct_right'></div>
                         <div id='lc_four' className='lane_circle'>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
-                            <span className="cas_teeth_loading"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
                         </div>
                     </div>    
                 </div>

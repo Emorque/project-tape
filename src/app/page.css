@@ -206,6 +206,7 @@
     border-left: 0;
     cursor: pointer;
     color: var(--screenBlack);
+    transition: all 0.2s ease;
     h3 {
         transform: skew(40deg);
         letter-spacing: 1px;
@@ -213,6 +214,10 @@
     svg {
         transform: scale(1.5) skew(40deg);
     }
+}
+
+.menuBtn:hover {
+    background-color: var(--whiteLight);
 }
 
 .menuBtn:first-child::before {
@@ -225,7 +230,13 @@
     border-top: 2px solid var(--screenBlack);
     position: absolute;
     content: "";
+    transition: all 0.2s ease;
 }
+.menuBtn:first-child:hover::before {
+    background-color: var(--whiteLight);
+
+}
+
 
 #startScreen {
     position: absolute;

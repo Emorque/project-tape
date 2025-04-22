@@ -632,6 +632,10 @@
     animation: initiateEndScreen 0.5s ease 1;
 }
 
+#end_screen_wrapper, #pause_wrapper {
+    overflow: auto;
+}
+
 #game_over_screen_wrapper{
     padding-top: 0;
     justify-content: center;
@@ -666,6 +670,12 @@
     align-items: center;
 }
 
+@media screen and (max-height: 330px) {
+    #pause_wrapper {
+        align-items: flex-start;
+    }
+}
+
 #pause_screen, #game_over_screen {
     height: fit-content;
     width: 50%;
@@ -685,7 +695,11 @@
         font-weight: bolder;
         letter-spacing: 1px;
         background-color: var(--white);
-        color: rgb(35, 35, 35)
+        color: rgb(35, 35, 35);
+        transition: all 0.2s ease;
+    }
+    button:hover {
+        background-color: var(--whiteLight);
     }
 }
 
@@ -1094,13 +1108,10 @@
 }
 
 #menu_div {
-    display: flex;
+    display: grid;
     width: 60%;
     max-width: 320px;
-    justify-content: space-around;
-    button {
-        flex: 1
-    }
+    grid-template-columns: 1fr 1fr;
 }
 
 @keyframes menuAnimation {
@@ -1124,8 +1135,10 @@
 
 .gameBtns {
     text-decoration: none;
-    margin: 0;
+    width: fit-content;
+    margin: 0 auto;
     padding: 0;
+    text-align: center;
     background-color: transparent;
     color: #eaeaea;
     border: 0;
@@ -1133,7 +1146,6 @@
     /* font-size: medium; */
     /* cursor: pointer; */
 }
-
 
 #yt_embed {
     position: absolute;

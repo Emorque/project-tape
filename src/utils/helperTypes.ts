@@ -84,12 +84,6 @@ export type editorMetadata = {
   source: string,
   length: number,
   difficulty: [number, number]
-
-  // background : ytBackgroundType
-
-  // ytID: string,
-  // ytStart: number,
-  // ytEnd: number
 }
 
 export type ytBackgroundType = [ytID: string, ytStart: number,ytEnd: number][]
