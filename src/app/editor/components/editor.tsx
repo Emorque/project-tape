@@ -12,7 +12,7 @@ import { type User } from '@supabase/supabase-js'
 import ReactPlayer from "react-player/youtube";
 
 const barGradient = "linear-gradient(rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.50) 24%, rgba(255, 255, 255, 0.50) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 48.75%, rgba(255, 255, 255, 0.50) 48.75%, rgba(255, 255, 255, 0.50) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.50) 74%, rgba(255, 255, 255, 0.50) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box"
-const gameGradient = "linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.25) 24%, rgba(255, 255, 255, 0.25) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.25%, rgba(255, 255, 255, 0.25) 49.25%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.25) 74%, rgba(255, 255, 255, 0.25) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box";
+// const gameGradient = "linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.25) 24%, rgba(255, 255, 255, 0.25) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.25%, rgba(255, 255, 255, 0.25) 49.25%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.25) 74%, rgba(255, 255, 255, 0.25) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box";
 const formatTime = (seconds: number) => [seconds / 60, seconds % 60, (seconds % 1) * 100].map((v) => `0${Math.floor(v)}`.slice(-2)).join(':')
 
 // Call this when settings are saved 
@@ -118,12 +118,12 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     waveColor: '#0b7033',
     progressColor: 'rgb(87, 77, 97)',
     cursorColor: 'rgb(223, 0, 0)',
-    autoCenter: true,
-    autoScroll: true,
+    autoCenter: false,
+    autoScroll: false,
     minPxPerSec: 256,
     height: 'auto', // reminder that this is not responsive. Height gets filled to div height only on intiailizing
     fillParent: true, // sets width to the width of the div
-    hideScrollbar: false,
+    hideScrollbar: true,
     dragToSeek: true,
   })
 
@@ -260,7 +260,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
   }
 
-  const listRef = useRef<List>(null);
   const vListRef = useRef<List>(null);
   
   const itemIndex = useMemo(() => {
@@ -285,26 +284,26 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
   }, [itemIndex, isPlaying]);
 
-  const changeNoteVer = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
+  const changeNoteHor = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
     if (isPlaying){ 
       console.log("Invalid")
       return;
     }
-    const hero_list_info = document.getElementById('hero_editor')?.getBoundingClientRect();
+    const hero_list_info = document.getElementById('waveform_bars')?.getBoundingClientRect();
     let mousePlacement;
-    let hero_width;
+    let hero_height;
     if (hero_list_info) {
-      mousePlacement = event.clientX - hero_list_info.left
-      hero_width = hero_list_info.right - hero_list_info.left
+      mousePlacement = event.clientY - hero_list_info.top
+      hero_height = hero_list_info.bottom - hero_list_info.top
     }
 
-    if (!mousePlacement || !hero_width) return;
-    const oneFourth = hero_width * (1/4)
-    const twoFourths = hero_width * (2/4)
-    const threeFourths = hero_width * (3/4)
+    if (!mousePlacement || !hero_height) return;
+    const oneFourth = hero_height * (1/4)
+    const twoFourths = hero_height * (2/4)
+    const threeFourths = hero_height * (3/4)
 
+    // const mousePlacement = event.clientY - (document.getElementById('vBars-Container')?.getBoundingClientRect().top as number)
     if (0 < mousePlacement && mousePlacement <= oneFourth) { // First Bar
-      console.log("First Bar")
       if (songNotes[2][index] === "S" || songNotes[2][index] === "T" || songNotes[3][index] === "S") {
         return
       }
@@ -316,7 +315,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
     }
     else if (oneFourth < mousePlacement && mousePlacement <= twoFourths) { // Second Bar
-      console.log("Second Bar")
       if (songNotes[2][index] === "S" || songNotes[2][index] === "T" || songNotes[3][index] === "S") {
         return
       }
@@ -328,7 +326,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
     }
     else if (twoFourths < mousePlacement && mousePlacement <= threeFourths) { // Third Bar
-      console.log("Third Bar")
       if (songNotes[0][index] === "S" || songNotes[0][index] === "T" || songNotes[1][index] === "S") {
         return
       }
@@ -339,8 +336,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         setNewNote(2, 3, index, "S");
       }
     }
-    else if (threeFourths < mousePlacement && mousePlacement <= hero_width) { // Fourth Bar
-      console.log("Fourth Bar")
+    else if (threeFourths < mousePlacement && mousePlacement <= hero_height) { // Fourth Bar
       if (songNotes[0][index] === "S" || songNotes[0][index] === "T" || songNotes[1][index] === "S") {
         return
       }
@@ -352,7 +348,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
     }
     scrollWindow(index) //This should now only shift if a note can be validly placed 
-  };
+   }
 
   const setDoubleNote = (firstBar: number, secondBar: number, index: number) => {
     let difference = 0
@@ -437,33 +433,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     setNoteCount(prevCount => prevCount + difference)
   }
 
-  const HRows = ({ index, style }: { index: number, style: React.CSSProperties }) => {
-    const gameBarStyle =(index: number) => {
-
-    const verticalGradients = [
-      songNotes[0][index] === 'T' ? "linear-gradient(135deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 0% 0% / 25% 25% padding-box border-box, linear-gradient(225deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 35%, rgb(0, 0, 0) 35%, rgb(0, 0, 0) 67%, rgb(184, 184, 184) 67%) no-repeat scroll 0% 25% / 25% 25% padding-box border-box" : songNotes[0][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 0% 0% / 25% 100% padding-box border-box",
-      songNotes[1][index] === 'T' ? "linear-gradient(135deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 33% 0% / 25% 25% padding-box border-box, linear-gradient(225deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 35%, rgb(0, 0, 0) 35%, rgb(0, 0, 0) 67%, rgb(184, 184, 184) 67%) no-repeat scroll 33% 25% / 25% 25% padding-box border-box" : songNotes[1][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 33.3% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 33.3% 0% / 25% 100% padding-box border-box",
-      songNotes[2][index] === 'T' ? "linear-gradient(45deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 66% 0% / 25% 25% padding-box border-box, linear-gradient(315deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 67%, rgb(184, 184, 184) 67%) no-repeat scroll 66% 25% / 25% 25% padding-box border-box" : songNotes[2][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 66.6% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 66.6% 0% / 25% 100% padding-box border-box",
-      songNotes[3][index] === 'T' ? "linear-gradient(45deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%,  rgb(0, 0, 0) 66%, rgb(184, 184, 184) 66%) no-repeat scroll 99% 0% / 25% 25% padding-box border-box, linear-gradient(315deg, rgb(184, 184, 184) 0%, rgb(184, 184, 184) 33%, rgb(0, 0, 0) 33%, rgb(0, 0, 0) 67%, rgb(184, 184, 184) 67%) no-repeat scroll 99% 25% / 25% 25% padding-box border-box" : songNotes[3][index] === 'S' ? "linear-gradient(to bottom, rgb(184, 184, 184)50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 99.9% 0% / 25% 100% padding-box border-box" : "linear-gradient(to bottom, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 50%) no-repeat scroll 99.9% 0% / 25% 100% padding-box border-box",
-    ];
-  
-    const updatedBG = `${gameGradient}, ${verticalGradients.join(", ")}`;
-  
-    return {
-      background: updatedBG,
-    };
-  }
-  
-    return (
-      <div
-        className="hero_bar"
-        onClick={(event) => changeNoteVer(index, event)}
-        style={{ ...style, ...gameBarStyle(index) }} 
-      >
-      </div>
-    );
-  };
-
   const VRow = ({ index, style }: { index: number, style: React.CSSProperties }) => {
     const barStyle = (index: number) => {
 
@@ -484,6 +453,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return (
       <div
         className="waveform_bar"
+        onClick={(event) => changeNoteHor(index, event)}
         style={{ ...style, ...barStyle(index) }} 
       >
       </div>
@@ -832,46 +802,18 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     gsap.to("#beatmap_save_tooltip", {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
   })
 
-  const scrollPositionRef = useRef<number>(0);
-
-// Updated useEffect
   useEffect(() => {
-    if (wavesurfer) {
-      const onScroll = () => {
-        const scroll = wavesurfer.getScroll();
-        // Check if scroll position has changed before updating
-        if (scroll !== scrollPositionRef.current) {
-          scrollPositionRef.current = scroll;  // Update the scroll position in the ref
-          if (vListRef.current) {
-            vListRef.current.scrollTo(scroll);
-            // console.log("vList", scroll);
-          }
-        }
-      };
-
-      wavesurfer.on('scroll', onScroll); // Listen for scroll events
-
-      return () => {
-        wavesurfer.un('scroll', onScroll); // Cleanup on component unmount
-      };
+    if (vListRef.current) {
+      vListRef.current.scrollTo(currentTime * 256)
     }
-  }, [wavesurfer]);  // Only re-run the effect if `wavesurfer` changes
-
-  useEffect(() => {
-    // if (listRef.current && isPlaying) {
-    if (listRef.current) {
-      listRef.current.scrollTo(currentTime * 256)
-      // console.log("snap,useEffect", currentTime)
-    }
+    wavesurfer?.setScrollTime(currentTime)
   }, [currentTime])
 
   function scrollWindow(index : number)  {
     if (isPlaying) return;
     setTimeout(() => {
-      if (wavesurfer && snapOn && listRef.current) {
+      if (wavesurfer && snapOn && vListRef.current) {
         wavesurfer.setTime(index / 16)
-        listRef.current.scrollTo(index * 16)
-        // console.log("scrollWindow")
       }
     }, 125)
   }
@@ -898,30 +840,11 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
   }
 
-  const singleBtnStyle = {
-    backgroundColor: (btn === "Single Note")? "rgb(145, 168, 154)" : "#3a4447",
-    color: (btn === "Single Note")? "#1a1a1a" : "rgb(145, 168, 154)"
-  }
-  
-  const turnBtnStyle = {
-    backgroundColor: (btn === "Turn Note")? "rgb(145, 168, 154)" : "#3a4447", 
-    color: (btn === "Turn Note")? "#1a1a1a" : "rgb(145, 168, 154)"
-  }
   const returnStyle = {
     visibility: (menu)? "visible" : "hidden",
     opacity: (menu)? 1 : 0,
     transition: 'opacity 500ms ease, visibility 500ms'
   } as React.CSSProperties
-
-  const snapStyle= {
-    backgroundColor: (snapOn)? "rgb(145, 168, 154)" : "#3a4447",
-    color: (snapOn)? "#1a1a1a" : "rgb(145, 168, 154)"
-  }
-
-  const keybindsStyle = {
-    backgroundColor: (keybindsActive)? "rgb(145, 168, 154)" : "#3a4447",
-    color: (keybindsActive)? "#1a1a1a" : "rgb(145, 168, 154)"
-  }
 
   const [videoPlaying, setVideoPlaying] = useState<boolean>(false)
   const [videoMuted, setVideoMuted] = useState<boolean>(true)
@@ -965,21 +888,30 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
 
   return (
     <div id="editor_page">
+      <div className="editor_header">
+        <h2 id="fixed_time"><span>{formatTime(currentTime)}</span>/ {formatTime((songLength- 1) / 16)}</h2>
+        <button className={keybindsActive? "active_btn" : "inactive_btn"} onClick={() => {setKeybinds(!keybindsActive)}}>Keybinds</button>
+          <button className={snapOn? "active_btn" : "inactive_btn"} onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap</button>
+          <div id="notes">
+            <button className={(btn === "Single Note")? "active_btn" : "inactive_btn"} onClick={() => {setBtn("Single Note")}}>S Note</button>
+            <button className={(btn === "Turn Note")? "active_btn" : "inactive_btn"} onClick={() => {setBtn("Turn Note")}}>T Note</button>
+          </div>
+      </div>
       <div id="wave_bars">
-        <div id="waveform_container" className={isPlaying? "no_scroll" : ""} ref={waveformRef}>
+        <div id="waveform_container" ref={waveformRef}>
         </div>
-
         <div id="waveform_bars">
           <AutoSizer>
             {({height, width}) => (
               <List
               ref={vListRef}
-              className={isPlaying? "no_scrollbar no_scroll" : "no_scrollbar"}
+              className={isPlaying? "no_scroll" : ""}
               height={height} 
               itemCount={songLength} 
               itemSize={16} 
               layout="horizontal"
               width={width} 
+              onScroll={updateTime}
               >
                 {VRow}
               </List>
@@ -988,246 +920,227 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         </div>
       </div>
 
-      <div id="hero_section">
-        <div id="left_hero">
-          <h2>{formatTime(currentTime)} <br/> Song Length: {formatTime((songLength- 1) / 16)}</h2>
+      <div id="metadata_section">
+        <div className="editor_header">
+          <h2>Last Updated: {formatDateFromMillis(timestamp)}</h2>
+          <h2>Notes: {noteCount}</h2>
+        </div>
+
+        <div id="metadata_video">
           <div id="metadata_wrapper">
-            <h1>Metadata: </h1>
-            <div>
-              <label htmlFor="songName">Song Name:</label>
-              <input 
-                className="metadata_input"
-                name="songName" 
-                id="songName"
-                type="text" 
-                value={songName}
-                onChange={(e) => setSongName(e.target.value)}
-              ></input>
-            </div>
-            
-            <div>
-              <label htmlFor="songArtist">Song Artist:</label>
-              <input 
-                className="metadata_input"
-                name="songArtist" 
-                id="songArtist"
-                type="text" 
-                value={songArtist}
-                onChange={(e) => setSongArtist(e.target.value)}
-              ></input>
-            </div>
-           
-            {/* <div>
-              <label htmlFor="songBPM">BPM:</label>
-              <input 
-                className="metadata_input"
-                name="songBPM" 
-                id="songBPM"
-                type="number" 
-                value={bpm}
-                onChange={(e) => setBPM(parseInt(e.target.value))}
-              ></input>
-            </div> */}
-           
-            <div>
-              <label htmlFor="songGenre">Genre:</label>
-              <input 
-                className="metadata_input"
-                name="songGenre" 
-                id="songGenre"
-                type="text" 
-                value={genre}
-                onChange={(e) => setGenre(e.target.value)}
-              ></input>
-            </div>
-            
-            <div>
-              <label htmlFor="songLanguage">Language:</label>
-              <input
-                className="metadata_input" 
-                name="songLanguage" 
-                id="songLanguage"
-                type="text" 
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-              ></input>
-            </div>
-            
-            <div>
-              <label htmlFor="songDescription">Description:</label>
-              <input 
-                className="metadata_input"
-                name="songDescription" 
-                id="songDescription"
-                type="text" 
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              ></input>
+            <div className="metadata_inputs">
+              <div className="metadata_div">
+                  <label htmlFor="songName">Title:</label>
+                  <input 
+                    className="metadata_input"
+                    name="songName" 
+                    id="songName"
+                    type="text" 
+                    value={songName}
+                    maxLength={50}
+                    onChange={(e) => setSongName(e.target.value)}
+                  ></input>
+                </div>
+              <div className="metadata_div">
+                <label htmlFor="songArtist">Artist:</label>
+                <input 
+                  className="metadata_input"
+                  name="songArtist" 
+                  id="songArtist"
+                  type="text" 
+                  value={songArtist}
+                  maxLength={20}
+                  onChange={(e) => setSongArtist(e.target.value)}
+                ></input>
+              </div>
+
+              <div className="metadata_div">
+                <label htmlFor="songGenre">Genre:</label>
+                <input 
+                  className="metadata_input"
+                  name="songGenre" 
+                  id="songGenre"
+                  type="text" 
+                  value={genre}
+                  maxLength={20}
+                  onChange={(e) => setGenre(e.target.value)}
+                ></input>
+              </div>
+              
+              <div className="metadata_div">
+                <label htmlFor="songLanguage">Language:</label>
+                <input
+                  className="metadata_input" 
+                  name="songLanguage" 
+                  id="songLanguage"
+                  type="text" 
+                  value={language}
+                  maxLength={20}
+                  onChange={(e) => setLanguage(e.target.value)}
+                ></input>
+              </div>
+              
+              <div className="metadata_div">
+                <label htmlFor="songDescription">Description:</label>
+                <input 
+                  className="metadata_input"
+                  name="songDescription" 
+                  id="songDescription"
+                  type="text" 
+                  value={description}
+                  maxLength={100}
+                  onChange={(e) => setDescription(e.target.value)}
+                ></input>
+              </div>
+
+              <div className="metadata_div">
+                <label htmlFor="songSource">Source Link:</label>
+                <input 
+                  className="metadata_input"
+                  name="songSource" 
+                  id="songSource"
+                  type="text" 
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                ></input>
+              </div>          
             </div>
 
-            <div>
-              <label htmlFor="songSource">Source Link:</label>
-              <input 
-                className="metadata_input"
-                name="songSource" 
-                id="songSource"
-                type="text" 
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-              ></input>
-            </div>
-            <label>Note Count: <br/>{noteCount}</label>
-            <label>Last Updated: <br/>{formatDateFromMillis(timestamp)}</label>
-            <br/>
-            <div>
-              <label htmlFor="ytBackground">Youtube ID:</label>
-              <input 
-                ref={ytIDRef}
-                className="metadata_input"
-                name="ytBackground" 
-                id="ytBackground"
-                type="text"
-              ></input>
-            </div>
-            <button onClick={() => setYTBackground(ytIDRef.current?.value || "")}>Set Youtube ID</button>
 
-            <div>
-              <label htmlFor="ytOffset">Start at Second:</label>
-              <input 
-                ref={ytOffsetRef}
-                className="metadata_input"
-                name="ytOffset" 
-                id="ytOffset"
-                type="number" 
-                min={0}
-                max={videoDuration}
-              ></input>
-            </div>
+            <div className="metadata_inputs">
+              <div className="metadata_div">
+                <label htmlFor="ytBackground">Youtube ID:</label>
+                <input 
+                  ref={ytIDRef}
+                  className="metadata_input"
+                  name="ytBackground" 
+                  id="ytBackground"
+                  type="text"
+                ></input>
+              </div>
+                <div className="metadata_div" style={{visibility: (videoDuration !== 0)? "visible" : "hidden"}}>
+                <label htmlFor="ytOffset">Start at Second:</label>
+                <input 
+                  ref={ytOffsetRef}
+                  className="metadata_input"
+                  name="ytOffset" 
+                  id="ytOffset"
+                  type="number" 
+                  min={0}
+                  max={videoDuration}
+                ></input>
+              </div>
 
-            <div>
-              <label htmlFor="ytEnd">End at Second:</label>
-              <input 
-                ref={ytEndRef}
-                className="metadata_input"
-                name="ytEnd" 
-                id="ytEnd"
-                type="number" 
-                min={0}
-                max={videoDuration}
-              ></input>
-            </div>
-            <button onClick={() => setTimestamps()}>Set Start/End Timestamps</button>
-            <button onClick={() => setVideoPlaying(!videoPlaying)}>{videoPlaying? "Pause" : "Play"}</button>
-            <button onClick={() => updatePlayerTime()}>Go To Start</button>
-            <button onClick={() => setVideoMuted(!videoMuted)}>{videoMuted? "Unmute" : "Mute"}</button>
-            
-            <div id="youtube_frame">
-              {/* <iframe 
-                width="100%" 
-                height="100%" 
-                src={`https://www.youtube.com/embed/${ytBackground}?si=1mZTLli-n2xhUurJ&amp;start=${ytOffset}&autoplay=1&mute=1`} 
-                title="YouTube video player" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                referrerPolicy="strict-origin-when-cross-origin" 
-                allowFullScreen
-                >
-              </iframe> */}
-              <ReactPlayer
-                ref={reactPlayerRef}
-                // url={`https://www.youtube.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0`} //&rel=0 means that "more videos" are locked to uploader's channel
-                url={`https://www.youtube-nocookie.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0&nocookie=true&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&widgetid=1&aoriginsup=1&vf=1`} //&rel=0 means that "more videos" are locked to uploader's channel
-                loop={false}
-                controls={false}
-                volume={100}
-                muted={videoMuted}
-                height={"100%"}
-                width={"100%"}
-                playing={videoPlaying}
-                pip={false}
-                light={false}
-                playsinline={true}
-                playbackRate={pbRate}
-                onProgress={handleProgress}
-                onDuration={handleDuration}
-                onEnded={() => setVideoPlaying(false)}
-                config={{
-                  playerVars: {
-                    iv_load_policy: 3,
-                    // cc_load_policy: 0, //Just setting it to 0 still puts the captions up. Opposite of the intent
-                    disablekb: 1
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div id="hero_list">
-          <div id="hero_editor">
-            <div id="current_bar"></div>
-            <AutoSizer>
-              {({height, width}) => (
-                <List
-                ref={listRef}
-                className={isPlaying? "scrollbar no_scroll" : "scrollbar"}
-                height={height}
-                itemCount={songLength}
-                onScroll={
-                  isPlaying? undefined : updateTime
-                }
-                itemSize={16} 
-                width={width} 
-                >
-                  {HRows}
-                </List>
-              )}
-            </AutoSizer>
-          </div>
-        </div>
-        
-        <div id="right_hero">
-          <div id="play_speed">
-            <button onClick={onPlayPause}>
-              {isPlaying? 
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z"/>
-              </svg>
-              :<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-play-circle" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445"/>
-              </svg>
-              }
-            </button>
-            <div id="pr_btn_container">
-              <h2>Playback Rate</h2>
-              <div>
-                <button style={{color: (pbRate === 0.25)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(0.25)}}>0.25</button>
-                <button style={{color: (pbRate === 0.50)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(0.50)}}>0.50</button>
-                <button style={{color: (pbRate === 0.75)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(0.75)}}>0.75</button>
-                <button style={{color: (pbRate === 1)? "#91a89a" : "#0b7033"}} className="playrate_btns" onClick={() => {updatePBRate(1)}}>1.00</button>
+              <div className="metadata_div" style={{visibility: (videoDuration !== 0)? "visible" : "hidden"}}>
+                <label htmlFor="ytEnd">End at Second:</label>
+                <input 
+                  ref={ytEndRef}
+                  className="metadata_input"
+                  name="ytEnd" 
+                  id="ytEnd"
+                  type="number" 
+                  min={0}
+                  max={videoDuration}
+                ></input>
+              </div>
+              
+              <div className="metadata_inputs">
+                <button className="play_btn" onClick={() => {
+                  if (ytIDRef.current?.value === ytBackground) return; 
+                  setVideoDuration(0); 
+                  setYTBackground(ytIDRef.current?.value || "")
+                  }}>Set Youtube ID</button>
+                {videoDuration !== 0 &&
+                <>
+                  <button onClick={() => setTimestamps()}>Set Timestamps</button>
+                  {/* <button onClick={() => setVideoPlaying(!videoPlaying)}>{videoPlaying? 
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                      <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z"/>
+                    </svg>
+                    :
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-play-circle" viewBox="0 0 16 16">
+                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                      <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445"/>
+                    </svg>}
+                  </button> */}
+                  <button onClick={() => updatePlayerTime()}>Go To Start</button>
+                  <button onClick={() => setVideoMuted(!videoMuted)}>{videoMuted? "Unmute" : "Mute"}</button>
+                </>
+                }              
               </div>
             </div>
           </div>
-          
-          <button style={keybindsStyle} className="styledBtns" onClick={() => {setKeybinds(!keybindsActive)}}>Keybinds {(keybindsActive)? "Active" : "Inactive"}</button>
-
-          <button style={snapStyle} className="styledBtns" onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap {snapOn? "On" : "Off"}</button>
-          <div id="notes">
-            <button className="styledBtns" style={singleBtnStyle} onClick={() => {setBtn("Single Note")}}>Single Note</button>
-            <button className="styledBtns" style={turnBtnStyle} onClick={() => {setBtn("Turn Note")}}>Turn Note</button>
+          <div id="youtube_frame" style={{height: (videoDuration !== 0)? "100%" : "0", width: (videoDuration !== 0)? "100%" : "0"}}>
+            <ReactPlayer
+              ref={reactPlayerRef}
+              // url={`https://www.youtube.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0`} //&rel=0 means that "more videos" are locked to uploader's channel
+              url={`https://www.youtube-nocookie.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0&nocookie=true&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&widgetid=1&aoriginsup=1&vf=1`} //&rel=0 means that "more videos" are locked to uploader's channel
+              loop={false}
+              controls={false}
+              volume={100}
+              muted={videoMuted}
+              height={"100%"}
+              width={"100%"}
+              playing={videoPlaying}
+              pip={false}
+              light={false}
+              playsinline={true}
+              playbackRate={pbRate}
+              onProgress={handleProgress}
+              onDuration={handleDuration}
+              onEnded={() => setVideoPlaying(false)}
+              config={{
+                playerVars: {
+                  iv_load_policy: 3,
+                  disablekb: 1
+                }
+              }}
+            />
           </div>
-          <div id="save_return">
-            <button disabled={disabledSave} className="styledBtns" id="beatmap_save_btn" onClick={() => {saveMap()}}>Save Locally
-              <h2 id="beatmap_save_tooltip">Beatmap Saved</h2>
-            </button>
+        </div>
+      </div>
 
-            <button className="styledBtns" onClick={() => {closeEditor()}}>Return</button>
+      <div id="editor_footer">
+        <div className="footer_div">
+          <button disabled={disabledSave} className="styledBtns" id="beatmap_save_btn" onClick={() => {saveMap()}}>Save
+            <h2 id="beatmap_save_tooltip">Beatmap Saved</h2>
+          </button>
+
+          <button className="styledBtns" onClick={() => {closeEditor()}}>Return</button>
+        </div>
+
+        <div className="footer_div">
+        <button className="play_btn" onClick={onPlayPause}>
+          {isPlaying? 
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+            <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z"/>
+          </svg>
+          :<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" className="bi bi-play-circle" viewBox="0 0 16 16">
+            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+            <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445"/>
+          </svg>
+          }
+        </button>
+          <div id="speed_cas" onClick={() => {
+            if (pbRate === 1) {
+              updatePBRate(0.25)
+            }
+            else {
+              updatePBRate(pbRate + 0.25)
+            }
+            }}>
+            <span className={(pbRate === 0.25 || pbRate === 0.50)? "speed_teeth teeth_half_active" : "speed_teeth teeth_active"}></span>
+            <span className={(pbRate === 0.25)? "speed_teeth teeth_unactive" : (pbRate === 1)? "speed_teeth teeth_active" : "speed_teeth teeth_half_active"}></span>
+            <div id="current_speed">Current Speed: {pbRate}x</div>
           </div>
+        </div>
+
+
+        <div className="footer_div">
           <button disabled={!user} className="styledBtns" onClick={() => {verifyDeployment()}}>Deploy</button>
         </div>
-      
       </div>
       {/* Change song_mapper to user when I pass into this component. If not logged in, have a note that says "Only registered accounts can upload maps to the internet" */}
 

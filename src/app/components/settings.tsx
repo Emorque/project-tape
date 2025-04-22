@@ -552,9 +552,9 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                 </button>
 
                 <button className="bottom_btns" disabled={disabledSave} onClick={() => resetSettings()}>
-                    Reset All Bindings
+                    Reset Settings
                     <div id="reset_tooltip_text" className="bottom_tooltip_text">
-                        Bindings Reset
+                        Settings Reset
                     </div>
                 </button>
             </div>

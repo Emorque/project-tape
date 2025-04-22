@@ -221,15 +221,25 @@
 
 #song_title {
     padding: 0px 0px 5px 0px;
-    text-align: center;
-    white-space: nowrap;
     text-overflow: ellipsis;
+    overflow: hidden;    
+    white-space: nowrap;
+    margin: 0 auto;
+    text-align: center;
+    width: calc(100% - 160px);
+}
+
+@media screen and (max-width: 500px) {
+    #song_title {
+        margin: 0;
+        width: calc(100% - 90px);
+    }
 }
 
 #song_btns {
     position: absolute;
     top: -5px;
-    right: -5px;
+    right: 0px;
     display: flex;
     justify-content: flex-end;
     width: 100%;

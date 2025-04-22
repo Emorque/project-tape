@@ -1,9 +1,4 @@
 // 'use client' taken out because of the gameMapProp. use client is now implied i think b/c parent has use client
-
-    // Things to add: combo bar div with "flow" meter
-    // Visible score and combo 
-    // Update UI to best match something like Taiko
-
 import React, { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import "./game.css";
 import gsap from 'gsap';
@@ -656,9 +651,9 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         hitsoundsRef.current = tempHitsounds;
 
         const res = (gameMap.sort((firstItem: [number,string], secondItem: [number,string]) => firstItem[0] - secondItem[0]))
-        // console.log(res)
-        // console.log()
-        setSongLength(res[res.length - 1][0])
+        if (audioProp.current) {
+            setSongLength(audioProp.current.duration * 1000)
+        }
 
         // setSongLength(res[-1])
         const lTiming: [number,string][] = [];
