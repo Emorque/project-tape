@@ -411,7 +411,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                     <input 
                         className="slider"
                         type="range"
-                        min={100}
+                        min={1000}
                         max={2500}
                         value={scrollSpeed}
                         onChange={handleScrollSpdChange}

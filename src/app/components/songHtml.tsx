@@ -404,7 +404,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                             <div className={(currentMenu === "Global")? "song_list active_list" : "song_list"}>
                                 {songlist.map((song : songType, index) => {
                                     return (
-                                        <button key={index} className={(song.id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id, true); setSongBackground(null) }}>
+                                        <button key={index} className={(song.id === songID)? "song_btn active" : "song_btn"} onClick={() => {updateSong(song.id, true)}}>
                                             <div className="song_metadata">
                                                 <div id="title_bookmark">
                                                     <h2>{song.header.song_name}</h2>
@@ -657,7 +657,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                         {selectedSong.source && 
                             <div id="source_links">
                                 <a href={selectedSong.source} target="blank">Source</a>
-                                {songBackground && 
+                                {songBackground && songBackground[0][0] !== "" &&  
                                 <a href={`https://www.youtube.com/watch?v=${songBackground[0]}`} target="blank">Background Source</a>
                                 }
                             </div>

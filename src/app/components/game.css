@@ -77,7 +77,6 @@
     }
 }
 
-
 #lane_container {
     position: absolute;
     /* 4 for progress and 60 is for stats_div 100? for combo bar*/
@@ -170,7 +169,7 @@
     left: 50%;
     opacity: 0;
     z-index: 1;
-    transform: translate(-50%, 50%);
+    transform: translate(-50%, -50%);
 }
 
 #okay_text {
@@ -187,7 +186,6 @@
 
 .lane {
     position: relative;
-    /* background-color: blue; */
     width: 100%;
     height: 50%;
 }
@@ -357,8 +355,6 @@
 
 #game_right_eye {
     top: 20%;
-    /* right: 10%; */
-    /* right: 5%; */
     transform: scaleY(0);
     width: 30%;
     border: 3px solid #eaeaea;
@@ -385,7 +381,6 @@
 }
 #hp_container {
     left: 0;
-    /* background-color: blue; */
     clip-path: polygon(0% 0%,15% 0%,20% 50%,80% 50%,85% 100%,0% 100%);
 }
 #hp_bar {
@@ -407,7 +402,6 @@
     position: absolute;
     content: "";
     height: 100%;
-    /* width: 15%; */
     background: var(--white);
     z-index: 10;
     top: 0;
@@ -423,7 +417,6 @@
     width: 100%;
     background-color: var(--white);
     content: "";
-    /* transition: width 1s ease; */
 }
 
 #hp_count, #flow_count {
@@ -441,7 +434,6 @@
     top: 0;
 }
 
-
 #flow_count {
     position: absolute;
     bottom: 0;
@@ -451,9 +443,7 @@
 }
 
 #flow {
-    /* background-color: green; */
     right: 0;
-    /* clip-path: polygon(37% 78%,64% 78%,82% 100%,100% 100%,100% 0%,0% 0%,0% 48%,20% 48%); */
 }
 
 .boombox_circle {
@@ -489,6 +479,12 @@
 
 #bc_right {
     right: 1%
+}
+
+#video_background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
 }
 
 #video_visible {
@@ -561,68 +557,6 @@
     cursor: pointer;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#circle-container {
-    background-color: var(--greyTransparent);
-    border: 1px solid #eaeaea;
-    transform: translateX(-1px);
-    width: calc(100% + 2px);
-    height: 25px;
-    content: "";
-    position: absolute;
-    bottom: -25px;
-}
-
-#lane-selection {
-    position: absolute;
-    content: "";
-    width: 30%;
-    max-width: 30px;
-    border-width: 0px 15px 30px 15px;
-    border-color: transparent transparent transparent transparent;
-    border-style: solid;    
-    aspect-ratio: 1;
-    bottom: -70px;
-    left: 23%;
-    translate: -10px;
-    z-index: 10;
-}
-
-#lane-selection-inner {
-    position: absolute;
-    content: "";
-    width: 30%;
-    max-width: 26px;
-    border-width: 0px 13px 26px 13px;
-    border-color: transparent transparent black transparent;
-    border-style: solid;    
-    aspect-ratio: 1;
-    left: -13px;
-    top: 3px;
-}
-
-
 #end_screen_wrapper, #game_over_screen_wrapper {
     position: absolute;
     display: flex;
@@ -666,7 +600,6 @@
 
 #waiting_wrapper {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
 }
@@ -701,7 +634,7 @@
         letter-spacing: 1px;
         background-color: var(--white);
         color: rgb(35, 35, 35);
-        transition: all 0.2s ease;
+        transition: backgroundColor 0.2s ease;
     }
     button:hover {
         background-color: var(--whiteLight);
@@ -715,19 +648,14 @@
     visibility: hidden;
 }
 
-#countdown {
-    font-size: 2.1rem;
+#waiting_wrapper span {
+    font-size: 4rem;
     color: var(--white);
     text-align: center;
-    position: relative;
-    /* height: 1em; */
-}
-
-#countdown span {
     position: absolute;
-    top: 0;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     opacity: 0;
     animation: countdown 3s linear;
 }
@@ -750,10 +678,10 @@
     100% { opacity: 0; }
 }
 
-#countdown span:nth-child(1) { animation-delay: 0s; }
-#countdown span:nth-child(2) { animation-delay: 1s; }
-#countdown span:nth-child(3) { animation-delay: 2s; }
-#countdown span:nth-child(4) { animation-delay: 3s; }
+#waiting_wrapper span:nth-child(1) { animation-delay: 0s; }
+#waiting_wrapper span:nth-child(2) { animation-delay: 1s; }
+#waiting_wrapper span:nth-child(3) { animation-delay: 2s; }
+#waiting_wrapper span:nth-child(4) { animation-delay: 3s; }
 
 #score_div {
     position: relative;
@@ -774,60 +702,6 @@
     div {
         flex: 1
     }
-}
-
-#combo-bar {
-    background-color: transparent;
-    border: 1px solid #eaeaea;
-    border-top: 0px;
-    transform: translateX(-1px) translateY(1px);
-    width: calc(100% + 2px);
-    height: 5px;
-    content: "";
-    position: absolute;
-    bottom: -29px;
-}
-
-#combo-bar-fill {
-    height: 100%;
-    position: absolute;
-    background-color: #eaeaea;
-    transition: width 0.5s ease;
-    content: "";
-}
-
-#turnBtns_container {
-    background-color: transparent;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    transform: translateX(-2px) translateY(1px);
-    width: calc(100% + 4px);
-    height: 50px;
-    position: absolute;
-    bottom: -80px;
-}
-
-.turnBtn {
-    background-color: var(--greyTransparent2);
-    color: rgba(255, 255, 255, 0.534);
-    border: 0;
-    font-size: 2rem;
-    display: flex;
-}
-
-.turnBtn:nth-of-type(1){
-    border-right: 1px solid var(--whiteTransparent);
-    /* text-align: left; */
-    align-items: center;
-    justify-content: flex-start;
-    padding-left: 10px;
-}
-.turnBtn:nth-of-type(2){
-    border-left: 1px solid var(--whiteTransparent);
-    /* text-align: right; */
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 10px;
 }
 
 #lil_guy_container {
@@ -1020,6 +894,12 @@
     animation-fill-mode: forwards, forwards;
 }
 
+#gear_container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
 @keyframes rightEyeAnimation1 {
     0% {
         transform: translate(0%, 0%)
@@ -1044,7 +924,6 @@
         transform: translate(0%, 0%)
     }
 }
-
 
 #cassette-tape{
     position: relative;
@@ -1087,12 +966,6 @@
     border-radius: 5%;
     border: 1px solid #eaeaea;
     content:"";
-}
-
-#svg_animation {
-    position: absolute;
-    top:25%;
-    transform: scale(1.2);
 }
 
 #scoreUpload_menu {
@@ -1148,40 +1021,12 @@
     color: #eaeaea;
     border: 0;
     font-size: 1.8rem;
-    /* font-size: medium; */
-    /* cursor: pointer; */
 }
 
 #yt_embed {
     position: absolute;
     top: 0;
     z-index: 10;
-}
-
-.circle {
-    position: absolute;
-    width: 50%;
-    max-width: 20px;
-    aspect-ratio: 1;
-    bottom: -22.5px;
-    left: 22.5%;
-    border: 2px solid #eaeaea;
-    background: linear-gradient(to right, transparent 40%, #eaeaea 40%, #eaeaea 60%, transparent 60%);
-    border-radius: 50%;
-    content: "";
-    z-index: 100; 
-    /* z-index to place on top of transparent background of div */
-}
-
-@media screen and (min-width: 950px) {
-}
-
-@media screen and (min-width: 350px) {
-    .circle {
-        width: 50%;
-        max-width: 20px;
-        left: 40%;
-    }
 }
 
 @media screen and (min-height: 800px) {

@@ -86,6 +86,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     const [flow, setFlow] = useState<number>(0);
 
     const [flippedScreen, setFlippedScreen] = useState<boolean>(false)
+    const [flippedBackground, setFlippedBackground] = useState<boolean>(false)
 
     const [comboCount, setComboCount] = useState<number>(0);
     const [maxCombo, setMaxCombo] = useState<number>(0);
@@ -178,7 +179,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     }, [])
 
     useEffect(() => {
-        if (!tabActive && gameState !== "Paused") {
+        if (!tabActive && gameState !== "Paused" && gameState !== "End") {
             pauseMap()
         }
     }, [tabActive, gameState])
@@ -213,6 +214,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     // Everything to do with Supabase, only executed if selectedSong and usingLocalMap is false
     const uploadScore = useCallback(async () => {
+        if (!user || gameState !== "End") return; // Error without this. Likely because it would query profiles with a null id without it
         if (!song_id || usingLocalMap) {
             setLeadboardText("Leaderboard Not Supported for Local Songs")
             setScoreUploading(false);
@@ -228,7 +230,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             setScoreUploading(false);
             return;
         }
-        if (!user || gameState !== "End") return; // Error without this. Likely because it would query profiles with a null id without it
         try {
             setScoreUploading(true)
             const { data, error, status } = await supabase
@@ -311,30 +312,58 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     // All animations
     const moveLeft = contextSafe(() => {
-        gsap.timeline()
-        .to("#lil_game_guy", {top: "25%", transform: " scaleY(0.8) translateY(-50%)", duration: "0.2"})
-        .to("#lil_game_guy", {transform: " scaleY(1) translateY(-50%)", duration: "0.2"})
-        gsap.timeline()
-        .to("#game_left_eye", {top: "0%", duration: "0.2"})
-        .to("#game_left_eye", {top: "30%", duration: "0.2"})
-        gsap.timeline()
-        .to("#game_right_eye", {top: "-5%", duration: "0.2"})
-        .to("#game_right_eye", {top: "20%", duration: "0.2"})
-
+        const tl = gsap.timeline();
+    
+        tl.to("#lil_game_guy", {
+            top: "25%",
+            transform: "scaleY(0.8) translateY(-50%)",
+            duration: 0.2,
+            ease: "power1.out"
+        })
+        .to("#lil_game_guy", {
+            transform: "scaleY(1) translateY(-50%)",
+            duration: 0.2,
+            ease: "power1.in"
+        }, "<");
+    
+        tl.to("#game_left_eye", { top: "0%", duration: 0.2 }, 0)
+          .to("#game_left_eye", { top: "30%", duration: 0.2 }, 0.2);
+    
+        tl.to("#game_right_eye", { top: "-5%", duration: 0.2 }, 0)
+          .to("#game_right_eye", { top: "20%", duration: 0.2 }, 0.2);
+    
         setDirection("Left");
-    })
+    });
+    
 
     const moveRight = contextSafe(() => {
-        gsap.timeline()
-        .to("#lil_game_guy", {top: "75%", transform: " scaleY(0.8) translateY(-50%)", duration: "0.2"})
-        .to("#lil_game_guy", {transform: " scaleY(1) translateY(-50%)", duration: "0.2"})
-        gsap.timeline()
-        .to("#game_left_eye", {top: "60%", duration: "0.2"})
-        .to("#game_left_eye", {top: "30%", duration: "0.2"})
-        gsap.timeline()
-        .to("#game_right_eye", {top: "45%", duration: "0.2"})
-        .to("#game_right_eye", {top: "20%", duration: "0.2"})
+        const tl = gsap.timeline();
+
+        tl.to("#lil_game_guy", {
+            top: "75%",
+            transform: "scaleY(0.8) translateY(-50%)",
+            duration: 0.2,
+            ease: "power1.out"
+        })
+        .to("#lil_game_guy", {
+            transform: "scaleY(1) translateY(-50%)",
+            duration: 0.2,
+            ease: "power1.in"
+        }, "<");
+
+        tl.to("#game_left_eye", { top: "60%", duration: 0.2 }, 0)
+        .to("#game_left_eye", { top: "30%", duration: 0.2 }, 0.2);
+
+        tl.to("#game_right_eye", { top: "45%", duration: 0.2 }, 0)
+        .to("#game_right_eye", { top: "20%", duration: 0.2 }, 0.2);
+
         setDirection("Right");
+    });
+
+    const defaultAnimation = contextSafe((circle : string) => {
+        gsap.timeline()
+        .to(`#${circle}`, {borderColor: defaultColor, duration: "0.1"})
+        .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
     })
 
     const missAnimation = contextSafe((circle : string) => {
@@ -351,13 +380,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         gsap.set(`#perfect_text`, {opacity: 0})
 
         missTextTimeline.current.restart();
-
-    })
-
-    const defaultAnimation = contextSafe((circle : string) => {
-        gsap.timeline()
-        .to(`#${circle}`, {borderColor: defaultColor, duration: "0.1"})
-        .to(`#${circle}`, {borderColor: gameWhite, duration: "0.1"})
     })
 
     const hitAnimation = contextSafe((circle : string) => {
@@ -426,10 +448,10 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             const baseScore = (note === "FT" || note === "ST")? 250 : 200
             // base score * (1 + combo multiplier) * (1 + bonues) //flowstate bonus is 0.5, timingBonus is 1 for perfect, and 0.5 for okay 
             if (flowState){
-                setScore((score) => score + (baseScore * (1 + getComboMultiplier(comboCount)) * (1 + 0.5)));
+                setScore((score) => score + Math.floor(baseScore * (1 + getComboMultiplier(comboCount)) * (1 + 0.5)));
             }
             else {
-                setScore((score) => score + (baseScore * (1 + getComboMultiplier(comboCount)) * (1)));
+                setScore((score) => score + Math.floor(baseScore * (1 + getComboMultiplier(comboCount)) * (1)));
             }
             setPerfectCount((perfect) => perfect + 1);
             setComboCount((combo) => combo + 1);
@@ -450,7 +472,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 setFlowState(true)
                 setFlow(0)
                 flowStateAnimation.current.restart()
-                // setFlow(100)
             } 
             else if (!flowState) {
                 setFlow(prevFlow => Math.min(prevFlow + 1, 100))
@@ -473,10 +494,10 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             const baseScore = (note === "FT" || note === "ST")? 250 : 200
             // base score * (1 + combo multiplier) * (1 + bonues) //flowstate bonus is 0.5, timingBonus is 1 for perfect, and -0.5 for okay 
             if (flowState){
-                setScore((score) => score + (baseScore * (1 + getComboMultiplier(comboCount)) * (1 + 0.5 - 0.5)));
+                setScore((score) => score + Math.floor(baseScore * (1 + getComboMultiplier(comboCount)) * (1 + 0.5 - 0.5)));
             }
             else {
-                setScore((score) => score + (baseScore * (1 + getComboMultiplier(comboCount)) * (1 - 0.5)));
+                setScore((score) => score + Math.floor(baseScore * (1 + getComboMultiplier(comboCount)) * (1 - 0.5)));
             }
             setOkayCount((okay) => okay + 1); 
             setComboCount((combo) => combo + 1);
@@ -497,7 +518,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 setFlowState(true)
                 setFlow(0)
                 flowStateAnimation.current.restart()
-                // setFlow(100)
             } 
             else if (!flowState) {
                 setFlow(prevFlow => Math.min(prevFlow + 1, 100))
@@ -520,7 +540,14 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             if (gameState === "End" || gameState === "Waiting") return;
 
             if ((event.key === buttonMappings.pause[0]|| event.key === buttonMappings.pause[1]) && songStarted) {
-                pauseMap();
+                if (time === turnTiming.current[turnTimingIndex][0] || time === rightTiming.current[rightTimingIndex][0] || leftTiming.current[leftTimingIndex][0]) {
+                    setTimeout(()=> {
+                        pauseMap()
+                    }, 1) //Might help in preventing instances where player pauses on frame a bar is created (its animation won't be paused)
+                }
+                else {
+                    pauseMap()
+                }
             }
             if(gameState === "Paused") return; //If false, that means game is complete/paused
 
@@ -639,6 +666,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     gsap.to("#left_eye", {backgroundColor: "transparent", borderBottomWidth: "2", duration: "0.3"});
                     gsap.to("#right_eye", {backgroundColor: "transparent", borderLeftWidth: "0", borderRightWidth: "0", borderTopWidth: "0", duration: "0.3"}); 
                 }
+                gsap.set("#gear_container", {transform: "scale(0)"})
             }, 3000)
         }
     }, [endScreen])
@@ -677,8 +705,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         if (flowState) {
             flowStateAnimation.current.pause()
         }
-        console.log(flowStateAnimation.current)
-        // flowStateAnimation.current.paused(true)
         if (reactPlayerRef.current){
             setVideoPlaying(false)
         }
@@ -1068,7 +1094,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     return (
     <div>
         {songBackground && 
-        <div id='video_visible' style={{opacity: videoVisible? (1 - backgroundDim) : 0}} className={videoLoaded? "showBackground" : "hideBackground"} >
+        <div id='video_background' style={{transform: flippedBackground? "scaleX(-1)" : ""}}>
+            <div id='video_visible' style={{opacity: videoVisible? (1 - backgroundDim) : 0}} className={videoLoaded? "showBackground" : "hideBackground"} >
             {/* <div id='yt-cover'> */}
             {/* </div> */}
             {/* // https://www.youtube-nocookie.com/embed/eh1r0ZpTrXo?controls=0&rel=0&playsinline=1&disablekb=1&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&origin=https%3A%2F%2Frhythm-plus.com&widgetid=1&forigin=https%3A%2F%2Frhythm-plus.com%2Fgame%2FGyLLbFGVGXJ9TagPGE5dur&aoriginsup=1&vf=1 i found a secret */}
@@ -1095,6 +1122,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 }}
             />
         </div>
+        </div>        
         }
         <div id='game_container'>
             {(!endScreen || !gameOverScreen) && 
@@ -1211,6 +1239,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                     <button onClick={() => resumeMap()}>Resume</button>
                     <button onClick={() => restartMap()}>Retry</button>
                     <button onClick={() => setFlippedScreen(!flippedScreen)}>Flip Screen</button>
+                    <button onClick={() => setFlippedBackground(!flippedBackground)}>Flip Background</button>
                     <button onClick={() => {closeGame(usingLocalMap)}}>Main Menu</button>
                 </div>
             </div>
@@ -1218,12 +1247,10 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             {gameState === "Waiting"? 
             <div id='waiting_wrapper'>
                 {songBackground && <p id='yt_info'>Video Background Powered by Youtube. Video copyright belongs to respective owners.</p>}
-                <div id='countdown'>
                     <span>3</span>
                     <span>2</span>
                     <span>1</span>
-                    <span>0</span>
-                </div>
+                    <span></span>
             </div>
             :
             <>
@@ -1239,7 +1266,13 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                         <div id='lil_guy_container'>
                             <div id='lil_guy'>
                                 <div className='eyes' id='left_eye'></div>
-                                <div className='eyes' id='right_eye'></div>
+                                <div className='eyes' id='right_eye'>
+                                    <div id='gear_container'>
+                                        <span className="cas_teeth_loading"></span>
+                                        <span className="cas_teeth_loading"></span>
+                                        <span className="cas_teeth_loading"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div id='inner-cassette'></div>

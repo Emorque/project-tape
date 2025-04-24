@@ -102,6 +102,7 @@
     background-color: var(--screenBlack);
     gap: 10px;
     flex-flow: column wrap;
+    align-content: flex-start;
     display: none;
     overflow: auto;
     scrollbar-width: thin;
@@ -301,6 +302,7 @@
     height: 100%;
     display: flex;
     gap: 10px;
+    align-content: flex-start;
     background-color: var(--screenBlack);
     flex-flow: column wrap;
     overflow: auto;
