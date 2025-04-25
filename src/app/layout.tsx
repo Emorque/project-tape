@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PostHogProvider } from './providers'
 // import localFont from "next/font/local";
 import "./globals.css";
 
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <PostHogProvider>
+          {children}
+        </PostHogProvider>
       </body>
     </html>
   );

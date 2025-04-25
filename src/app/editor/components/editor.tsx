@@ -1,5 +1,5 @@
 
-import { MouseEvent, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useWavesurfer } from '@wavesurfer/react'
 import { createClient } from '@/utils/supabase/client'
 import { FixedSizeList as List } from 'react-window';
