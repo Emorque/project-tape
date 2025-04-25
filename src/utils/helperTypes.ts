@@ -124,5 +124,13 @@ export type keybindsType = {
   increaseSpd: string,
 
   snap: string,
-  toggleMusic: string
+  toggleMusic: string,
+
+  staffUp: string,
+  topStaffTop: string,
+  topStaffBottom: string,
+
+  staffDown: string,
+  bottomStaffTop: string,
+  bottomStaffBottom: string,
 }

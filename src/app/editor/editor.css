@@ -288,7 +288,7 @@ input::file-selector-button {
     cursor: pointer;
 }
 
-#current_speed {
+#current_speed, #play_along_info {
     visibility: hidden;
     position: absolute;
     bottom: calc(100% + 5px);
@@ -305,6 +305,7 @@ input::file-selector-button {
 #speed_cas:hover #current_speed {
     visibility: visible;
 }
+
 
 .speed_teeth {
     position:absolute;
@@ -327,6 +328,14 @@ input::file-selector-button {
 }
 .teeth_unactive {
     background: linear-gradient(to right, transparent 25%,transparent 25%, transparent 75%, transparent 75%);
+}
+
+#play_along {
+    position: relative;
+}
+
+#play_along:hover #play_along_info {
+    visibility: visible;
 }
 
 a {

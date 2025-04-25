@@ -1,5 +1,5 @@
 
-import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEvent, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useWavesurfer } from '@wavesurfer/react'
 import { createClient } from '@/utils/supabase/client'
 import { FixedSizeList as List } from 'react-window';
@@ -97,6 +97,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const [mapSaved, setMapSaved] = useState<boolean>(true) 
   const [pbRate, setPbRate] = useState<number>(1)
   const [disabledSave, setDisabledSave] = useState<boolean>(false)
+  const [playingAlong, setPlayingAlong] = useState<boolean>(false);
 
   // String that will tell the user what fields of data are missing before deploying beatmap
   const [missingData, setMissingData] = useState<string>("")
@@ -110,7 +111,15 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     increaseSpd: getKeyMapping(keybinds.increaseSpd),
   
     snap: getKeyMapping(keybinds.snap),
-    toggleMusic: getKeyMapping(keybinds.toggleMusic)
+    toggleMusic: getKeyMapping(keybinds.toggleMusic),
+
+    staffUp: getKeyMapping(keybinds.staffUp),
+    topStaffTop: getKeyMapping(keybinds.topStaffTop),
+    topStaffBottom: getKeyMapping(keybinds.topStaffBottom),
+  
+    staffDown: getKeyMapping(keybinds.staffDown),
+    bottomStaffTop: getKeyMapping(keybinds.bottomStaffTop),
+    bottomStaffBottom: getKeyMapping(keybinds.bottomStaffBottom),
   }
 
   const { wavesurfer, isReady, isPlaying, currentTime} = useWavesurfer({
@@ -118,7 +127,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     url: songAudio,
     waveColor: '#0b7033',
     progressColor: 'rgb(87, 77, 97)',
-    cursorWidth: 0,
+    cursorWidth: 2,
     autoCenter: false,
     autoScroll: false,
     minPxPerSec: 256,
@@ -134,7 +143,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       if (wavesurfer) {
         const duration = wavesurfer.getDuration()
         const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((duration) * 16) + 1)).fill(""));
-        console.log(metadata)
         if (metadata) {
           for (let i = 0; i < metadata.normal_notes[0].length; i++) {
             tempNotes[0][i] = metadata.normal_notes[0][i]
@@ -151,36 +159,100 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         }
         console.log("Please exit Inspect Mode. Project Tape is likely to crash if you edit with it open. Be sure to save your map often.")
       }
-      console.log('Audio File', songFile)
     }
   }, [isReady])
+
+  
+  const itemIndex = useMemo(() => {
+    return (Math.floor(currentTime * 16) + 1);
+  }, [currentTime]);
+
+  useEffect(() => {
+    if (itemIndex && isPlaying){
+      const offset : number = (itemIndex % 3)
+      if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T") {
+        hitsoundsRef[0 + 3*offset].play();
+      }
+      if (songNotes[1][itemIndex] === "S") {
+        hitsoundsRef[1 + 3*offset].play();
+      }
+      if (songNotes[2][itemIndex] === "S" || songNotes[2][itemIndex] === "T") {
+        hitsoundsRef[2 + 3*offset].play();
+      }
+      if (songNotes[3][itemIndex] === "S") {
+        hitsoundsRef[3 + 3*offset].play();
+      }
+    }
+  }, [itemIndex, isPlaying]);
 
   useEffect(() => {
     const handleKeyDown = (event: {key: string; repeat: boolean}) => {
       if (event.repeat) return;
       if (!keybindsActive) return;
 
-      if (event.key === keybindMappings.sNote[0] || event.key === keybindMappings.sNote[1]) {
-        setBtn("Single Note")
+      if (playingAlong) {
+        if (event.key === keybindMappings.staffUp[0] || event.key === keybindMappings.staffUp[1]) {
+          if (songNotes[2][itemIndex] === "S" || songNotes[2][itemIndex] === "T" || songNotes[3][itemIndex] === "S") {
+            return
+          }
+          setDoubleNote(0, 1, itemIndex)
+        }
+  
+        else if (event.key === keybindMappings.topStaffTop[0] || event.key === keybindMappings.topStaffTop[1]) {
+          if (songNotes[2][itemIndex] === "S" || songNotes[2][itemIndex] === "T" || songNotes[3][itemIndex] === "S") {
+            return
+          }
+          setNewNote(0, 1, itemIndex, "S");
+        }
+        else if (event.key === keybindMappings.topStaffBottom[0] || event.key === keybindMappings.topStaffBottom[1]) {
+          if (songNotes[2][itemIndex] === "S" || songNotes[2][itemIndex] === "T" || songNotes[3][itemIndex] === "S") {
+            return
+          }
+          setNewNote(1, 0, itemIndex, "S");
+        }
+        else if (event.key === keybindMappings.staffDown[0] || event.key === keybindMappings.staffDown[1]) {
+          if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T" || songNotes[1][itemIndex] === "S") {
+            return
+          }
+          setDoubleNote(2, 3, itemIndex)
+        }
+        else if (event.key === keybindMappings.bottomStaffTop[0] || event.key === keybindMappings.bottomStaffTop[1]) {
+          if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T" || songNotes[1][itemIndex] === "S") {
+            return
+          }
+          setNewNote(2, 3, itemIndex, "S");
+        }
+        else if (event.key === keybindMappings.bottomStaffBottom[0] || event.key === keybindMappings.bottomStaffBottom[1]) {
+          if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T" || songNotes[1][itemIndex] === "S") {
+            return
+          }
+          setNewNote(3, 2, itemIndex, "S");
+        }
       }
 
-      else if (event.key === keybindMappings.tNote[0] || event.key === keybindMappings.tNote[1]) {
-        setBtn("Turn Note")
-      }
-      
-      else if (event.key === keybindMappings.decreaseSpd[0] || event.key === keybindMappings.decreaseSpd[1]) {
-        updatePBRate(Math.max(0.25, pbRate - 0.25))
-      }
+      else {
 
-      else if (event.key === keybindMappings.increaseSpd[0] || event.key === keybindMappings.increaseSpd[1]) {
-        updatePBRate(Math.min(1, pbRate + 0.25))
+        if (event.key === keybindMappings.sNote[0] || event.key === keybindMappings.sNote[1]) {
+          setBtn("Single Note")
+        }
+  
+        else if (event.key === keybindMappings.tNote[0] || event.key === keybindMappings.tNote[1]) {
+          setBtn("Turn Note")
+        }
+        
+        else if (event.key === keybindMappings.decreaseSpd[0] || event.key === keybindMappings.decreaseSpd[1]) {
+          updatePBRate(Math.max(0.25, pbRate - 0.25))
+        }
+  
+        else if (event.key === keybindMappings.increaseSpd[0] || event.key === keybindMappings.increaseSpd[1]) {
+          updatePBRate(Math.min(1, pbRate + 0.25))
+        }
+  
+        else if (event.key === keybindMappings.snap[0] || event.key === keybindMappings.snap[1]) {
+          setSnap(prevSnap => !prevSnap)
+        }
       }
-
-      else if (event.key === keybindMappings.snap[0] || event.key === keybindMappings.snap[1]) {
-        setSnap(prevSnap => !prevSnap)
-      }
-
-      else if (event.key === keybindMappings.toggleMusic[0] || event.key === keybindMappings.toggleMusic[1]) {
+      if (event.key === keybindMappings.toggleMusic[0] || event.key === keybindMappings.toggleMusic[1]) {
         onPlayPause();
       }
     }
@@ -191,12 +263,11 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return () => {
         document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [btn, pbRate, snapOn, keybindsActive])
+  }, [btn, pbRate, snapOn, keybindsActive, playingAlong, itemIndex, songNotes])
 
   
   useEffect(() => {
     const handleUserLeave = (event: BeforeUnloadEvent) => {
-      // console.log(event, typeof(event.preventDefault()))
       const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
 
       let isMapSaved = false;
@@ -263,31 +334,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
 
   const vListRef = useRef<List>(null);
   
-  const itemIndex = useMemo(() => {
-    return Math.floor(currentTime * 16);
-  }, [currentTime]);
-
-  useEffect(() => {
-    if (itemIndex && isPlaying){
-      const offset : number = (itemIndex % 3)
-      if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T") {
-        hitsoundsRef[0 + 3*offset].play();
-      }
-      if (songNotes[1][itemIndex] === "S") {
-        hitsoundsRef[1 + 3*offset].play();
-      }
-      if (songNotes[2][itemIndex] === "S" || songNotes[2][itemIndex] === "T") {
-        hitsoundsRef[2 + 3*offset].play();
-      }
-      if (songNotes[3][itemIndex] === "S") {
-        hitsoundsRef[3 + 3*offset].play();
-      }
-    }
-  }, [itemIndex, isPlaying]);
-
   const changeNoteHor = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
     if (isPlaying){ 
-      console.log("Invalid")
       return;
     }
     const hero_list_info = document.getElementById('waveform_bars')?.getBoundingClientRect();
@@ -540,19 +588,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         background: localMaps[map_id].background
       });
 
-      console.log(JSON.stringify({
-        song_metadata: currentMap.song_metadata,
-        song_notes: currentMap.normal_notes,
-        background: currentMap.background
-      }))
-      console.log(JSON.stringify({
-        song_metadata: localMaps[map_id].song_metadata,
-        song_notes: localMaps[map_id].normal_notes,
-        background: localMaps[map_id].background
-      }))
-
-      
-      console.log(isEqual)
       setMapSaved(isEqual)
       setPromptMenu("Exit")
       setMenu(true)
@@ -634,10 +669,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
       else {
         setDeploymentMap(localMaps[map_id])
-        console.log("Deployment Map", localMaps[map_id])
       }
 
-      console.log(isEqual)
       setMapSaved(isEqual)
       setPromptMenu("Deploy")
       setMenu(true)
@@ -647,7 +680,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       setPromptMenu("Deploy")
       setMenu(true)
     }
-    console.log("Deploy Menu")
   }
 
   // const [beatmapUpload, setBeatmapUploading] = useState<boolean>(false)
@@ -692,7 +724,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     const lastUpload = localStorage.getItem("lastUpload")
     if (lastUpload) {
       const timeDifference = currentTime - parseInt(lastUpload);
-      // console.log(timeDifference, oneDayInMilliseconds, currentTime.toString())
       if (timeDifference > oneDayInMilliseconds){
         localStorage.setItem("lastUpload", currentTime.toString())
         deployMap();
@@ -701,7 +732,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         const remainingHours = Math.floor((oneDayInMilliseconds - timeDifference) / (3600 * 1000)); // Get hours
         const remainingMinutes = Math.floor(((oneDayInMilliseconds - timeDifference) % (3600 * 1000)) / (60 * 1000)); // Get minutes
 
-        console.log("User has already uploaded a song in the last 24 hours.(LS)");
         setDeployMessage(`You Can Only Upload One Beatmap per Day. You Can Upload Again In ${remainingHours} Hours, ${remainingMinutes} Minutes.`)
         return;
       }
@@ -717,11 +747,9 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     const localMaps = localStorage.getItem("localMaps");
     if (!localMaps) {
       setDeployMessage("Beatmap Not Saved. Unable To Deploy")
-      console.log("Beatmap not saved. Unable to Deploy")
       return;
     }
     // const currentMap = JSON.parse(localMaps)
-    console.log("deployMap")
     const current_metadata = deploymentMap.song_metadata
     const current_notes = deploymentMap.normal_notes
     const song_metadata_upload = {
@@ -758,7 +786,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
 
       if (recentUploads && recentUploads.length > 0) {
-        console.log("User has already uploaded a song in the last 24 hours.");
         setDeployMessage("You Can Only Upload One Beatmap per Day.")
         return;
       }
@@ -809,10 +836,11 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   })
 
   useEffect(() => {
+    console.log(currentTime)
     if (vListRef.current) {
       vListRef.current.scrollTo(currentTime * 256)
     }
-    wavesurfer?.setScrollTime(currentTime)
+    wavesurfer?.setScrollTime(Math.max(0, currentTime - (1 / 16)))
   }, [currentTime])
 
   function scrollWindow(index : number)  {
@@ -828,20 +856,17 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     if (wavesurfer) {
       wavesurfer.setPlaybackRate(rate);
       setPbRate(rate)
-      // console.log("updatePBRate")
     }
   }
 
   const updateTime = (event: {scrollOffset: number}) => {
-    console.log(event)
     if (isPlaying) return; // Prevent updates while playing
     if (wavesurfer) {
       const newTime = event.scrollOffset / 256;
-      console.log("newTime", newTime)
       // Only update if the time has actually changed
+      // if (Math.abs(currentTime - newTime) > 0.03) {
       if (Math.abs(currentTime - newTime) > 0.03) {
         wavesurfer.setTime(newTime);
-        console.log("updateTime", event.scrollOffset)
       }
     }
   }
@@ -856,7 +881,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const [videoMuted, setVideoMuted] = useState<boolean>(true)
   const [videoDuration, setVideoDuration] = useState<number>(0)
   const reactPlayerRef = useRef<ReactPlayer | null>(null)
-
   const updatePlayerTime = () => {
     if (reactPlayerRef.current) {
       reactPlayerRef.current.seekTo(ytOffset);
@@ -890,6 +914,10 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       setYTOffset(0)
       setYTEnd(duration)
     }
+  }
+
+  const playAlong = () => {
+    setPlayingAlong(!playingAlong)
   }
 
   return (
@@ -1162,6 +1190,19 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
 
 
         <div className="footer_div">
+          <button onClick={playAlong} className="play_btn" id="play_along">
+          {playingAlong? 
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" className="bi bi-keyboard-fill" viewBox="0 0 16 16">
+              <path d="M0 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm13 .25v.5c0 .138.112.25.25.25h.5a.25.25 0 0 0 .25-.25v-.5a.25.25 0 0 0-.25-.25h-.5a.25.25 0 0 0-.25.25M2.25 8a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h.5A.25.25 0 0 0 3 8.75v-.5A.25.25 0 0 0 2.75 8zM4 8.25v.5c0 .138.112.25.25.25h.5A.25.25 0 0 0 5 8.75v-.5A.25.25 0 0 0 4.75 8h-.5a.25.25 0 0 0-.25.25M6.25 8a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h.5A.25.25 0 0 0 7 8.75v-.5A.25.25 0 0 0 6.75 8zM8 8.25v.5c0 .138.112.25.25.25h.5A.25.25 0 0 0 9 8.75v-.5A.25.25 0 0 0 8.75 8h-.5a.25.25 0 0 0-.25.25M13.25 8a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h.5a.25.25 0 0 0 .25-.25v-.5a.25.25 0 0 0-.25-.25zm0 2a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h.5a.25.25 0 0 0 .25-.25v-.5a.25.25 0 0 0-.25-.25zm-3-2a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h1.5a.25.25 0 0 0 .25-.25v-.5a.25.25 0 0 0-.25-.25zm.75 2.25v.5c0 .138.112.25.25.25h.5a.25.25 0 0 0 .25-.25v-.5a.25.25 0 0 0-.25-.25h-.5a.25.25 0 0 0-.25.25M11.25 6a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h.5a.25.25 0 0 0 .25-.25v-.5a.25.25 0 0 0-.25-.25zM9 6.25v.5c0 .138.112.25.25.25h.5a.25.25 0 0 0 .25-.25v-.5A.25.25 0 0 0 9.75 6h-.5a.25.25 0 0 0-.25.25M7.25 6a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h.5A.25.25 0 0 0 8 6.75v-.5A.25.25 0 0 0 7.75 6zM5 6.25v.5c0 .138.112.25.25.25h.5A.25.25 0 0 0 6 6.75v-.5A.25.25 0 0 0 5.75 6h-.5a.25.25 0 0 0-.25.25M2.25 6a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h1.5A.25.25 0 0 0 4 6.75v-.5A.25.25 0 0 0 3.75 6zM2 10.25v.5c0 .138.112.25.25.25h.5a.25.25 0 0 0 .25-.25v-.5a.25.25 0 0 0-.25-.25h-.5a.25.25 0 0 0-.25.25M4.25 10a.25.25 0 0 0-.25.25v.5c0 .138.112.25.25.25h5.5a.25.25 0 0 0 .25-.25v-.5a.25.25 0 0 0-.25-.25z"/>
+            </svg>
+            :
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" className="bi bi-keyboard" viewBox="0 0 16 16">
+              <path d="M14 5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM2 4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+              <path d="M13 10.25a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm0-2a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm-5 0A.25.25 0 0 1 8.25 8h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 8 8.75zm2 0a.25.25 0 0 1 .25-.25h1.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-1.5a.25.25 0 0 1-.25-.25zm1 2a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm-5-2A.25.25 0 0 1 6.25 8h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 6 8.75zm-2 0A.25.25 0 0 1 4.25 8h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 4 8.75zm-2 0A.25.25 0 0 1 2.25 8h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 2 8.75zm11-2a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm-2 0a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm-2 0A.25.25 0 0 1 9.25 6h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 9 6.75zm-2 0A.25.25 0 0 1 7.25 6h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 7 6.75zm-2 0A.25.25 0 0 1 5.25 6h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5A.25.25 0 0 1 5 6.75zm-3 0A.25.25 0 0 1 2.25 6h1.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-1.5A.25.25 0 0 1 2 6.75zm0 4a.25.25 0 0 1 .25-.25h.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-.5a.25.25 0 0 1-.25-.25zm2 0a.25.25 0 0 1 .25-.25h5.5a.25.25 0 0 1 .25.25v.5a.25.25 0 0 1-.25.25h-5.5a.25.25 0 0 1-.25-.25z"/>
+            </svg>
+          }
+            <div id="play_along_info">Play Along: {playingAlong? "Enabled" : "Disabled"}</div>
+          </button>
           <button disabled={!user} className="styledBtns" onClick={() => {verifyDeployment()}}>Deploy</button>
         </div>
       </div>

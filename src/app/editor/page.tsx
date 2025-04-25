@@ -121,13 +121,21 @@ export default function EditorPage() {
     if (!localKeybinds) {
       console.log("No Local Keybinds")
       defaultKeybinds = {
-        sNote: "Q",
-        tNote: "W",
-        decreaseSpd: "1",
-        increaseSpd: "2",
+        sNote: "1",
+        tNote: "2",
+        decreaseSpd: "9",
+        increaseSpd: "0",
 
-        snap: "A",
+        snap: "Q",
         toggleMusic: "P",
+
+        staffUp: "A",
+        topStaffTop: "S",
+        topStaffBottom: "D",
+      
+        staffDown: "L",
+        bottomStaffTop: "J",
+        bottomStaffBottom: "K",
       }
     }
     else {

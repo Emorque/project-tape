@@ -11,16 +11,23 @@ interface keybindsInterface {
 export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {   
 
   // Settings metadata
-  const [singleNoteBtn, setSingleNoteBtn] = useState<string>("S")
-  const [turnNoteBtn, setTurnNoteBtn] = useState<string>("K")
+  const [singleNoteBtn, setSingleNoteBtn] = useState<string>("1")
+  const [turnNoteBtn, setTurnNoteBtn] = useState<string>("2")
 
-  const [decreaseSpdBtn, setDecreaseSpdBtn] = useState<string>("1")
-  const [increaseSpdBtn, setIncreaseSpdBtn] = useState<string>("2")
+  const [decreaseSpdBtn, setDecreaseSpdBtn] = useState<string>("9")
+  const [increaseSpdBtn, setIncreaseSpdBtn] = useState<string>("0")
 
   const [snapBtn, setSnapBtn] = useState<string>("Q")
   const [toggleMusicBtn, setToggleMusicBtn] = useState<string>("P")
-  // Have a div pop up at the top with something like "Map saved locally". It goes away after 2 seconds, and during that two seconds, disable the save command
- 
+
+  const [staffUpBtn, setStaffUpBtn] = useState<string>("A");
+  const [topStaffTopBtn, setTopStaffTopBtn] = useState<string>("S");
+  const [topStaffBottomBtn, setTopStaffBottomBtn] = useState<string>("D");
+  
+  const [staffDownBtn, setStaffDownBtn] = useState<string>("L");
+  const [bottomStaffTopBtn, setBottomStaffTopBtn] = useState<string>("J");
+  const [bottomStaffBottomBtn, setBottomStaffBottomBtn] = useState<string>("K");
+
   const [disableMapping, setDisabedMapping] = useState<boolean>(false)
   const [disabledSave, setDisabedSave] = useState<boolean>(false)
   const [actionKey, setActionKey] = useState<string>("");
@@ -37,6 +44,35 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
     gsap.to(btn, {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
   })
   
+
+  const compareKeys = (key: string, btn: string) => {
+    const musicControlButtons = {
+      "singleNoteBtn" : singleNoteBtn,
+      "turnNoteBtn" : turnNoteBtn,
+      "decreaseSpdBtn": decreaseSpdBtn,
+      "increaseSpdBtn" : increaseSpdBtn,
+      "snapBtn" : snapBtn,
+      "toggleMusicBtn" : toggleMusicBtn,
+
+      "staffUpBtn" : staffUpBtn, 
+      "topStaffTopBtn" : topStaffTopBtn, 
+      "topStaffBottomBtn" : topStaffBottomBtn, 
+      "staffDownBtn" : staffDownBtn, 
+      "bottomStaffTopBtn" : bottomStaffTopBtn, 
+      "bottomStaffBottomBtn" : bottomStaffBottomBtn
+    };
+
+    for (const [musicBtn, value] of Object.entries(musicControlButtons)) {
+      if (btn === musicBtn) {
+        continue
+      }
+      if (key === value) {
+        return true
+      }
+    }
+    return false
+  }
+
   // Keybind Assignment 
   useEffect(() => {
     const handleKeyDown = (event: {key: string; repeat: boolean}) => {
@@ -47,8 +83,8 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
       const key = (event.key === " ") ? "Spacebar" : event.key.charAt(0).toUpperCase() + event.key.slice(1);
 
       if (actionKey === "Single") {
-          if (key === turnNoteBtn || key === decreaseSpdBtn || key === increaseSpdBtn || key === snapBtn || key === toggleMusicBtn) {
-              keyError("#singleNoteBtn");
+          if (compareKeys(key, "singleNoteBtn")){
+            keyError("#singleNoteBtn");
               setDisabedMapping(true);
               setTimeout(() => {
                   setDisabedMapping(false)
@@ -59,7 +95,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
       }
 
       if (actionKey === "Turn") {
-        if (key === singleNoteBtn || key === decreaseSpdBtn || key === increaseSpdBtn || key === snapBtn || key === toggleMusicBtn) {
+        if (compareKeys(key, "turnNoteBtn")){
           keyError("#turnNoteBtn");
               setDisabedMapping(true);
               setTimeout(() => {
@@ -71,7 +107,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
       }
 
       if (actionKey === "Decrease Spd") {
-        if (key === singleNoteBtn || key === turnNoteBtn || key === increaseSpdBtn || key === snapBtn || key === toggleMusicBtn) {
+        if (compareKeys(key, "decreaseSpdBtn")){
           keyError("#decreaseSpdBtn");
               setDisabedMapping(true);
               setTimeout(() => {
@@ -83,7 +119,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
       }
 
       if (actionKey === "Increase Spd") {
-        if (key === singleNoteBtn || key === turnNoteBtn || key === decreaseSpdBtn || key === snapBtn || key === toggleMusicBtn) {
+        if (compareKeys(key, "increaseSpdBtn")){
           keyError("#increaseSpdBtn");
               setDisabedMapping(true);
               setTimeout(() => {
@@ -95,7 +131,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
       }
 
       if (actionKey === "Snap") {
-        if (key === singleNoteBtn || key === turnNoteBtn || key === decreaseSpdBtn || key === increaseSpdBtn || key === toggleMusicBtn) {
+        if (compareKeys(key, "snapBtn")){
           keyError("#snapBtn");
               setDisabedMapping(true);
               setTimeout(() => {
@@ -107,7 +143,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
       }
 
       if (actionKey === "Music") {
-        if (key === singleNoteBtn || key === turnNoteBtn || key === decreaseSpdBtn || key === increaseSpdBtn || key === snapBtn) {
+        if (compareKeys(key, "toggleMusicBtn")){
           keyError("#toggleMusicBtn");
               setDisabedMapping(true);
               setTimeout(() => {
@@ -117,6 +153,78 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
           }
           setToggleMusicBtn(key)
       }
+
+      if (actionKey === "StaffUp") {
+        if (compareKeys(key, "staffUpBtn")){
+          keyError("#staffUpBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setStaffUpBtn(key)
+      }
+
+      if (actionKey === "TopStaffTop") {
+        if (compareKeys(key, "topStaffTopBtn")){
+          keyError("#topStaffTopBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setTopStaffTopBtn(key)
+      }
+
+      if (actionKey === "TopStaffBottom") {
+        if (compareKeys(key, "topStaffBottomBtn")){
+          keyError("#topStaffBottomBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setTopStaffBottomBtn(key)
+      }
+
+      if (actionKey === "StaffDown") {
+        if (compareKeys(key, "staffDownBtn")){
+          keyError("#staffDownBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setStaffDownBtn(key)
+      }
+
+      if (actionKey === "BottomStaffTop") {
+        if (compareKeys(key, "bottomStaffTopBtn")){
+          keyError("#bottomStaffTopBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setBottomStaffTopBtn(key)
+      }
+
+      if (actionKey === "BottomStaffBottom") {
+        if (compareKeys(key, "bottomStaffBottomBtn")){
+          keyError("#bottomStaffBottomBtn");
+              setDisabedMapping(true);
+              setTimeout(() => {
+                  setDisabedMapping(false)
+              }, 1500)
+              return
+          }
+          setBottomStaffBottomBtn(key)
+      }
     }
 
     document.addEventListener('keydown', handleKeyDown);
@@ -125,7 +233,9 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
     return () => {
         document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [singleNoteBtn, turnNoteBtn, decreaseSpdBtn, increaseSpdBtn, snapBtn, toggleMusicBtn, actionKey, disableMapping])
+  }, [singleNoteBtn, turnNoteBtn, decreaseSpdBtn, increaseSpdBtn, snapBtn, toggleMusicBtn, actionKey, disableMapping,
+    staffUpBtn, topStaffTopBtn, topStaffBottomBtn, staffDownBtn, bottomStaffTopBtn, bottomStaffBottomBtn
+  ])
 
   // Grabbing local
   useEffect(() => {
@@ -134,13 +244,21 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
     if (!localKeybinds) {
       console.log("No Local Keybinds")
       updatedKeybinds = {
-        sNote: "Q",
-        tNote: "W",
-        decreaseSpd: "1",
-        increaseSpd: "2",
+        sNote: "1",
+        tNote: "2",
+        decreaseSpd: "9",
+        increaseSpd: "0",
 
-        snap: "A",
+        snap: "Q",
         toggleMusic: "P",
+
+        staffUp: "A",
+        topStaffTop: "S",
+        topStaffBottom: "D",
+      
+        staffDown: "L",
+        bottomStaffTop: "J",
+        bottomStaffBottom: "K",
       }
     }
     else {
@@ -155,6 +273,14 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
     setSnapBtn(updatedKeybinds.snap)
     setToggleMusicBtn(updatedKeybinds.toggleMusic)
 
+    setStaffUpBtn(updatedKeybinds.staffUp || "A")
+    setTopStaffTopBtn(updatedKeybinds.topStaffTop || "S")
+    setTopStaffBottomBtn(updatedKeybinds.topStaffBottom || "D")
+
+    setStaffDownBtn(updatedKeybinds.staffDown || "L")
+    setBottomStaffTopBtn(updatedKeybinds.bottomStaffTop || "J") 
+    setBottomStaffBottomBtn(updatedKeybinds.bottomStaffBottom || "K")
+
     localStorage.setItem("keybinds", JSON.stringify(updatedKeybinds))
   }, [])
 
@@ -168,6 +294,14 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
     
       snap: snapBtn,
       toggleMusic: toggleMusicBtn,
+
+      staffUp: staffUpBtn,
+      topStaffTop: topStaffTopBtn,
+      topStaffBottom: topStaffBottomBtn,
+    
+      staffDown: staffDownBtn,
+      bottomStaffTop: bottomStaffTopBtn,
+      bottomStaffBottom: bottomStaffBottomBtn,
     }
 
     // Animation + Temporarily disable saving keybinds 
@@ -184,13 +318,21 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
   // resetKeybinds
   const resetKeybinds = () => {
     const defaultKeybinds : keybindsType = {
-      sNote: "Q",
-      tNote: "W",
-      decreaseSpd: "1",
-      increaseSpd: "2",
+      sNote: "1",
+      tNote: "2",
+      decreaseSpd: "9",
+      increaseSpd: "0",
 
-      snap: "A",
+      snap: "Q",
       toggleMusic: "P",
+      
+      staffUp: "A",
+      topStaffTop: "S",
+      topStaffBottom: "D",
+    
+      staffDown: "L",
+      bottomStaffTop: "J",
+      bottomStaffBottom: "K",
     }
     setSingleNoteBtn(defaultKeybinds.sNote)
     setTurnNoteBtn(defaultKeybinds.tNote)
@@ -199,6 +341,14 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
 
     setSnapBtn(defaultKeybinds.snap)
     setToggleMusicBtn(defaultKeybinds.toggleMusic)
+
+    setStaffUpBtn(defaultKeybinds.staffUp)
+    setTopStaffTopBtn(defaultKeybinds.topStaffTop)
+    setTopStaffBottomBtn(defaultKeybinds.topStaffBottom)
+
+    setStaffDownBtn(defaultKeybinds.staffDown)
+    setBottomStaffTopBtn(defaultKeybinds.bottomStaffTop)
+    setBottomStaffBottomBtn(defaultKeybinds.bottomStaffBottom)
 
     // TODO: ANIMATION
     bottomAnimation("#reset_tooltip_text")
@@ -263,6 +413,37 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
       color: (actionKey === "Music")? "#1d1d1d" : "#eaeaea"
   }
 
+  const staffUpStyle = {
+      backgroundColor: (actionKey === "StaffUp")? "#91a89a" : "#1a1a1a",
+      color: (actionKey === "StaffUp")? "#1d1d1d" : "#eaeaea"
+  }
+
+  const topStaffTopStyle = {
+    backgroundColor: (actionKey === "TopStaffTop")? "#91a89a" : "#1a1a1a",
+    color: (actionKey === "TopStaffTop")? "#1d1d1d" : "#eaeaea"
+  }
+
+  const topStaffBottomStyle = {
+    backgroundColor: (actionKey === "TopStaffBottom")? "#91a89a" : "#1a1a1a",
+    color: (actionKey === "TopStaffBottom")? "#1d1d1d" : "#eaeaea"
+  }
+
+  const staffDownStyle = {
+    backgroundColor: (actionKey === "StaffDown")? "#91a89a" : "#1a1a1a",
+    color: (actionKey === "StaffDown")? "#1d1d1d" : "#eaeaea"
+  }
+
+  const bottomStaffTopStyle = {
+    backgroundColor: (actionKey === "BottomStaffTop")? "#91a89a" : "#1a1a1a",
+    color: (actionKey === "BottomStaffTop")? "#1d1d1d" : "#eaeaea"
+  }
+
+  const bottomStaffBottomStyle = {
+    backgroundColor: (actionKey === "BottomStaffBottom")? "#91a89a" : "#1a1a1a",
+    color: (actionKey === "StaffUp")? "#1d1d1d" : "#eaeaea"
+  }
+
+
   return (
     <div id="keybinds_page">
       <button id="keybinds_back_btn" onClick={() => {
@@ -303,11 +484,52 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
         <div className="horizontal_div">
           <h2>Toggle Music</h2>
           <button id="toggleMusicBtn" className="action_btn" style={musicStyle} onClick={() => {newActionKey("Music")}}>{toggleMusicBtn}
-            
-            <h2 id="mapping_error">Keybind Conflict</h2>
-  
           </button>  
         </div>
+
+        <br/>
+        <h1>Play Along Keybinds</h1>
+        <div className="horizontal_div">
+          <h2>Staff Up Key</h2>
+          <button id="staffUpBtn" className="action_btn" style={staffUpStyle} onClick={() => {newActionKey("StaffUp")}}>
+            {staffUpBtn}
+          </button>  
+        </div>
+
+        <div className="horizontal_div">
+          <h2>Top Staff Top Key</h2>
+          <button id="topStaffTopBtn" className="action_btn" style={topStaffTopStyle} onClick={() => { newActionKey("TopStaffTop");}}>
+            {topStaffTopBtn}
+          </button>
+        </div>
+
+        <div className="horizontal_div">
+          <h2>Top Staff Bottom Key</h2>
+          <button id="topStaffBottomBtn" className="action_btn" style={topStaffBottomStyle} onClick={() => { newActionKey("TopStaffBottom");}}>
+            {topStaffBottomBtn}          </button>
+        </div>
+
+        <div className="horizontal_div">
+          <h2>Staff Down Key</h2>
+          <button id="staffDownBtn" className="action_btn" style={staffDownStyle} onClick={() => { newActionKey("StaffDown");}}>
+            {staffDownBtn}
+          </button>
+        </div>
+
+        <div className="horizontal_div">
+          <h2>Bottom Staff Top Key</h2>
+          <button id="bottomStaffTopBtn" className="action_btn" style={bottomStaffTopStyle} onClick={() => { newActionKey("BottomStaffTop");}}>
+            {bottomStaffTopBtn}
+          </button>
+        </div>
+
+        <div className="horizontal_div">
+          <h2>Bottom Staff Bottom Key</h2>
+          <button id="bottomStaffBottomBtn" className="action_btn" style={bottomStaffBottomStyle} onClick={() => { newActionKey("BottomStaffBottom");}}>
+            {bottomStaffBottomBtn}
+d          </button>
+        </div>
+
 
       {/* TODO do the same setActionKey("") for gameplay Settings. Without it, you can still edit keybinds after saving. Not good UX */}
         <div id="save_reset_btns">

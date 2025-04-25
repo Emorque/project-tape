@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import Image from 'next/image'
 
+const MaxFileSize = 1.0 * 1024 * 1024; 
+
 export default function Avatar({
   uid,
   url,
@@ -51,6 +53,11 @@ export default function Avatar({
       }
 
       const file = event.target.files[0]
+
+      if (file.size > MaxFileSize) {
+        throw new Error('Max Avatar Size is 1MB.')
+      }
+
       const fileExt = file.name.split('.').pop()
       const filePath = `${uid}/${uid}-${Math.random()}.${fileExt}`
 
@@ -83,7 +90,7 @@ export default function Avatar({
       onUpload(filePath)
     } catch (error) {
       console.error('Avatar error:', error) // Only used for eslint
-      alert('Error uploading avatar!')
+      alert(error)
     } finally {
       setTimeout(() => {
         setUploading(false)
