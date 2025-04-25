@@ -1,5 +1,5 @@
 
-import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWavesurfer } from '@wavesurfer/react'
 import { createClient } from '@/utils/supabase/client'
 import { FixedSizeList as List } from 'react-window';
@@ -263,8 +263,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return () => {
         document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [btn, pbRate, snapOn, keybindsActive, playingAlong, itemIndex, songNotes])
-
+  }, [pbRate, keybindsActive, playingAlong, itemIndex, songNotes])
+  
   
   useEffect(() => {
     const handleUserLeave = (event: BeforeUnloadEvent) => {
@@ -531,10 +531,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         description: description,
         source : source,
         difficulty: [difficulty, 0]
-        
-        // ytID: ytBackground,
-        // ytStart: ytOffset,
-        // ytEnd: ytEnd
       },
       background: [[ytBackground, ytOffset, ytEnd]],
       normal_notes : songNotes,
@@ -742,7 +738,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
   }
 
-  const deployMap = async () => {
+  const deployMap = useCallback( async () => {
     if (!songFile || !user || !deploymentMap) return;
     const localMaps = localStorage.getItem("localMaps");
     if (!localMaps) {
@@ -827,7 +823,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     catch (error) {
       console.log("Error Uploading Beatmap", error)
     }
-  }
+  }, [user, supabase, songFile, deploymentMap, ytBackground, ytOffset, ytEnd])
 
   const { contextSafe } = useGSAP();
 
@@ -836,7 +832,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   })
 
   useEffect(() => {
-    console.log(currentTime)
     if (vListRef.current) {
       vListRef.current.scrollTo(currentTime * 256)
     }

@@ -182,11 +182,21 @@
     }
 }
 
-#setting_back_btn {
+#settings_header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#setting_back_btn, #fullscreen_btn {
     background-color: var(--black);
     svg {
         fill: var(--white);
     }
+}
+
+#fullscreen_btn {
+    padding: 7px 5px 5px 5px;
 }
 
 .unactiveMenu {

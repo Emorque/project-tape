@@ -214,17 +214,22 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     // Everything to do with Supabase, only executed if selectedSong and usingLocalMap is false
     const uploadScore = useCallback(async () => {
-        if (!user || gameState !== "End") return; // Error without this. Likely because it would query profiles with a null id without it
+        if (gameState !== "End") return;
+        if (!user) {
+            setLeadboardText("You need to be logged in to upload scores")
+            setScoreUploading(false);
+            return; // Error without this. Likely because it would query profiles with a null id without it
+        }    
         if (!song_id || usingLocalMap) {
             setLeadboardText("Leaderboard Not Supported for Local Songs")
             setScoreUploading(false);
             return;
         }
-        if (!user && gameState === "End") {
-            setLeadboardText("You need to be logged in to upload scores")
-            setScoreUploading(false);
-            return;
-        }
+        // if (!user && gameState === "End") {
+        //     setLeadboardText("You need to be logged in to upload scores")
+        //     setScoreUploading(false);
+        //     return;
+        // }
         if (gameState === "End" && !verified) {
             setLeadboardText("Leaderboard not available for pending songs")
             setScoreUploading(false);

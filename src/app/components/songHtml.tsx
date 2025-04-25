@@ -76,15 +76,14 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     
           if (songs) {
             setSongList(songs)
-            console.log("Verified songs", songs);
           }
         } catch (error) {
           console.error('Song error:', error) // Only used for eslint
           alert('Error Loading Songs!')
         } 
-        finally {
-          console.log('Loaded Songs')
-        }
+        // finally {
+        //   console.log('Loaded Songs')
+        // }
     }, [supabase])
 
     useEffect(() => {
@@ -105,15 +104,13 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     
           if (songs) {
             setPendingSongList(songs)
-            console.log("role", role)
-            console.log("Pending Songs", songs);
           }
         } catch (error) {
           console.error('Song error:', error) // Only used for eslint
           alert('Error Loading Songs!')
         } 
         finally {
-          console.log('Loaded Pending Songs')
+        //   console.log('Loaded Pending Songs')
         }
     }, [role, supabase])
 
@@ -161,7 +158,6 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                 setLocalID(null)
                 setUsingLocalMap(false);
                 if (song.background) {
-                    console.log("songhtml", song.background)
                     setSongBackground(song.background)
                 }
                 else {
