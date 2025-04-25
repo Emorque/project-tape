@@ -16,6 +16,8 @@ import { type User } from '@supabase/supabase-js'
 import { LoadingScreen } from "./components/loadingScreen";
 import { Game } from "./components/game";
 
+import PlausibleProvider from 'next-plausible'
+
 const formatNotes = (notes : string[][]) => {
   const finalNotes : [number, string][] = [] 
   for (let i = 0; i < notes[0].length; i++) {
@@ -336,6 +338,7 @@ export default function Home() {
   }
   
   return (
+    <PlausibleProvider domain="project-tape.vercel.app">
     <div id="canvasContainer">
       <Canvas id="canvas_id" style={{ background: "black" }} camera={{ position: [36,4,40]}}>
         <Suspense fallback={null}>
@@ -554,5 +557,6 @@ export default function Home() {
         }
       </div>
     </div>
+    </PlausibleProvider>
   );
 }
