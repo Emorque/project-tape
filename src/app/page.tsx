@@ -66,8 +66,10 @@ export default function Home() {
   const [howtoView, setHowToView] = useState<boolean>(false);
 
   const [audioURL, setAudioURL] = useState<string | null>(null)
+  const [ytAudio, setYTAudio] = useState<boolean>(false)
   const audioRef = useRef<HTMLAudioElement>(null);
   const [audioReady, setAudioReady] = useState<boolean>(false);
+  const [songLength, setSongLength] = useState<number>(0)
 
   const [verifiedSong, setVerifiedSong] = useState<boolean>(false)
 
@@ -127,16 +129,22 @@ export default function Home() {
 
       if (songMap) {
         setGameMap(songMap.normal_map)
-        try {
-          const {data : songFile, error : songFileError} = await supabase.storage.from("songs").download(songMap.audio_link)
-          if (songFileError) {
-            throw songFileError
-          } 
-          const url = URL.createObjectURL(songFile)
-          setAudioURL(url)
+        if (songMap.audio_link.startsWith("https://www.youtube.com/watch?v=")) {
+          setYTAudio(true)
         }
-        catch (error) {
-          console.log("Error downloading Audio", error)
+        else {
+          setYTAudio(false)
+          try {
+            const {data : songFile, error : songFileError} = await supabase.storage.from("songs").download(songMap.audio_link)
+            if (songFileError) {
+              throw songFileError
+            } 
+            const url = URL.createObjectURL(songFile)
+            setAudioURL(url)
+          }
+          catch (error) {
+            console.log("Error downloading Audio", error)
+          }
         }
       }
     } catch (error) {
@@ -210,7 +218,7 @@ export default function Home() {
   // Local Songs 
   const [usingLocalMap, setUsingLocalMap] = useState<boolean>(false);
 
-  const handleSelectedSong = (songID: number, song_background : ytBackgroundType | null, verified: boolean) => {
+  const handleSelectedSong = (songID: number, song_background : ytBackgroundType | null, verified: boolean, gameLength: number) => {
     // updateCamera([14,8,34,   14, 7, 26], true)
     setSongPlaying(true);
     setSelectedSong(songID); 
@@ -218,18 +226,25 @@ export default function Home() {
     setUsingLocalMap(false)
     setSongBackground(song_background)
     setVerifiedSong(verified)
+    setSongLength(gameLength)
     // console.log("handled", song_background)
   }
 
-  const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => {
+  const handleLocalMap = (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null, gameLength: number) => {
     // updateCamera([14,8,34,   14, 7, 26], true)
     setSongPlaying(true);
-    setAudioURL(song_url)
+    if (song_url.startsWith("https://www.youtube.com/watch?v=")) {
+      setYTAudio(true)
+    }
+    else {
+      setYTAudio(false)
+    }
     setGameMap(formatNotes(song_notes))
     setUsingLocalMap(true)
     setVerifiedSong(false)
     setSongBackground(song_background)
-    // console.log("handled", song_background)
+    setSongLength(gameLength)
+    console.log("handled", song_background)
   }
 
   const handleSongReady = () => {
@@ -579,8 +594,8 @@ export default function Home() {
       />
       
       <div id="songScreen" style={stageStyle}>
-        {gameMap && songPlaying && userSettings && audioRef && audioReady && 
-        <Game gameMap={gameMap} closeGame={handleGameExit} settings={userSettings} audioProp={audioRef} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong} usingLocalMap={usingLocalMap}/>
+        {gameMap && songPlaying && userSettings && audioRef && (audioReady || ytAudio) && 
+        <Game gameMap={gameMap} closeGame={handleGameExit} settings={userSettings} audioProp={audioRef} ytAudio={ytAudio} gameLength={songLength} user={user} song_id={selectedSong} songBackground={songBackground} verified={verifiedSong} usingLocalMap={usingLocalMap}/>
         }
       </div>
     </div>

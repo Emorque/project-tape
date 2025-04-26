@@ -67,6 +67,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
   const [source, setSource] = useState<string>(metadata?.song_metadata.source || "");
   const [difficulty, setDifficulty] = useState<number>(metadata?.song_metadata.difficulty[0] || 1)
+  const [usingMP3, setUsingMP3] = useState<boolean>(metadata?.song_metadata.mp3 || true)
   const [ytBackground, setYTBackground] = useState<string>(metadata?.background[0][0] || ""); //Fix to .ytbg
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
   const [deploymentMap, setDeploymentMap] = useState<editorMap | null>(null)
@@ -284,6 +285,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
           ex_notes: 0,
           description: description,
           source : source,
+          mp3: usingMP3
         },
         background: [[ytBackground, ytOffset, ytEnd]],
         normal_notes : songNotes,
@@ -317,7 +319,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return () => {
         window.removeEventListener('beforeunload', handleUserLeave);
     };
-  }, [metadata, songName, songArtist, user, genre, songLength, language, noteCount, description, source, ytBackground, ytOffset, ytEnd, map_id, songNotes])
+  }, [metadata, songName, songArtist, user, genre, songLength, language, noteCount, description, source, ytBackground, ytOffset, ytEnd, map_id, songNotes, usingMP3])
 
   const onPlayPause = () => {
     if (wavesurfer) {
@@ -530,7 +532,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         ex_notes: 0,
         description: description,
         source : source,
-        difficulty: [difficulty, 0]
+        difficulty: [difficulty, 0],
+        mp3: usingMP3
       },
       background: [[ytBackground, ytOffset, ytEnd]],
       normal_notes : songNotes,
@@ -567,7 +570,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         ex_notes: 0,
         description: description,
         source : source,
-        difficulty: [difficulty, 0]
+        difficulty: [difficulty, 0],
+        mp3: usingMP3
       },
       background: [[ytBackground, ytOffset, ytEnd]],
       normal_notes : songNotes,
@@ -619,7 +623,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         ex_notes: 0,
         description: description,
         source : source,
-        difficulty: [difficulty, 0]
+        difficulty: [difficulty, 0],
+        mp3: usingMP3
       },
       background: [[ytBackground, ytOffset, ytEnd]],
       normal_notes : songNotes,
@@ -786,16 +791,22 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         return;
       }
 
-      const file = songFile;
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${user.id}/${user.id}-${Math.random()}.${fileExt}`
-      // user.id is needed with '/' because in my RLS, each user has their own folder, with the name {user.id}
-      // so to be able to upload folders, that folder header with their id is needed to be included
-
-      // Uploads song file to storage bucket
-      const { error : songUploadError } = await supabase.storage.from('songs').upload(filePath, file);
-      if (songUploadError) {
-        throw songUploadError
+      let filePath : string;
+      if (usingMP3) { //Upload file is user chooses too
+        const file = songFile;
+        const fileExt = file.name.split('.').pop()
+        filePath = `${user.id}/${user.id}-${Math.random()}.${fileExt}`
+        // user.id is needed with '/' because in my RLS, each user has their own folder, with the name {user.id}
+        // so to be able to upload folders, that folder header with their id is needed to be included
+        
+        // Uploads song file to storage bucket if user chooses to upload mp3
+        const { error : songUploadError } = await supabase.storage.from('songs').upload(filePath, file);
+        if (songUploadError) {
+          throw songUploadError
+        }
+      }
+      else {
+        filePath = `https://www.youtube.com/watch?v=${ytBackground}`
       }
 
       const { error : beatmapUploadError, status } = await supabase
@@ -1050,12 +1061,31 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
                   <option value={5}>5</option>
                   <option value={6}>6</option>
                 </select>
-              </div>          
+              </div> 
+
+              <div className="metadata_div">
+                <label id="mp3_label" htmlFor="usingMP3">Deploy w/ MP3:
+                  <div id="mp3_info">Select &quot;No&quot; if MP3 is same as YT Video</div>
+                </label>
+                <select 
+                  className="metadata_input"
+                  name="usingMP3" 
+                  id="usingMP3"
+                  value={usingMP3? "Yes" : "No"}
+                  onChange={(e) => setUsingMP3(e.target.value === 'Yes')}
+                >
+                  <option value={'Yes'}>Yes</option>
+                  <option value={'No'}>No</option>
+                </select>
+              </div> 
             </div>
+            
 
             <div className="metadata_inputs">
               <div className="metadata_div">
-                <label htmlFor="ytBackground">Youtube ID:</label>
+                <label id="yt_id_label" htmlFor="ytBackground">Youtube ID:
+                  <div id="yt_id_info">A YouTube ID is 11 characters long, right after &apos;?v=&apos; on the URL</div>
+                </label>
                 <input 
                   ref={ytIDRef}
                   className="metadata_input"
@@ -1099,17 +1129,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
                 {videoDuration !== 0 &&
                 <>
                   <button onClick={() => setTimestamps()}>Set Timestamps</button>
-                  {/* <button onClick={() => setVideoPlaying(!videoPlaying)}>{videoPlaying? 
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
-                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                      <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z"/>
-                    </svg>
-                    :
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-play-circle" viewBox="0 0 16 16">
-                      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                      <path d="M6.271 5.055a.5.5 0 0 1 .52.038l3.5 2.5a.5.5 0 0 1 0 .814l-3.5 2.5A.5.5 0 0 1 6 10.5v-5a.5.5 0 0 1 .271-.445"/>
-                    </svg>}
-                  </button> */}
                   <button onClick={() => updatePlayerTime()}>Go To Start</button>
                   <button onClick={() => setVideoMuted(!videoMuted)}>{videoMuted? "Unmute" : "Mute"}</button>
                 </>

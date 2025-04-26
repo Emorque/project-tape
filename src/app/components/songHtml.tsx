@@ -10,8 +10,8 @@ import gsap from 'gsap';
 import { useGSAP } from "@gsap/react";
 
 interface SongHtmlProps {
-    songToPlay : (songID: number, song_background: ytBackgroundType | null, verified: boolean) => void,
-    playLocalSong: (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null) => void,
+    songToPlay : (songID: number, song_background: ytBackgroundType | null, verified: boolean, songLength: number) => void,
+    playLocalSong: (song_url: string, song_notes: string[][], song_background: ytBackgroundType | null, songLength: number) => void,
     user: User | null,
     role : string | null,
     avatar_url : string | null
@@ -39,6 +39,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
     const [songID, setSongID] = useState<number | null>(null)
     const [pendingID, setPendingID] = useState<number | null>(null)
     const [localID, setLocalID] = useState<number | null>(null)
+    const [YTAudio, setYTAudio] = useState<boolean>(false)
     
     const [songBackground, setSongBackground] = useState<ytBackgroundType | null>(null)
     const [selectedSong, setSelectedSong] = useState<mapMetadata>({
@@ -168,7 +169,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
             console.error('Song error:', error) // Only used for eslint
             alert('Error Updating Song!')
         } finally {
-            console.log('Updated Songs')
+            // console.log('Updated Songs')
             setSongLoading(false)
         }
     }, [supabase, songID, pendingID])
@@ -485,6 +486,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                                     setSongLoading(false)
                                                     setLocalID(parseInt(map_id))
                                                     setSongID(null)
+                                                    setYTAudio(song_metadata.mp3)
                                                     if (background) {
                                                         setSongBackground(background)
                                                     }
@@ -564,8 +566,11 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                         <div id="song_btns">
                         {usingLocalMap? 
                                 <button id="" onClick={() => {
-                                    if (audioURL) {
-                                        playLocalSong(audioURL, localNotes, songBackground)
+                                    if (YTAudio) {
+                                        playLocalSong(selectedSong.source, localNotes, songBackground, selectedSong.length)
+                                    }
+                                    else if (audioURL) {
+                                        playLocalSong(audioURL, localNotes, songBackground, selectedSong.length)
                                     }
                                     else {
                                         audioNeeded()
@@ -577,10 +582,10 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                 </button>
                                 :
                                 <button id="" onClick={() => {if (songID) {
-                                        songToPlay(songID, songBackground, true); 
+                                        songToPlay(songID, songBackground, true, selectedSong.length); 
                                     }
                                     else if (pendingID) {
-                                        songToPlay(pendingID, songBackground, false); 
+                                        songToPlay(pendingID, songBackground, false, selectedSong.length); 
                                     }
                                     }}
                                     disabled={selectedSong.normal_notes === 0 || songLoading || (!songID && !pendingID)}>

@@ -13,6 +13,8 @@ interface gameInterface {
     closeGame: (local : boolean) => void;
     settings: settingsType;
     audioProp: React.RefObject<HTMLAudioElement>;
+    ytAudio: boolean;
+    gameLength: number;
     user : User | null;
     song_id: number | null;
     songBackground: ytBackgroundType | null;
@@ -49,7 +51,7 @@ const getComboMultiplier = (combo: number) => {
     return (Math.min(tenthDigit, 5))/10
 }
 
-export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, songBackground, verified, usingLocalMap} : gameInterface) => {   
+export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLength, user, song_id, songBackground, verified, usingLocalMap} : gameInterface) => {   
     const supabase = createClient() // Maybe both of these can work outside of the Game function
     const { contextSafe } = useGSAP(); 
 
@@ -97,7 +99,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     const okayTextTimeline = useRef(gsap.timeline({ paused: true }))
     const missTextTimeline = useRef(gsap.timeline({ paused: true }))
 
-    const [songLength, setSongLength] = useState<number>(0);
+    // const [songLength, setSongLength] = useState<number>(gameLength);
 
     useEffect(() => {        
         flowStateAnimation.current.to("#flow_bar_cover", {width: "15%", duration: 10, ease: "none", onComplete: () => {setFlowState(false)}})
@@ -154,13 +156,17 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     const [backgroundDim, setBackgroundDim] = useState<number>(settings.backgroundDim || 0.5)
     const [videoLoaded, setVideoLoaded] = useState<boolean>(false)
     const [videoPlaying, setVideoPlaying] = useState<boolean>(true)
+    const [reactPlayerVolume, setReactPlayerVolumne] = useState<number>(0)
     const reactPlayerRef = useRef<ReactPlayer | null>(null)
 
     const [videoVisible, setVideoVisible] = useState<boolean>(false)
     const handleProgress = (state: {playedSeconds : number}) => {
-        if (songBackground && state.playedSeconds >= songBackground[0][2] - 5) {
+        if (songBackground && state.playedSeconds >= songBackground[0][2] - 1) {
             setVideoPlaying(false)
             setVideoVisible(false)
+            if (ytAudio){
+                handleEnd()
+            }
         }
     }
 
@@ -545,7 +551,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             if (gameState === "End" || gameState === "Waiting") return;
 
             if ((event.key === buttonMappings.pause[0]|| event.key === buttonMappings.pause[1]) && songStarted) {
-                if (time === turnTiming.current[turnTimingIndex][0] || time === rightTiming.current[rightTimingIndex][0] || leftTiming.current[leftTimingIndex][0]) {
+                if ((turnTiming.current.length > 0 && rightTiming.current.length > 0 && leftTiming.current.length > 0) && (time === turnTiming.current[turnTimingIndex][0] || time === rightTiming.current[rightTimingIndex][0] || leftTiming.current[leftTimingIndex][0])) {
                     setTimeout(()=> {
                         pauseMap()
                     }, 1) //Might help in preventing instances where player pauses on frame a bar is created (its animation won't be paused)
@@ -625,14 +631,14 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             }
         })
     })
-    
+
     const gameOver = () => {
         gsap.to("#lane_container", {
             opacity: 0,
             duration: 1,
             onComplete: () => {
                 setGameState("End")
-                audioProp.current?.pause()
+                if (!ytAudio) audioProp.current?.pause()
                 setGameOverScreen(true)
                 setStopwatchActive(false)
                 setVideoVisible(false)
@@ -642,13 +648,16 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
     }
 
     // Ends the game once the audio file ends 
+    // I don't think ytAudio check needed here
     useEffect(() => {
-        const audioReference = audioProp.current;
-        audioReference?.addEventListener('ended', handleEnd);        
-        return () => {
-            audioReference?.removeEventListener('ended', handleEnd);
+        if (!ytAudio) {
+            const audioReference = audioProp.current;
+            audioReference?.addEventListener('ended', handleEnd);        
+            return () => {
+                audioReference?.removeEventListener('ended', handleEnd);
+            }
         }
-    }, [])
+    }, [ytAudio])
 
     useGSAP(() => {
         if (endScreen) {
@@ -678,14 +687,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
 
     const resumeMap = () => {
         const curves = document.querySelectorAll('.bar');
-        if (audioProp.current) {
+        if (audioProp.current && !ytAudio) {
             audioProp.current.play();
-            setStopwatchActive(true);
-            setStPaused(false);
-            setGameState("Running");
-            for (let i = 0; i < curves.length; i++) {
-                (curves[i] as HTMLParagraphElement).style.animationPlayState = "running";
-            }
         }
         if (flowState) {
             flowStateAnimation.current.play()
@@ -693,25 +696,31 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         if (reactPlayerRef.current){
             setVideoPlaying(true)
         }
+        setStopwatchActive(true);
+        setStPaused(false);
+        setGameState("Running");
+        for (let i = 0; i < curves.length; i++) {
+            (curves[i] as HTMLParagraphElement).style.animationPlayState = "running";
+        }
     }
     
 
     const pauseMap = () => {
         const curves = document.querySelectorAll('.bar');
-        if (audioProp.current) {
+        if (audioProp.current && !ytAudio) {
             audioProp.current.pause();
-            setStopwatchActive(false);
-            setStPaused(true);
-            setGameState("Paused"); //Pause game
-            for (let i = 0; i < curves.length; i++) {
-                (curves[i] as HTMLParagraphElement).style.animationPlayState = "paused";
-            }
         }
         if (flowState) {
             flowStateAnimation.current.pause()
         }
         if (reactPlayerRef.current){
             setVideoPlaying(false)
+        }
+        setStopwatchActive(false);
+        setStPaused(true);
+        setGameState("Paused"); //Pause game
+        for (let i = 0; i < curves.length; i++) {
+            (curves[i] as HTMLParagraphElement).style.animationPlayState = "paused";
         }
     }
 
@@ -726,9 +735,9 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         hitsoundsRef.current = tempHitsounds;
 
         const res = (gameMap.sort((firstItem: [number,string], secondItem: [number,string]) => firstItem[0] - secondItem[0]))
-        if (audioProp.current) {
-            setSongLength(audioProp.current.duration * 1000)
-        }
+        // if (audioProp.current) {
+        //     setSongLength(audioProp.current.duration * 1000)
+        // }
 
         // setSongLength(res[-1])
         const lTiming: [number,string][] = [];
@@ -764,17 +773,18 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         
         if (offset >= 0) {
             setTimeout(() => {
-                if (audioProp.current) {
+                if (audioProp.current && !ytAudio) {
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
-                    setSongStarted(true)
                 }
                 if (reactPlayerRef.current && songBackground) {
                     reactPlayerRef.current.seekTo(songBackground[0][1])
                     setVideoVisible(true)
                     setVideoLoaded(true)
+                    setReactPlayerVolumne(settings.gpVolume)
                 }
+                setSongStarted(true)
             }, ((scrollSpeed * 2) + 3000 + offset))
     
             setTimeout(() => {
@@ -785,17 +795,17 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
         }
         else {
             setTimeout(() => {
-                if (audioProp.current) {
+                if (audioProp.current && !ytAudio) {
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
-                    setSongStarted(true)
                 }
                 if (reactPlayerRef.current && songBackground) {
                     reactPlayerRef.current.seekTo(songBackground[0][1])
                     setVideoVisible(true)
                     setVideoLoaded(true)
                 }
+                setSongStarted(true)
             }, ((scrollSpeed * 2) + 3000))
     
             setTimeout(() => {
@@ -1110,8 +1120,8 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
                 url={`https://www.youtube-nocookie.com/watch?v=${songBackground[0][0]}?start=${songBackground[0][1]}&end=${songBackground[0][2]}&rel=0&nocookie=true`} //&rel=0 means that "more videos" are locked to uploader's channel
                 loop={false}
                 controls={false}
-                volume={100}
-                muted={true}
+                volume={reactPlayerVolume}
+                muted={!ytAudio}
                 height={"100%"}
                 width={"100%"}
                 playing={videoPlaying}
@@ -1154,7 +1164,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, user, song_id, so
             </div>
             }
 
-            <div id='progress_bar' style={{width: `${(time/songLength) * 100}%`, opacity: (gameState === "End")? 0 : 1 }}></div>
+            <div id='progress_bar' style={{width: `${(time/gameLength) * 100}%`, opacity: (gameState === "End")? 0 : 1 }}></div>
             <div id='stats_div' style={{opacity: (gameState === "End")? 0 : 1 }}>
                 <h1 id='score_text'>{score}</h1>
                 {(comboCount > 5) && <h1 id="combo_text">{comboCount} Combo</h1>}

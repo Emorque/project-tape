@@ -288,7 +288,7 @@ input::file-selector-button {
     cursor: pointer;
 }
 
-#current_speed, #play_along_info {
+#current_speed, #play_along_info, #mp3_info, #yt_id_info {
     visibility: hidden;
     position: absolute;
     bottom: calc(100% + 5px);
@@ -305,6 +305,19 @@ input::file-selector-button {
 #speed_cas:hover #current_speed {
     visibility: visible;
 }
+
+#mp3_label, #yt_id_label {
+    position: relative;
+}
+
+#mp3_label:hover #mp3_info {
+    visibility: visible;
+}
+
+#yt_id_label:hover #yt_id_info{
+    visibility: visible;
+}
+
 
 
 .speed_teeth {

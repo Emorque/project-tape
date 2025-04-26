@@ -69,7 +69,8 @@ export type oldEditor = {
   ytEnd: number, 
   ytID: string, 
   ytStart: number,
-  difficulty: [number, number]
+  difficulty: [number, number],
+  mp3: boolean
 }
 
 export type editorMetadata = {
@@ -84,7 +85,8 @@ export type editorMetadata = {
   description: string,
   source: string,
   length: number,
-  difficulty: [number, number]
+  difficulty: [number, number],
+  mp3: boolean
 }
 
 export type ytBackgroundType = [ytID: string, ytStart: number,ytEnd: number][]

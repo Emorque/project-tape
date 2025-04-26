@@ -96,7 +96,8 @@ export default function EditorPage() {
             description: map.song_metadata.description,
             source: map.song_metadata.source,
             length: 0,
-            difficulty: map.song_metadata.difficulty
+            difficulty: map.song_metadata.difficulty,
+            mp3: map.song_metadata.mp3
           },
           background: [[map.song_metadata.ytID, map.song_metadata.ytStart, map.song_metadata.ytEnd]],
           normal_notes: map.song_notes,
