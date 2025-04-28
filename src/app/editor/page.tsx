@@ -2,7 +2,8 @@
 
 import "./editor.css";
 import { Keybinds } from "./components/keybinds";
-import { Editor } from "./components/editor";
+import { EditorYT } from "./components/editorYT";
+import { EditorMP3 } from "./components/editorMP3";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import gsap from 'gsap';
 import { useGSAP } from "@gsap/react";
@@ -11,6 +12,7 @@ import { editorMap, keybindsType, localStorageMaps, localStorageEditorMaps, oldE
 import { type User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 import Link from "next/link";
+import { CreateBeatmap } from "./components/createBeatmap";
 
 const formatDateFromMillis = (milliseconds : string) => {
   const date = new Date(milliseconds);
@@ -39,7 +41,6 @@ function isOldEditorMap(obj: unknown): obj is oldEditorMap {
   );
 }
 
-
 const MaxFileSize = 5.0 * 1024 * 1024; // 5.5MBs converting to Bytes which is what File type uses
 
 export default function EditorPage() {
@@ -51,15 +52,14 @@ export default function EditorPage() {
   const [menu, setMenu] = useState<string>("")
   const [selectedMapID, setMapID] = useState<string | null>(null)
   const [keybindsView, setKeybindsView] = useState<boolean>(false)
+  const [promptVisible, setPromptVisible] = useState<boolean>(false)
 
   // Multiple Prompt states
   const [deletePromptVisible, setDeleteVisible] = useState<boolean>(false)
   const [disabledCreateButton, setDisabledCreateButton] = useState<boolean>(false) 
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [audioFileError, setAudioFileError] = useState<number>(0)
-  // 0 is no error, 1 is a file needed, 2 is exceeded map limit
-
-
+  const [audioFileError, setAudioFileError] = useState<number>(0)  // 0 is no error, 1 is a file needed, 2 is exceeded map limit
+  const [audioSource, setAudioSource] = useState<string>("")
   const supabase = createClient()
 
   const [user, setUser] = useState<User | null>(null);
@@ -80,8 +80,6 @@ export default function EditorPage() {
     // Clean up maps
     const sortedMaps : localStorageMaps = {}
     Object.entries(localMaps).map(([, map], index) => {
-      // console.log(map_id, map, index)
-      // if (isOldEditor(map)) {
         if (isOldEditorMap(map)) {
           const updatedMap : editorMap = {
           timestamp: map.timestamp,
@@ -103,7 +101,6 @@ export default function EditorPage() {
           normal_notes: map.song_notes,
           ex_notes: []
         }
-        console.log(updatedMap, index)
         sortedMaps[index + 1] = updatedMap
       }
       else {
@@ -120,7 +117,6 @@ export default function EditorPage() {
     const localKeybinds = localStorage.getItem("keybinds");
     let defaultKeybinds: keybindsType
     if (!localKeybinds) {
-      console.log("No Local Keybinds")
       defaultKeybinds = {
         sNote: "1",
         tNote: "2",
@@ -141,6 +137,15 @@ export default function EditorPage() {
     }
     else {
       defaultKeybinds = JSON.parse(localKeybinds)
+      if (!defaultKeybinds.staffUp) {
+        defaultKeybinds.staffUp = "A"
+        defaultKeybinds.topStaffTop = "S"
+        defaultKeybinds.topStaffBottom = "D"
+      
+        defaultKeybinds.staffDown = "L"
+        defaultKeybinds.bottomStaffTop = "J"
+        defaultKeybinds.bottomStaffBottom = "K"
+      }
     }
 
     setUserKeybinds(defaultKeybinds)
@@ -155,7 +160,7 @@ export default function EditorPage() {
   const { contextSafe } = useGSAP();
 
   const audioNeeded = contextSafe(() => {
-    gsap.to("#audio_input", {backgroundColor: "#df0000 ", yoyo: true, repeat: 1, duration:0.75})
+    // gsap.to("#audio_input", {backgroundColor: "#df0000 ",color: "#000000", yoyo: true, repeat: 1, duration:0.75})
     gsap.to("#audio_tooltip_text", {color: "#df0000", yoyo: true, repeat: 1, duration:0.75})
   })
 
@@ -170,6 +175,11 @@ export default function EditorPage() {
     transition: 'left 1s ease'
   } as React.CSSProperties
 
+  const promptStyle = {
+    visibility: (promptVisible)? "visible" : "hidden",
+    opacity: (promptVisible)? 1 : 0,
+    transition: 'opacity 0.5s ease, visibility 1s'
+  } as React.CSSProperties
 
   // TODO, may need to update visibility for these two styles to left like above style
   const editorStyle = {
@@ -204,6 +214,9 @@ export default function EditorPage() {
       audioNeeded()
       setAudioFileError(1)
       setDisabledCreateButton(true);
+      setTimeout(() => {
+        setDisabledCreateButton(false)
+      }, 1500)
       return;
     }
     else {
@@ -220,6 +233,8 @@ export default function EditorPage() {
       setEditorActive(false)
       setSelectedMap(null)
       setMapID("")
+      setDisabledCreateButton(false)
+      setAudioSource("")
     }, 1000)
   }
 
@@ -229,8 +244,30 @@ export default function EditorPage() {
     localStorage.setItem("localMaps", JSON.stringify(localMaps));
   }
 
-  const newMap = () => {
-    if (audioURL == "") {
+  const handleCreateMapYT = (newMap : editorMap) => {
+    const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+    let highestMapId = 0
+    for (const map_id in localMaps) {
+      const id = parseInt(map_id)
+      if (id > highestMapId) {
+        highestMapId = id
+      }
+    }
+    setMapID((highestMapId + 1).toString());
+    setSelectedMap(newMap)
+    setEditorActive(true)
+    setAudioSource("YT")
+    setTimeout(() => {
+      setMenu("Editor")
+      setPromptVisible(false)
+    }, 500)
+    setTimeout(() => {
+      setKeybindsView(false)
+    }, 1500)
+  }
+
+  const handleCreateMapMP3 = (fileURL : string, file : File) => {
+    if (fileURL == "") {
       console.log("Audio must be set first")
       return;
     }
@@ -244,8 +281,12 @@ export default function EditorPage() {
     }
     setMapID((highestMapId + 1).toString());
     setEditorActive(true)
+    setAudioFile(file)
+    setAudioURL(fileURL)
+    setAudioSource("MP3")
     setTimeout(() => {
       setMenu("Editor")
+      setPromptVisible(false)
     }, 500)
     setTimeout(() => {
       setKeybindsView(false)
@@ -254,13 +295,11 @@ export default function EditorPage() {
   }
 
   const deleteMap = () => {
-    console.log(selectedMapID)
     const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
 
     if (selectedMapID && selectedMapID in localMaps) {
       delete localMaps[selectedMapID]
       localStorage.setItem("localMaps", JSON.stringify(localMaps))
-      console.log("Deleted", selectedMapID)
       setLocalMaps(localMaps)
     }
     else {
@@ -274,45 +313,56 @@ export default function EditorPage() {
       setKeybindsView(false)
     }, 1000)
   }
+  
+  const createMapMainMenu = () => {
+    // Limit Player to 10 maps
+    const localMaps : localStorageEditorMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
+    const localMapsCount = Object.entries(localMaps)
+    if (localMapsCount.length >= 5) {
+      audioNeeded();
+      setDisabledCreateButton(true)
+      setAudioFileError(2)
+      setTimeout(() => {
+        setDisabledCreateButton(false)
+        setAudioFileError(0)
+      }, 1500)
+      return;
+    }
+    setPromptVisible(true)
+    setDisabledCreateButton(true)
+  }
+
+  const ytOffsetRef = useRef<HTMLInputElement>(null)
+  const ytEndRef = useRef<HTMLInputElement>(null)
+  const ytIDRef= useRef<HTMLInputElement>(null)
+  const prevID = useRef<string>("")
+  useEffect(() => {
+    if (ytOffsetRef.current && ytEndRef.current && ytIDRef.current){
+      ytOffsetRef.current.value = (0).toString()
+      ytEndRef.current.value = (0).toString()
+      ytIDRef.current.value = ""
+      prevID.current =""
+    }
+  }, [])
+
+  const handleExitCreate = () => {
+    setPromptVisible(false)
+    setDisabledCreateButton(false)
+    setAudioSource("")
+  }
 
   return (
     <div id="editor">
       <div id="beatmap_wrapper">
         <div id="audio_select">
           <Link href={"/"}>Back to Project Tape</Link>
-          <h2 id="audio_tooltip_text">{(audioFileError === 1)? "Audio File exceeds 5MB" : (audioFileError === 2)? "5 Beatmap Limit" : "Enter Your Audio File" }</h2>
+          <h2 id="audio_tooltip_text">{(audioFileError === 1)? "Audio File exceeds 5MB" : (audioFileError === 2)? "5 Beatmap Limit" : "Enter Your Audio File"}{(audioFileError === 0) && <span> (For MP3 Beatmaps)</span>}</h2>
           <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>
         </div>
 
         <div id="create_settings">
           <button id="create_btn" disabled={disabledCreateButton} onClick={() => {
-            if (audioURL == "") {
-              console.log("Audio must be set first")
-              setDisabledCreateButton(true)
-              setTimeout(() => {
-                setDisabledCreateButton(false)
-              }, 1500)
-              audioNeeded();
-              return;
-            }
-            if (audioFileError) {
-              return;
-            }
-            // Limit Player to 10 maps
-            const localMaps : localStorageEditorMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
-            const localMapsCount = Object.entries(localMaps)
-            // console.log(localMapsCount.length)
-            if (localMapsCount.length >= 5) {
-              audioNeeded();
-              setDisabledCreateButton(true)
-              setAudioFileError(2)
-              setTimeout(() => {
-                setDisabledCreateButton(false)
-                setAudioFileError(0)
-              }, 1500)
-              return;
-            }
-            newMap()          
+            createMapMainMenu()
             }}>
             <div id="create_div">
               Create 
@@ -337,7 +387,6 @@ export default function EditorPage() {
             const editorMap = mapItem;
             
             if (!editorMap) {
-              console.log(mapItem)
               return (
                 <div key={map_id}>
                   {/* TODO: someone may mess with local storage and mess up a map. In that case, allow for them to fix the error by removing the entry. Like removing a bookmarked song */}
@@ -346,9 +395,10 @@ export default function EditorPage() {
               )
             }
 
-            const { timestamp, song_metadata, normal_notes } = editorMap;
+            const { timestamp, song_metadata } = editorMap;
+            const hasMp3 = !(song_metadata?.mp3 === false);
             return (
-              <div key={map_id} className="beatmap">
+              <div key={map_id} className={hasMp3? "beatmap mp3_map" : "beatmap yt_map"}>
                 <div>
                   <h2><span>Title:</span> {song_metadata.song_name || 'Untitled Song'}</h2>
                   <h2><span>Artist:</span> {song_metadata.song_artist || "Untitled Artist"}</h2>  
@@ -357,22 +407,19 @@ export default function EditorPage() {
                 
                 <div className="beatmap_icons">
                   <button disabled={disabledCreateButton} onClick={() => {
-                    if (audioURL == "") {
-                      console.log("Audio must be set first")
+                    if ((audioURL === "" || audioFileError !== 0) && hasMp3 ) {
                       setDisabledCreateButton(true)
                       setTimeout(() => {
                         setDisabledCreateButton(false)
                       }, 1500)
                       audioNeeded();
-                      return;
+                      return
                     }
-                    if (audioFileError) {
-                      return;
-                    }
-                    console.log(normal_notes)
                     setSelectedMap(editorMap)
                     setMapID(map_id)
                     setEditorActive(true)
+                    setAudioSource(hasMp3? "MP3" : "YT")
+                    setDisabledCreateButton(true)
                     setTimeout(() => {
                       setMenu("Editor")
                     }, 500)
@@ -401,6 +448,12 @@ export default function EditorPage() {
           })
           }
         </div>
+      </div>
+
+      <div id="prompt_wrapper" style={promptStyle}> 
+        {promptVisible && 
+          <CreateBeatmap createMapYT={handleCreateMapYT} createMapMP3={handleCreateMapMP3} exitCreateMap={handleExitCreate}/>
+        }
       </div>
       
       <div id="delete_wrapper" style={deleteStyle}>
@@ -436,8 +489,11 @@ export default function EditorPage() {
       </div>
       
       <div id="editor_wrapper" style={editorStyle}>
-        {userKeybinds && editorActive && audioURL && audioFile && hitsoundsRef.current && selectedMapID && 
-        <Editor user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
+        {userKeybinds && editorActive && hitsoundsRef.current && selectedMapID && (audioSource === "YT") &&  
+          <EditorYT user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
+        }
+        {userKeybinds && editorActive && audioURL && audioFile && hitsoundsRef.current && selectedMapID && (audioSource === "MP3") &&  
+          <EditorMP3 user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
         }
       </div>
       

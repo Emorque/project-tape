@@ -231,11 +231,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
             setScoreUploading(false);
             return;
         }
-        // if (!user && gameState === "End") {
-        //     setLeadboardText("You need to be logged in to upload scores")
-        //     setScoreUploading(false);
-        //     return;
-        // }
         if (gameState === "End" && !verified) {
             setLeadboardText("Leaderboard not available for pending songs")
             setScoreUploading(false);
@@ -1164,7 +1159,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
             </div>
             }
 
-            <div id='progress_bar' style={{width: `${(time/gameLength) * 100}%`, opacity: (gameState === "End")? 0 : 1 }}></div>
+            <div id='progress_bar' style={{width: `${(time/(gameLength * 1000)) * 100}%`, opacity: (gameState === "End")? 0 : 1 }}></div>
             <div id='stats_div' style={{opacity: (gameState === "End")? 0 : 1 }}>
                 <h1 id='score_text'>{score}</h1>
                 {(comboCount > 5) && <h1 id="combo_text">{comboCount} Combo</h1>}
@@ -1246,7 +1241,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                         className="slider-dim"
                         type="range"
                         min={0}
-                        max={1}
+                        max={0.9}
                         value={backgroundDim}
                         onChange={e => setBackgroundDim(parseFloat(e.target.value))}
                         step={0.1}

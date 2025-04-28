@@ -471,7 +471,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
                         className="slider"
                         type="range"
                         min={0}
-                        max={1}
+                        max={0.9}
                         value={backgroundDim}
                         onChange={handleBackgroundDimChange}
                         step={0.1}

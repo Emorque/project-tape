@@ -479,6 +479,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                     {Object.entries(localMapsList).map(([map_id, mapItem]) => {
                                         const editorMap = mapItem;
                                         const { song_metadata, normal_notes, background } = editorMap;
+                                        const hasMp3 = !(song_metadata?.mp3 === false);
                                         return (
                                             <button key={map_id} className={(localID === parseInt(map_id))? "song_btn active" : "song_btn"} onClick={() => {
                                                     setLocalNotes(normal_notes);
@@ -486,7 +487,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
                                                     setSongLoading(false)
                                                     setLocalID(parseInt(map_id))
                                                     setSongID(null)
-                                                    setYTAudio(song_metadata.mp3)
+                                                    setYTAudio(!hasMp3);                                                    
                                                     if (background) {
                                                         setSongBackground(background)
                                                     }

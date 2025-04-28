@@ -527,7 +527,7 @@ export const Keybinds = ({saveKeybinds, clearKeybinds} : keybindsInterface) => {
           <h2>Bottom Staff Bottom Key</h2>
           <button id="bottomStaffBottomBtn" className="action_btn" style={bottomStaffBottomStyle} onClick={() => { newActionKey("BottomStaffBottom");}}>
             {bottomStaffBottomBtn}
-d          </button>
+          </button>
         </div>
 
 

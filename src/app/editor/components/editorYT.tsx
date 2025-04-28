@@ -1,5 +1,5 @@
 
-import { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useWavesurfer } from '@wavesurfer/react'
 import { createClient } from '@/utils/supabase/client'
 import { FixedSizeList as List } from 'react-window';
@@ -10,9 +10,9 @@ import { keybindsType, editorMap } from "@/utils/helperTypes";
 import { type User } from '@supabase/supabase-js'
 
 import ReactPlayer from "react-player/youtube";
+import { Player } from "./player";
 
 const barGradient = "linear-gradient(rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.50) 24%, rgba(255, 255, 255, 0.50) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 48.75%, rgba(255, 255, 255, 0.50) 48.75%, rgba(255, 255, 255, 0.50) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.50) 74%, rgba(255, 255, 255, 0.50) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box"
-// const gameGradient = "linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 24%, rgba(255, 255, 255, 0.25) 24%, rgba(255, 255, 255, 0.25) 25%, rgba(0, 0, 0, 0) 25%, rgba(0, 0, 0, 0) 49.25%, rgba(255, 255, 255, 0.25) 49.25%, rgba(255, 255, 255, 0.25) 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 74%, rgba(255, 255, 255, 0.25) 74%, rgba(255, 255, 255, 0.25) 75%, rgba(0, 0, 0, 0) 75%, rgba(0, 0, 0, 0) 100%) no-repeat scroll 0% 0% / 100% 100% padding-box border-box";
 const formatTime = (seconds: number) => [seconds / 60, seconds % 60, (seconds % 1) * 100].map((v) => `0${Math.floor(v)}`.slice(-2)).join(':')
 
 // Call this when settings are saved 
@@ -40,18 +40,17 @@ interface editorInterface {
   metadata : editorMap | null, //if null, that means a fresh map has to be made
   map_id: string,
   keybinds : keybindsType,
-  songAudio: string,
-  songFile : File,
+  songFile : File | null,
   hitsoundsRef: {play : () => void;}[];
   clearMap : () => void;
   updateLocalMaps: () => void;
 }
 
-export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
+export const EditorYT = ({user, metadata, map_id, keybinds, songFile, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
   const [songNotes, setSongNotes] = useState<string[][]>([])
   const [songLength, setSongLength] = useState<number>(0);    
   const [btn, setBtn] = useState<string>("Single Note");
-  const [snapOn, setSnap] = useState<boolean>(false);
+  // const [snapOn, setSnap] = useState<boolean>(false);
   const [keybindsActive, setKeybinds] = useState<boolean>(true);
 
   const supabase = createClient()
@@ -60,25 +59,37 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   // When setting metadata, like description, disable the other buttons being activiated. Like when pressing "P" for the description, don't play the song 
   const [songName, setSongName] = useState<string>(metadata?.song_metadata.song_name || "")
   const [songArtist, setSongArtist] = useState<string>(metadata?.song_metadata.song_artist || "")
-  // const [bpm, setBPM] = useState<number>(metadata?.song_metadata.bpm || 0)
   const [genre, setGenre] = useState<string>(metadata?.song_metadata.genre || "")
   const [language, setLanguage] = useState<string>(metadata?.song_metadata.language || "")
   const [noteCount, setNoteCount] = useState<number>(metadata?.song_metadata.normal_notes || 0)
   const [description, setDescription] = useState<string>(metadata?.song_metadata.description || "");
   const [source, setSource] = useState<string>(metadata?.song_metadata.source || "");
-  const [difficulty, setDifficulty] = useState<number>(metadata?.song_metadata.difficulty[0] || 1)
-  const [usingMP3, setUsingMP3] = useState<boolean>(metadata?.song_metadata.mp3 || true)
-  const [ytBackground, setYTBackground] = useState<string>(metadata?.background[0][0] || ""); //Fix to .ytbg
+  const [difficulty, setDifficulty] = useState<number>(  metadata?.song_metadata?.difficulty?.[0] ?? 1  )
   const [timestamp, setTimestamp] = useState<string>(metadata?.timestamp || "0");
   const [deploymentMap, setDeploymentMap] = useState<editorMap | null>(null)
   const [deployMessage, setDeployMessage] = useState<string>("")
 
+  // const [ytBackground, setYTBackground] = useState<string>(metadata?.background[0][0] || ""); //Fix to .ytbg
   const [ytOffset, setYTOffset] = useState<number>(metadata?.background[0][1] || 0)
   const [ytEnd, setYTEnd] = useState<number>(metadata?.background[0][2] || 0)
+  const [videoDuration, setVideoDuration] = useState<number>(0)
   const ytOffsetRef = useRef<HTMLInputElement>(null)
   const ytEndRef = useRef<HTMLInputElement>(null)
   const ytIDRef= useRef<HTMLInputElement>(null)
   const prevID = useRef<string>("")
+
+  const vListRef = useRef<List>(null);
+
+  useEffect(() => {
+    if (metadata?.background) {
+      setVideoDuration(metadata.background[0][2] - metadata.background[0][1])
+    } 
+  }, [])
+
+  // const [disabledCreateButton, setDisabledCreateButton] = useState<boolean>(false) 
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  // const [audioFileError, setAudioFileError] = useState<number>(0)
+  const [audioURL, setAudioURL] = useState<string>("");
 
   useEffect(() => {
     if (ytOffsetRef.current && ytEndRef.current && ytIDRef.current){
@@ -98,12 +109,14 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
   const [mapSaved, setMapSaved] = useState<boolean>(true) 
   const [pbRate, setPbRate] = useState<number>(1)
   const [disabledSave, setDisabledSave] = useState<boolean>(false)
+  const [disableWaveform, setDisableWaveform] = useState<boolean>(false)
   const [playingAlong, setPlayingAlong] = useState<boolean>(false);
 
   // String that will tell the user what fields of data are missing before deploying beatmap
   const [missingData, setMissingData] = useState<string>("")
 
   const waveformRef = useRef<HTMLDivElement>(null);
+  const notesRef = useRef<HTMLDivElement>(null);
 
   const keybindMappings = {
     sNote: getKeyMapping(keybinds.sNote),
@@ -123,53 +136,79 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     bottomStaffBottom: getKeyMapping(keybinds.bottomStaffBottom),
   }
 
-  const { wavesurfer, isReady, isPlaying, currentTime} = useWavesurfer({
+  // Set stage depdening on if mp3 is primary
+  const { wavesurfer, isPlaying} = useWavesurfer({
     container: waveformRef,
-    url: songAudio,
+    url: audioURL,
     waveColor: '#0b7033',
     progressColor: 'rgb(87, 77, 97)',
     cursorWidth: 2,
     autoCenter: false,
     autoScroll: false,
     minPxPerSec: 256,
-    height: 'auto', // reminder that this is not responsive. Height gets filled to div height only on intiailizing
-    fillParent: true, // sets width to the width of the div
+    height: 'auto', 
+    fillParent: true,
     hideScrollbar: true,
     dragToSeek: true,
   })
 
-  // Set Stage depending on if a map was passed or if this is new
-  useEffect(() => {
-    if (isReady) {
-      if (wavesurfer) {
-        const duration = wavesurfer.getDuration()
-        const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((duration) * 16) + 1)).fill(""));
-        if (metadata) {
-          for (let i = 0; i < metadata.normal_notes[0].length; i++) {
-            tempNotes[0][i] = metadata.normal_notes[0][i]
-            tempNotes[1][i] = metadata.normal_notes[1][i]
-            tempNotes[2][i] = metadata.normal_notes[2][i]
-            tempNotes[3][i] = metadata.normal_notes[3][i]
-          }
-          setSongNotes(tempNotes)
-          setSongLength((duration * 16) + 1);
-        }
-        else {
-          setSongLength((duration * 16) + 1);
-          setSongNotes(tempNotes);    
-        }
-        console.log("Please exit Inspect Mode. Project Tape is likely to crash if you edit with it open. Be sure to save your map often.")
-      }
+  const onPlayPause = () => {
+    if (reactPlayerRef.current && !videoPlaying) {        
+      setVideoPlaying(true)
     }
-  }, [isReady])
+    else if (videoPlaying) {
+      setVideoPlaying(false)
+    }
+  }
 
+  const [videoPlaying, setVideoPlaying] = useState<boolean>(false)
+  const [videoMuted, setVideoMuted] = useState<boolean>(false)
+  const reactPlayerRef = useRef<ReactPlayer | null>(null)
   
+  const handleProgress = (state: {playedSeconds : number, played: number}) => {
+    if (state.playedSeconds >= ytEnd) {
+      setVideoPlaying(false)
+    }
+    if (!timelineSeeking) {
+      const percent = ((state.playedSeconds - ytOffset)/ (ytEnd - ytOffset))
+      setTimeline(percent)
+      vListRef.current?.scrollTo((state.playedSeconds - ytOffset) * 16 * 16)
+      if (wavesurfer) {
+        wavesurfer?.setScrollTime(state.playedSeconds - ytOffset)
+      }
+    } 
+  }
+
+  // Timeline for controlling everything 
+  const [timeline, setTimeline] = useState<number>(0)
+  const [timelineSeeking, setTimelineSeeking] = useState<boolean>(false)
+  const handleSeekMouseDown = () => {
+    setTimelineSeeking(true)
+  }
+  const handleSeekChange = (e : React.ChangeEvent<HTMLInputElement>) => {
+    setTimeline(parseFloat(e.target.value))
+    vListRef.current?.scrollTo(parseFloat(e.target.value) * videoDuration * 16 * 16)
+  }
+  const handleSeekMouseUp = (e: React.MouseEvent<HTMLInputElement>) => {
+    setTimelineSeeking(false)
+    const target = e.target as HTMLInputElement; // Cast EventTarget to HTMLInputElement
+    reactPlayerRef.current?.seekTo((parseFloat(target.value) * videoDuration) + ytOffset)
+  }
+
   const itemIndex = useMemo(() => {
-    return (Math.floor(currentTime * 16) + 1);
-  }, [currentTime]);
+    return (Math.floor((timeline * videoDuration) * 16) + 1);
+  }, [timeline]);
+
+  const moveWaveform = (e: {scrollOffset : number}) => {
+    if (!wavesurfer || videoPlaying) return;
+    const newTime = (((e.scrollOffset / 256)))
+    setTimeline((newTime / videoDuration))
+    wavesurfer.setScrollTime(newTime)
+  }
+
 
   useEffect(() => {
-    if (itemIndex && isPlaying){
+    if (itemIndex && videoPlaying){
       const offset : number = (itemIndex % 3)
       if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T") {
         hitsoundsRef[0 + 3*offset].play();
@@ -185,6 +224,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
     }
   }, [itemIndex, isPlaying]);
+
 
   useEffect(() => {
     const handleKeyDown = (event: {key: string; repeat: boolean}) => {
@@ -232,7 +272,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       }
 
       else {
-
+        if (!keybindsActive) return
         if (event.key === keybindMappings.sNote[0] || event.key === keybindMappings.sNote[1]) {
           setBtn("Single Note")
         }
@@ -249,12 +289,13 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
           updatePBRate(Math.min(1, pbRate + 0.25))
         }
   
-        else if (event.key === keybindMappings.snap[0] || event.key === keybindMappings.snap[1]) {
-          setSnap(prevSnap => !prevSnap)
+        else if ((event.key === keybindMappings.snap[0] || event.key === keybindMappings.snap[1])) {
+          // setSnap(prevSnap => !prevSnap)
+          snapPlayer()
         }
-      }
-      if (event.key === keybindMappings.toggleMusic[0] || event.key === keybindMappings.toggleMusic[1]) {
-        onPlayPause();
+        else if (event.key === keybindMappings.toggleMusic[0] || event.key === keybindMappings.toggleMusic[1]) {
+          onPlayPause();
+        }
       }
     }
 
@@ -266,7 +307,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     };
   }, [pbRate, keybindsActive, playingAlong, itemIndex, songNotes])
   
-  
+
   useEffect(() => {
     const handleUserLeave = (event: BeforeUnloadEvent) => {
       const localMaps = JSON.parse(localStorage.getItem("localMaps") || "{}");
@@ -279,15 +320,15 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
           song_artist: songArtist,
           song_mapper: user?.user_metadata.username || "",
           genre: genre,
-          length: Math.floor((songLength- 1) / 16),
+          length: videoDuration,
           language: language,
           normal_notes: noteCount,
           ex_notes: 0,
           description: description,
           source : source,
-          mp3: usingMP3
+          mp3: false
         },
-        background: [[ytBackground, ytOffset, ytEnd]],
+        background: [[metadata?.background[0][0], ytOffset, ytEnd]],
         normal_notes : songNotes,
         ex_notes: []
       }
@@ -319,23 +360,8 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return () => {
         window.removeEventListener('beforeunload', handleUserLeave);
     };
-  }, [metadata, songName, songArtist, user, genre, songLength, language, noteCount, description, source, ytBackground, ytOffset, ytEnd, map_id, songNotes, usingMP3])
+  }, [metadata, songName, songArtist, user, genre, songLength, language, noteCount, description, source, ytOffset, ytEnd, map_id, songNotes])
 
-  const onPlayPause = () => {
-    if (wavesurfer) {
-      wavesurfer.playPause()
-      if (reactPlayerRef.current && !isPlaying) {
-        reactPlayerRef.current.seekTo(wavesurfer.getCurrentTime() + ytOffset)
-        setVideoPlaying(true)
-      }
-      else if (isPlaying) {
-        setVideoPlaying(false)
-      }
-    }
-  }
-
-  const vListRef = useRef<List>(null);
-  
   const changeNoteHor = (index: number, event: MouseEvent<HTMLParagraphElement>) => {
     if (isPlaying){ 
       return;
@@ -398,7 +424,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         setNewNote(3, 2, index, "S");
       }
     }
-    scrollWindow(index) //This should now only shift if a note can be validly placed 
+    // scrollWindow(index) //This should now only shift if a note can be validly placed 
    }
 
   const setDoubleNote = (firstBar: number, secondBar: number, index: number) => {
@@ -526,16 +552,16 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         song_artist: songArtist,
         song_mapper: user?.user_metadata.username || "",
         genre: genre,
-        length: Math.floor((songLength- 1) / 16),
+        length: videoDuration,
         language: language,
         normal_notes: noteCount,
         ex_notes: 0,
         description: description,
         source : source,
         difficulty: [difficulty, 0],
-        mp3: usingMP3
+        mp3: false
       },
-      background: [[ytBackground, ytOffset, ytEnd]],
+      background: [[metadata?.background[0][0], ytOffset, ytEnd]],
       normal_notes : songNotes,
       ex_notes: []
     }
@@ -564,16 +590,16 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         song_artist: songArtist,
         song_mapper: user?.user_metadata.username || "",
         genre: genre,
-        length: Math.floor((songLength- 1) / 16),
+        length: videoDuration,
         language: language,
         normal_notes: noteCount,
         ex_notes: 0,
         description: description,
         source : source,
         difficulty: [difficulty, 0],
-        mp3: usingMP3
+        mp3: false
       },
-      background: [[ytBackground, ytOffset, ytEnd]],
+      background: [[metadata?.background[0][0], ytOffset, ytEnd]],
       normal_notes : songNotes,
       ex_notes: []
     }
@@ -597,11 +623,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       setPromptMenu("Exit")
       setMenu(true)
     }
-
-    // localStorage.setItem("localMaps", JSON.stringify(localMaps));
-    console.log("Closed Editor")
   }
-
   const verifyDeployment = () => {
     if (menu || !user) {
       setMapSaved(false)
@@ -617,16 +639,16 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         song_artist: songArtist,
         song_mapper: user?.user_metadata.username || "",
         genre: genre,
-        length: Math.floor((songLength- 1) / 16),
+        length: videoDuration,
         language: language,
         normal_notes: noteCount,
         ex_notes: 0,
         description: description,
         source : source,
         difficulty: [difficulty, 0],
-        mp3: usingMP3
+        mp3: false
       },
-      background: [[ytBackground, ytOffset, ytEnd]],
+      background: [[metadata?.background[0][0], ytOffset, ytEnd]],
       normal_notes : songNotes,
       ex_notes: []
     }
@@ -683,8 +705,6 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
   }
 
-  // const [beatmapUpload, setBeatmapUploading] = useState<boolean>(false)
-
   const formatNotes = (notes : string[][]) => {
     const finalNotes : [number, string][] = [] 
     for (let i = 0; i < notes[0].length; i++) {
@@ -717,9 +737,9 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     return finalNotes;
   }
 
+
   const canUserUpload = () => {
     if (missingData !== "" || !deploymentMap || !user) return;
-    // setLinkLoading(true);
     const currentTime = Date.now()
     const oneDayInMilliseconds = 24 * 3600 * 1000; // 1 day = 24 hours * 3600 seconds/hour * 1000 milliseconds/second
     const lastUpload = localStorage.getItem("lastUpload")
@@ -743,8 +763,9 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     }
   }
 
+
   const deployMap = useCallback( async () => {
-    if (!songFile || !user || !deploymentMap) return;
+    if (!user || !deploymentMap) return;
     const localMaps = localStorage.getItem("localMaps");
     if (!localMaps) {
       setDeployMessage("Beatmap Not Saved. Unable To Deploy")
@@ -768,7 +789,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       "normal_notes": current_metadata.normal_notes,
       "ex_notes": 0,
       "description": current_metadata.description,
-      "length": Math.floor((songLength - 1) / 16),
+      "length": videoDuration,
       "difficulty" : [current_metadata.difficulty, 0],
     }
 
@@ -786,28 +807,13 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         throw uploadCheckError;
       }
 
+      // Come back and revisit. For YT beatmaps, shorten the limit to ~12 hours
       if (recentUploads && recentUploads.length > 0) {
         setDeployMessage("You Can Only Upload One Beatmap per Day.")
         return;
       }
 
-      let filePath : string;
-      if (usingMP3) { //Upload file is user chooses too
-        const file = songFile;
-        const fileExt = file.name.split('.').pop()
-        filePath = `${user.id}/${user.id}-${Math.random()}.${fileExt}`
-        // user.id is needed with '/' because in my RLS, each user has their own folder, with the name {user.id}
-        // so to be able to upload folders, that folder header with their id is needed to be included
-        
-        // Uploads song file to storage bucket if user chooses to upload mp3
-        const { error : songUploadError } = await supabase.storage.from('songs').upload(filePath, file);
-        if (songUploadError) {
-          throw songUploadError
-        }
-      }
-      else {
-        filePath = `https://www.youtube.com/watch?v=${ytBackground}`
-      }
+      const filePath = `https://www.youtube.com/watch?v=${metadata?.background[0][0]}`
 
       const { error : beatmapUploadError, status } = await supabase
       .from('pending_songs')
@@ -815,7 +821,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
         'user_id' : user.id,
         'header' : song_metadata_upload,
         'metadata' : map_metadata_upload,
-        'background': [[ytBackground, ytOffset, ytEnd]],
+        'background': [[metadata?.background[0][0], ytOffset, ytEnd]],
         "normal_map" : final_notes,
         "audio_link" : filePath
       }])
@@ -827,14 +833,13 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       else if (beatmapUploadError && status === 406) {
         setDeployMessage("Error Uploading Beatmap. Try Again Later");
         throw (beatmapUploadError)
-        // return;
       }
       setDeployMessage("Beatmap Successfully Uploaded & Ready for Review. The Review Process is ~1 day.")
     }
     catch (error) {
       console.log("Error Uploading Beatmap", error)
     }
-  }, [user, supabase, songFile, deploymentMap, ytBackground, ytOffset, ytEnd])
+  }, [user, supabase, songFile, deploymentMap, ytOffset, ytEnd])
 
   const { contextSafe } = useGSAP();
 
@@ -842,39 +847,20 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     gsap.to("#beatmap_save_tooltip", {visibility: "visible", opacity: 1, yoyo: true, repeat: 1, duration:0.75})
   })
 
-  useEffect(() => {
-    if (vListRef.current) {
-      vListRef.current.scrollTo(currentTime * 256)
-    }
-    wavesurfer?.setScrollTime(Math.max(0, currentTime - (1 / 16)))
-  }, [currentTime])
+  // function scrollWindow(index : number)  {
+  //   if (isPlaying) return;
+  //   setTimeout(() => {
+  //     if (wavesurfer && snapOn && vListRef.current) {
+  //       wavesurfer.setTime(index / 16)
+  //     }
+  //   }, 125)
+  // }
 
-  function scrollWindow(index : number)  {
-    if (isPlaying) return;
-    setTimeout(() => {
-      if (wavesurfer && snapOn && vListRef.current) {
-        wavesurfer.setTime(index / 16)
-      }
-    }, 125)
-  }
-  
   const updatePBRate = (rate: number) => {
     if (wavesurfer) {
       wavesurfer.setPlaybackRate(rate);
-      setPbRate(rate)
     }
-  }
-
-  const updateTime = (event: {scrollOffset: number}) => {
-    if (isPlaying) return; // Prevent updates while playing
-    if (wavesurfer) {
-      const newTime = event.scrollOffset / 256;
-      // Only update if the time has actually changed
-      // if (Math.abs(currentTime - newTime) > 0.03) {
-      if (Math.abs(currentTime - newTime) > 0.03) {
-        wavesurfer.setTime(newTime);
-      }
-    }
+    setPbRate(rate)
   }
 
   const returnStyle = {
@@ -883,42 +869,27 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     transition: 'opacity 500ms ease, visibility 500ms'
   } as React.CSSProperties
 
-  const [videoPlaying, setVideoPlaying] = useState<boolean>(false)
-  const [videoMuted, setVideoMuted] = useState<boolean>(true)
-  const [videoDuration, setVideoDuration] = useState<number>(0)
-  const reactPlayerRef = useRef<ReactPlayer | null>(null)
-  const updatePlayerTime = () => {
+  // console.log(timeline * videoDuration, metadata.song_metadata.length, videoDuration)
+
+  useEffect(() => {
+    if (!metadata?.song_metadata.length) return;
+    const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((metadata.song_metadata.length) * 16) + 1)).fill(""));
+    if (metadata && metadata.normal_notes.length > 0) {
+      for (let i = 0; i < metadata.normal_notes[0].length; i++) {
+        tempNotes[0][i] = metadata.normal_notes[0][i]
+        tempNotes[1][i] = metadata.normal_notes[1][i]
+        tempNotes[2][i] = metadata.normal_notes[2][i]
+        tempNotes[3][i] = metadata.normal_notes[3][i]
+      }
+    }
+    setSongNotes(tempNotes);    
+    setSongLength((metadata.song_metadata.length * 16) + 1);
+  }, [])
+
+  const goToStart = () => {
     if (reactPlayerRef.current) {
       reactPlayerRef.current.seekTo(ytOffset);
       setVideoPlaying(true)
-    }
-  }
-
-  const setTimestamps = () => {
-    if (ytEndRef.current && ytOffsetRef.current) {
-      const start = Math.min(Math.floor(parseInt(ytOffsetRef.current.value.replace(/[^0-9]/g, '') || "0")), videoDuration)
-      const end = Math.min(Math.floor(parseInt(ytEndRef.current.value.replace(/[^0-9]/g, '')) || videoDuration), videoDuration)
-      setYTOffset(start)
-      setYTEnd(end)
-      ytOffsetRef.current.value = start.toString();
-      ytEndRef.current.value = end.toString()
-    }
-  }
-
-  const handleProgress = (state: {playedSeconds : number}) => {
-    if (state.playedSeconds >= ytEnd) {
-      setVideoPlaying(false)
-    }
-  }
-
-  const handleDuration = (duration : number) => {
-    setVideoDuration(duration)
-    if (ytIDRef.current && prevID.current !== ytIDRef.current.value && ytOffsetRef.current && ytEndRef.current) {
-      prevID.current = ytIDRef.current.value
-      ytOffsetRef.current.value = "0"
-      ytEndRef.current.value = duration.toString()
-      setYTOffset(0)
-      setYTEnd(duration)
     }
   }
 
@@ -926,12 +897,163 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
     setPlayingAlong(!playingAlong)
   }
 
+  const audioNeeded = contextSafe(() => {
+    // gsap.to("#file_label", {backgroundColor: "#df0000 ", yoyo: true, repeat: 1, duration:0.75})
+    gsap.to("#audio_tooltip_text", {color: "#df0000", yoyo: true, repeat: 1, duration:0.75})
+  })
+
+  const audioChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file) {
+      setDisableWaveform(false)
+      setAudioFile(file);
+    }
+    else {
+      audioNeeded()
+      setAudioFile(null)
+      setDisableWaveform(true)
+    }
+  }, []);
+
+  const [audioPrompt, setAudioPrompt] = useState<boolean>(false)
+  const [ytPrompt, setYTPrompt] = useState<boolean>(false)
+
+  const audioStyle = {
+    visibility: (audioPrompt)? "visible" : "hidden",
+    opacity: (audioPrompt)? 1 : 0,
+    transition: 'opacity 500ms ease, visibility 500ms'
+  } as React.CSSProperties
+
+  const ytStyle = {
+    visibility: (ytPrompt)? "visible" : "hidden",
+    opacity: (ytPrompt)? 1 : 0,
+    transition: 'opacity 500ms ease, visibility 500ms'
+  } as React.CSSProperties
+
+
+
+
+  
+
+
+
+  // const handleDuration = (duration : number) => {
+  //   setVideoDuration(duration)
+  //   if (ytIDRef.current && prevID.current !== ytIDRef.current.value && ytOffsetRef.current && ytEndRef.current) {
+  //     prevID.current = ytIDRef.current.value
+  //     ytOffsetRef.current.value = "0"
+  //     ytEndRef.current.value = duration.toString()
+  //     setYTOffset(0)
+  //     setYTEnd(duration)
+  //   }
+  // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  // useEffect(() => {
+  //   if (metadata?.song_metadata.mp3) {
+  //     setSongLength(999)
+  //     const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((999) * 16) + 1)).fill(""));
+  //     setSongNotes(tempNotes);    
+  //   }
+  // })
+
+    // Set Stage depending on if a map was passed or if this is new
+  // useEffect(() => {
+  //   if (isReady) {
+  //     if (wavesurfer) {
+  //       const duration = wavesurfer.getDuration()
+  //       const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((duration) * 16) + 1)).fill(""));
+  //       if (metadata && metadata.normal_notes.length > 0) {
+  //         for (let i = 0; i < metadata.normal_notes[0].length; i++) {
+  //           tempNotes[0][i] = metadata.normal_notes[0][i]
+  //           tempNotes[1][i] = metadata.normal_notes[1][i]
+  //           tempNotes[2][i] = metadata.normal_notes[2][i]
+  //           tempNotes[3][i] = metadata.normal_notes[3][i]
+  //         }
+  //         setSongNotes(tempNotes)
+  //         setSongLength((duration * 16) + 1);
+  //       }
+  //       else {
+  //         setSongLength((duration * 16) + 1);
+  //         setSongNotes(tempNotes);    
+  //       }
+  //       console.log("Please exit Inspect Mode. Project Tape is likely to crash if you edit with it open. Be sure to save your map often.")
+  //     }
+  //   }
+  // }, [isReady])
+
+
+
+  
+  // console.log(metadata?.background)
+
+  const snapPlayer = () => {
+    if (videoPlaying || timelineSeeking) return
+    // if ((timeline * videoDuration) + ytOffset )
+    if (reactPlayerRef.current && vListRef.current) {
+      reactPlayerRef.current?.seekTo((timeline * videoDuration) + ytOffset)
+    }
+  }
+
+  const handleNewTimestamp = (newOffset : number, newEnd: number) => {
+    setYTPrompt(false)
+    if (newOffset === ytOffset && newEnd === ytEnd) return;
+    const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((newEnd - newOffset) * 16) + 1)).fill(""));
+    if (songNotes) {
+      for (let i = 0; i < newEnd - newOffset; i++) {
+        if (i > songNotes[0].length) break;
+        tempNotes[0][i] = songNotes[0][i]
+        tempNotes[1][i] = songNotes[1][i]
+        tempNotes[2][i] = songNotes[2][i]
+        tempNotes[3][i] = songNotes[3][i]
+      }
+    }
+    // console.log("Break")
+    // console.log(songNotes)
+    // console.log(tempNotes)
+    setSongNotes(tempNotes);
+    setSongLength(((newEnd + newOffset) * 16) + 1)
+    setYTOffset(newOffset)
+    setYTEnd(newEnd)
+    setVideoDuration(newEnd - newOffset)
+    // console.log(songLength, newEnd - newOffset)    
+    // setSongLength((metadata.song_metadata.length * 16) + 1);
+    // console.log("Length", (metadata.song_metadata.length * 16) + 1)
+  }
+
   return (
     <div id="editor_page">
       <div className="editor_header">
-        <h2 id="fixed_time"><span>{formatTime(currentTime)}</span>/ {formatTime((songLength- 1) / 16)}</h2>
+        <h2 id="fixed_time"><span>{formatTime((timeline * videoDuration))}</span>/ {formatTime((songLength- 1) / 16)}</h2>
         <button className={keybindsActive? "active_btn" : "inactive_btn"} onClick={() => {setKeybinds(!keybindsActive)}}>Keybinds</button>
-          <button className={snapOn? "active_btn" : "inactive_btn"} onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap</button>
+          {/* <button className={snapOn? "active_btn" : "inactive_btn"} onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap</button> */}
           <div id="notes">
             <button className={(btn === "Single Note")? "active_btn" : "inactive_btn"} onClick={() => {setBtn("Single Note")}}>S Note</button>
             <button className={(btn === "Turn Note")? "active_btn" : "inactive_btn"} onClick={() => {setBtn("Turn Note")}}>T Note</button>
@@ -940,24 +1062,37 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       <div id="wave_bars">
         <div id="waveform_container" ref={waveformRef}>
         </div>
-        <div id="waveform_bars">
+        <div id="waveform_bars" ref={notesRef}>
           <AutoSizer>
             {({height, width}) => (
               <List
               ref={vListRef}
-              className={isPlaying? "no_scroll" : ""}
+              className={videoPlaying? "no_scroll no_pointer" : "no_scroll"}
               height={height} 
               itemCount={songLength} 
               itemSize={16} 
               layout="horizontal"
-              width={width} 
-              onScroll={updateTime}
+              width={width}
+              onScroll={moveWaveform}
               >
                 {VRow}
               </List>
             )}
           </AutoSizer>
         </div>
+      </div>
+
+      <div id="timeline_slider_wrapper">
+        <input
+        id="timeline_slider"
+        type="range"
+        min={0} max={0.99999} step={'any'}
+        value={timeline}
+        onMouseDown={handleSeekMouseDown}
+        onChange={handleSeekChange}
+        onMouseUp={handleSeekMouseUp}
+        >
+        </input>
       </div>
 
       <div id="metadata_section">
@@ -1041,6 +1176,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
                   id="songSource"
                   type="text" 
                   value={source}
+                  maxLength={50}
                   onChange={(e) => setSource(e.target.value)}
                 ></input>
               </div>       
@@ -1062,85 +1198,28 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
                   <option value={6}>6</option>
                 </select>
               </div> 
-
-              <div className="metadata_div">
-                <label id="mp3_label" htmlFor="usingMP3">Deploy w/ MP3:
-                  <div id="mp3_info">Select &quot;No&quot; if MP3 is same as YT Video</div>
-                </label>
-                <select 
-                  className="metadata_input"
-                  name="usingMP3" 
-                  id="usingMP3"
-                  value={usingMP3? "Yes" : "No"}
-                  onChange={(e) => setUsingMP3(e.target.value === 'Yes')}
-                >
-                  <option value={'Yes'}>Yes</option>
-                  <option value={'No'}>No</option>
-                </select>
-              </div> 
             </div>
-            
 
             <div className="metadata_inputs">
-              <div className="metadata_div">
-                <label id="yt_id_label" htmlFor="ytBackground">Youtube ID:
-                  <div id="yt_id_info">A YouTube ID is 11 characters long, right after &apos;?v=&apos; on the URL</div>
-                </label>
-                <input 
-                  ref={ytIDRef}
-                  className="metadata_input"
-                  name="ytBackground" 
-                  id="ytBackground"
-                  type="text"
-                ></input>
-              </div>
-                <div className="metadata_div" style={{visibility: (videoDuration !== 0)? "visible" : "hidden"}}>
-                <label htmlFor="ytOffset">Start at Second:</label>
-                <input 
-                  ref={ytOffsetRef}
-                  className="metadata_input"
-                  name="ytOffset" 
-                  id="ytOffset"
-                  type="number" 
-                  min={0}
-                  max={videoDuration}
-                ></input>
-              </div>
-
-              <div className="metadata_div" style={{visibility: (videoDuration !== 0)? "visible" : "hidden"}}>
-                <label htmlFor="ytEnd">End at Second:</label>
-                <input 
-                  ref={ytEndRef}
-                  className="metadata_input"
-                  name="ytEnd" 
-                  id="ytEnd"
-                  type="number" 
-                  min={0}
-                  max={videoDuration}
-                ></input>
-              </div>
-              
-              <div className="metadata_inputs">
-                <button className="play_btn" onClick={() => {
-                  if (ytIDRef.current?.value === ytBackground) return; 
-                  setVideoDuration(0); 
-                  setYTBackground(ytIDRef.current?.value || "")
-                  }}>Set Youtube ID</button>
-                {videoDuration !== 0 &&
-                <>
-                  <button onClick={() => setTimestamps()}>Set Timestamps</button>
-                  <button onClick={() => updatePlayerTime()}>Go To Start</button>
-                  <button onClick={() => setVideoMuted(!videoMuted)}>{videoMuted? "Unmute" : "Mute"}</button>
-                </>
-                }              
-              </div>
+              <button className="play_btn" onClick={() => {
+                setAudioPrompt(true)
+              }}>Obtain Waveform</button>
+              <button onClick={() => goToStart()}>Go To Start</button>
+              <button onClick={() => setVideoMuted(!videoMuted)}>{videoMuted? "Unmute" : "Mute"}</button>
             </div>
+
+            <div className="metadata_inputs">
+              <button className="play_btn" onClick={() => {
+                setYTPrompt(true)
+              }}>Edit Timestamps</button>
+            </div>
+            
           </div>
           <div id="youtube_frame" style={{height: (videoDuration !== 0)? "100%" : "0", width: (videoDuration !== 0)? "100%" : "0"}}>
             <ReactPlayer
               ref={reactPlayerRef}
               // url={`https://www.youtube.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0`} //&rel=0 means that "more videos" are locked to uploader's channel
-              url={`https://www.youtube-nocookie.com/watch?v=${ytBackground}?start=${ytOffset}?end=${ytEnd}&rel=0&nocookie=true&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&widgetid=1&aoriginsup=1&vf=1`} //&rel=0 means that "more videos" are locked to uploader's channel
+              url={`https://www.youtube-nocookie.com/watch?v=${metadata?.background[0][0]}?start=${ytOffset}?end=${ytEnd}&rel=0&nocookie=true&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&widgetid=1&aoriginsup=1&vf=1`} //&rel=0 means that "more videos" are locked to uploader's channel
               loop={false}
               controls={false}
               volume={100}
@@ -1148,12 +1227,15 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
               height={"100%"}
               width={"100%"}
               playing={videoPlaying}
+              progressInterval={30}
               pip={false}
               light={false}
               playsinline={true}
               playbackRate={pbRate}
+              onPlay={() => {if (!videoPlaying) setVideoPlaying(true)}}
+              onPause={() => {if (videoPlaying) setVideoPlaying(false)}}
               onProgress={handleProgress}
-              onDuration={handleDuration}
+              // onDuration={handleDuration}
               onEnded={() => setVideoPlaying(false)}
               config={{
                 playerVars: {
@@ -1177,7 +1259,7 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
 
         <div className="footer_div">
         <button className="play_btn" onClick={onPlayPause}>
-          {isPlaying? 
+          {videoPlaying? 
           <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" className="bi bi-pause-circle" viewBox="0 0 16 16">
             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
             <path d="M5 6.25a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0zm3.5 0a1.25 1.25 0 1 1 2.5 0v3.5a1.25 1.25 0 1 1-2.5 0z"/>
@@ -1222,6 +1304,38 @@ export const Editor = ({user, metadata, map_id, keybinds, songAudio, songFile, h
       </div>
       {/* Change song_mapper to user when I pass into this component. If not logged in, have a note that says "Only registered accounts can upload maps to the internet" */}
 
+      <div id="audio_wrapper" style={audioStyle}>
+        {audioPrompt && 
+          <div id="audio_prompt">
+          <button onClick={() => {setAudioPrompt(false); setDisableWaveform(true); if (audioURL === "") setAudioFile(null)}}>
+            Close
+          </button>
+          <br/>
+          <button onClick={() => {setAudioFile(null); setAudioURL("")}}>Remove Waveform</button>
+          <h1>Upload a matching MP3 to generate a waveform for your YouTube video</h1>
+          <h3>Ensure the starting/ending timestamps of your MP3 file matches the video</h3>
+
+          <br/>
+          <div className="metadata_div">
+            <label id="file_label" htmlFor="audio_input">Upload Audio File:</label>
+            <input id="audio_input" type="file" accept='audio/*' onChange={audioChange}/>
+          </div> 
+          <br/>
+
+          {(!disableWaveform && audioFile) && <button onClick={() => 
+            {if (audioFile) setAudioURL(URL.createObjectURL(audioFile))
+            }}>Confirm
+          </button>
+          }
+        
+        </div>
+        } 
+      </div>
+
+      <div id="yt_wrapper" style={ytStyle}>
+        {ytPrompt && metadata?.background[0][0] &&<Player ytID={metadata?.background[0][0]} initialOffset={ytOffset} intialEnd={ytEnd} updateTimestamp={handleNewTimestamp} closeYTPrompt={() => setYTPrompt(false)}/>}
+      </div>
+      
       <div id="return_wrapper" style={returnStyle}>
         {(promptMenu === "Exit" || promptMenu === "Deploy") && 
         <div id="return_div">
