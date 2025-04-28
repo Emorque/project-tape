@@ -778,7 +778,7 @@ export const EditorYT = ({user, metadata, map_id, keybinds, songFile, hitsoundsR
       "song_name" : current_metadata.song_name,
       "song_artist" : current_metadata.song_artist,
       "song_mapper" : user.user_metadata.username,
-      "difficulty": [current_metadata.difficulty, 0]
+      "difficulty": current_metadata.difficulty
     }
 
     const map_metadata_upload = {
@@ -790,7 +790,7 @@ export const EditorYT = ({user, metadata, map_id, keybinds, songFile, hitsoundsR
       "ex_notes": 0,
       "description": current_metadata.description,
       "length": videoDuration,
-      "difficulty" : [current_metadata.difficulty, 0],
+      "difficulty" : current_metadata.difficulty,
     }
 
     const final_notes = formatNotes(current_notes)
@@ -931,89 +931,6 @@ export const EditorYT = ({user, metadata, map_id, keybinds, songFile, hitsoundsR
     transition: 'opacity 500ms ease, visibility 500ms'
   } as React.CSSProperties
 
-
-
-
-  
-
-
-
-  // const handleDuration = (duration : number) => {
-  //   setVideoDuration(duration)
-  //   if (ytIDRef.current && prevID.current !== ytIDRef.current.value && ytOffsetRef.current && ytEndRef.current) {
-  //     prevID.current = ytIDRef.current.value
-  //     ytOffsetRef.current.value = "0"
-  //     ytEndRef.current.value = duration.toString()
-  //     setYTOffset(0)
-  //     setYTEnd(duration)
-  //   }
-  // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-
-  // useEffect(() => {
-  //   if (metadata?.song_metadata.mp3) {
-  //     setSongLength(999)
-  //     const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((999) * 16) + 1)).fill(""));
-  //     setSongNotes(tempNotes);    
-  //   }
-  // })
-
-    // Set Stage depending on if a map was passed or if this is new
-  // useEffect(() => {
-  //   if (isReady) {
-  //     if (wavesurfer) {
-  //       const duration = wavesurfer.getDuration()
-  //       const tempNotes = Array.from({ length: 4 }, () => new Array(Math.floor(((duration) * 16) + 1)).fill(""));
-  //       if (metadata && metadata.normal_notes.length > 0) {
-  //         for (let i = 0; i < metadata.normal_notes[0].length; i++) {
-  //           tempNotes[0][i] = metadata.normal_notes[0][i]
-  //           tempNotes[1][i] = metadata.normal_notes[1][i]
-  //           tempNotes[2][i] = metadata.normal_notes[2][i]
-  //           tempNotes[3][i] = metadata.normal_notes[3][i]
-  //         }
-  //         setSongNotes(tempNotes)
-  //         setSongLength((duration * 16) + 1);
-  //       }
-  //       else {
-  //         setSongLength((duration * 16) + 1);
-  //         setSongNotes(tempNotes);    
-  //       }
-  //       console.log("Please exit Inspect Mode. Project Tape is likely to crash if you edit with it open. Be sure to save your map often.")
-  //     }
-  //   }
-  // }, [isReady])
-
-
-
-  
-  // console.log(metadata?.background)
-
   const snapPlayer = () => {
     if (videoPlaying || timelineSeeking) return
     // if ((timeline * videoDuration) + ytOffset )
@@ -1035,17 +952,11 @@ export const EditorYT = ({user, metadata, map_id, keybinds, songFile, hitsoundsR
         tempNotes[3][i] = songNotes[3][i]
       }
     }
-    // console.log("Break")
-    // console.log(songNotes)
-    // console.log(tempNotes)
     setSongNotes(tempNotes);
     setSongLength(((newEnd + newOffset) * 16) + 1)
     setYTOffset(newOffset)
     setYTEnd(newEnd)
     setVideoDuration(newEnd - newOffset)
-    // console.log(songLength, newEnd - newOffset)    
-    // setSongLength((metadata.song_metadata.length * 16) + 1);
-    // console.log("Length", (metadata.song_metadata.length * 16) + 1)
   }
 
   return (
@@ -1053,7 +964,6 @@ export const EditorYT = ({user, metadata, map_id, keybinds, songFile, hitsoundsR
       <div className="editor_header">
         <h2 id="fixed_time"><span>{formatTime((timeline * videoDuration))}</span>/ {formatTime((songLength- 1) / 16)}</h2>
         <button className={keybindsActive? "active_btn" : "inactive_btn"} onClick={() => {setKeybinds(!keybindsActive)}}>Keybinds</button>
-          {/* <button className={snapOn? "active_btn" : "inactive_btn"} onClick={() => {setSnap(prevSnap => !prevSnap)}}>Snap</button> */}
           <div id="notes">
             <button className={(btn === "Single Note")? "active_btn" : "inactive_btn"} onClick={() => {setBtn("Single Note")}}>S Note</button>
             <button className={(btn === "Turn Note")? "active_btn" : "inactive_btn"} onClick={() => {setBtn("Turn Note")}}>T Note</button>

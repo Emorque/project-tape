@@ -681,9 +681,6 @@ export const EditorMP3 = ({user, metadata, map_id, keybinds, songAudio, songFile
       setMenu(true)
     }
   }
-
-  // const [beatmapUpload, setBeatmapUploading] = useState<boolean>(false)
-
   const formatNotes = (notes : string[][]) => {
     const finalNotes : [number, string][] = [] 
     for (let i = 0; i < notes[0].length; i++) {
@@ -756,7 +753,7 @@ export const EditorMP3 = ({user, metadata, map_id, keybinds, songAudio, songFile
       "song_name" : current_metadata.song_name,
       "song_artist" : current_metadata.song_artist,
       "song_mapper" : user.user_metadata.username,
-      "difficulty": [current_metadata.difficulty, 0]
+      "difficulty": current_metadata.difficulty
     }
 
     const map_metadata_upload = {
@@ -768,7 +765,7 @@ export const EditorMP3 = ({user, metadata, map_id, keybinds, songAudio, songFile
       "ex_notes": 0,
       "description": current_metadata.description,
       "length": Math.floor((songLength - 1) / 16),
-      "difficulty" : [current_metadata.difficulty, 0],
+      "difficulty" : current_metadata.difficulty
     }
 
     const final_notes = formatNotes(current_notes)
