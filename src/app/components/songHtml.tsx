@@ -208,7 +208,7 @@ export const SongHtml = ({songToPlay, playLocalSong, user, role, avatar_url} : S
           console.error('Leaderboard error:', error) // Only used for eslint
         //   alert('Error loading Leaderboard!')
         } finally {
-          console.log('Loaded Leaderboard')
+        //   console.log('Loaded Leaderboard')
           setLeaderboardLoading(false);
         }
     }, [supabase])

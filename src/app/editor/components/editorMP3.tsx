@@ -42,12 +42,13 @@ interface editorInterface {
   keybinds : keybindsType,
   songAudio: string,
   songFile : File,
-  hitsoundsRef: {play : () => void;}[];
+  audioContextRef : AudioContext,
+  audioBufferRef : AudioBuffer,
   clearMap : () => void;
   updateLocalMaps: () => void;
 }
 
-export const EditorMP3 = ({user, metadata, map_id, keybinds, songAudio, songFile, hitsoundsRef, clearMap, updateLocalMaps} : editorInterface) => {   
+export const EditorMP3 = ({user, metadata, map_id, keybinds, songAudio, songFile, audioContextRef , audioBufferRef, clearMap, updateLocalMaps} : editorInterface) => {   
   const [songNotes, setSongNotes] = useState<string[][]>([])
   const [songLength, setSongLength] = useState<number>(0);    
   const [btn, setBtn] = useState<string>("Single Note");
@@ -169,21 +170,29 @@ export const EditorMP3 = ({user, metadata, map_id, keybinds, songAudio, songFile
   }, [currentTime]);
 
   useEffect(() => {
-    if (itemIndex && isPlaying){
-      const offset : number = (itemIndex % 3)
-      if (songNotes[0][itemIndex] === "S" || songNotes[0][itemIndex] === "T") {
-        hitsoundsRef[0 + 3*offset].play();
+    if (itemIndex == null || !isPlaying) return;
+  
+    const context = audioContextRef;
+    const buffer = audioBufferRef;
+    if (!context || !buffer) return;
+  
+    // Indices of songNotes rows that require playback
+    const rowsToCheck = [0, 1, 2, 3];
+    
+    rowsToCheck.forEach(row => {
+      const note = songNotes[row][itemIndex];
+      if (
+        (row === 0 && (note === "S" || note === "T")) ||
+        (row === 1 && note === "S") ||
+        (row === 2 && (note === "S" || note === "T")) ||
+        (row === 3 && note === "S")
+      ) {
+        const source = context.createBufferSource();
+        source.buffer = buffer;
+        source.connect(context.destination);
+        source.start(0);
       }
-      if (songNotes[1][itemIndex] === "S") {
-        hitsoundsRef[1 + 3*offset].play();
-      }
-      if (songNotes[2][itemIndex] === "S" || songNotes[2][itemIndex] === "T") {
-        hitsoundsRef[2 + 3*offset].play();
-      }
-      if (songNotes[3][itemIndex] === "S") {
-        hitsoundsRef[3 + 3*offset].play();
-      }
-    }
+    });
   }, [itemIndex, isPlaying]);
 
   useEffect(() => {

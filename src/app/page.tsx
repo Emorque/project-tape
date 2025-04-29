@@ -101,7 +101,7 @@ export default function Home() {
   }
 
   const getMap = useCallback(async (selectedSong : number, verified: boolean) => {
-    console.log("called Supabase for Map")
+    // console.log("called Supabase for Map")
     try {
       // TODO: add loading state hear, if loading is true for too long, have the user return back to songHTML
       // setMapLoading(true)
@@ -151,7 +151,7 @@ export default function Home() {
       console.error('User error:', error) // Only used for eslint
       alert('Error loading user data!')
     } finally {
-      console.log('loaded game_map and audio')
+      // console.log('loaded game_map and audio')
     }
   }, [supabase])
 
@@ -554,7 +554,7 @@ export default function Home() {
             </svg>
           </button>
           <div>
-            <h1>View Settings to Refernece Keybinds</h1>
+            <h1>View Settings to Reference Keybinds</h1>
             <br/>
             <h1>Each stage consists of 4 lanes.</h1>
             <h2>Lanes 1-2 are on the Top Staff. <br/> Lanes 3-4 are on the Bottom Staff.</h2>

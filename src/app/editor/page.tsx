@@ -195,17 +195,34 @@ export default function EditorPage() {
   } as React.CSSProperties;
 
   const [audioURL, setAudioURL] = useState<string>("");
-  const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
+  // const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
+
+  // useEffect(() => {
+  //   const tempHitsounds: { play: () => void; }[] = []
+  //   for (let i = 0; i <8; i++) {
+  //     const hitsound  = new Audio('/hitsound.mp3');
+  //     hitsound.volume = 1
+  //     tempHitsounds.push(hitsound);
+  //   } 
+  //   hitsoundsRef.current = tempHitsounds;
+  // }, [])
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioBufferRef = useRef<AudioBuffer | null>(null);
 
   useEffect(() => {
-    const tempHitsounds: { play: () => void; }[] = []
-    for (let i = 0; i < 12; i++) {
-      const hitsound  = new Audio('/hitsound.mp3');
-      hitsound.volume = 1
-      tempHitsounds.push(hitsound);
-    } 
-    hitsoundsRef.current = tempHitsounds;
-  }, [])
+    const loadAudio = async () => {
+      const context = new AudioContext();
+      audioContextRef.current = context;
+
+      const response = await fetch('/hitsound.mp3');
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await context.decodeAudioData(arrayBuffer);
+
+      audioBufferRef.current = audioBuffer;
+    };
+
+    loadAudio();
+  }, []);
 
   const audioChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -489,14 +506,14 @@ export default function EditorPage() {
       </div>
       
       <div id="editor_wrapper" style={editorStyle}>
-        {userKeybinds && editorActive && hitsoundsRef.current && selectedMapID && (audioSource === "YT") &&  
-          <EditorYT user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
+        {userKeybinds && editorActive && audioContextRef.current && audioBufferRef.current && selectedMapID && (audioSource === "YT") &&  
+          <EditorYT user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songFile={audioFile} audioContextRef={audioContextRef.current} audioBufferRef={audioBufferRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
         }
-        {userKeybinds && editorActive && audioURL && audioFile && hitsoundsRef.current && selectedMapID && (audioSource === "MP3") &&  
-          <EditorMP3 user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} hitsoundsRef={hitsoundsRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
+        {userKeybinds && editorActive && audioURL && audioFile && audioContextRef.current && audioBufferRef.current && selectedMapID && (audioSource === "MP3") &&  
+          <EditorMP3 user={user} metadata={selectedMap} map_id={selectedMapID} keybinds={userKeybinds} songAudio={audioURL} songFile={audioFile} audioContextRef={audioContextRef.current} audioBufferRef={audioBufferRef.current} clearMap={clearEditor} updateLocalMaps={updateMaps}/>  
         }
       </div>
-      
+
     </div>
   )
 }

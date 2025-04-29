@@ -145,8 +145,10 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
     const [rightTimingIndex, setRightTimingIndex] = useState<number>(0)
     const [turnTimingIndex, setTurnTimingIndex] = useState<number>(0)
 
-    const [hitsoundIndex, setHitsoundIndex] = useState<number>(0);
-    const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
+    // const [hitsoundIndex, setHitsoundIndex] = useState<number>(0);
+    // const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const audioBufferRef = useRef<AudioBuffer | null>(null);
 
     // Score for Leaderboard
     const [scoreUploading, setScoreUploading] = useState<boolean>(true)
@@ -276,7 +278,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                 }
             }
             else if (error && error.code === "PGRST116") {
-                console.log("This row with these ids don't exist")
+                // console.log("This row with these ids don't exist")
                 try {
                     const { error : insertError } = await supabase
                     .from('leaderboard')
@@ -305,7 +307,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
         } catch (error) {
             console.log("Caught leaderboard error", error);
         } finally {
-            console.log("Leaderboard Score Complete")
+            // console.log("Leaderboard Score Complete")
             setScoreUploading(false)
         }
     }, [user, supabase, gameState, perfectCount, okayCount, missCount, score, maxCombo, song_id, verified]);
@@ -449,8 +451,18 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
         ) => {
         // Check for "Perfect" hit
         if (timingList[noteIndex][0] + 75 >= time && time > timingList[noteIndex][0] - 75 && timingList[noteIndex][1] === note) {
-            hitsoundsRef.current[hitsoundIndex].play();
-            setHitsoundIndex((index) => (index + 1) % 12); 
+            const context = audioContextRef.current;
+            const buffer = audioBufferRef.current;
+            if (context && buffer) {
+                const source = context.createBufferSource();
+                source.buffer = buffer;
+                const gainNode = context.createGain();
+                gainNode.gain.value = settings.hsVolume;
+                source.connect(gainNode)
+                gainNode.connect(context.destination);
+                source.start(0);
+            }
+
             const baseScore = (note === "FT" || note === "ST")? 250 : 200
             // base score * (1 + combo multiplier) * (1 + bonues) //flowstate bonus is 0.5, timingBonus is 1 for perfect, and 0.5 for okay 
             if (flowState){
@@ -495,8 +507,17 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
         
         // Check for "Success" hit
         else if (timingList[noteIndex][0] + 150 >= time && time > timingList[noteIndex][0] - 150 && timingList[noteIndex][1] === note) {
-            hitsoundsRef.current[hitsoundIndex].play();
-            setHitsoundIndex((index) => (index + 1) % 12); 
+            const context = audioContextRef.current;
+            const buffer = audioBufferRef.current;
+            if (context && buffer) {
+                const source = context.createBufferSource();
+                source.buffer = buffer;
+                const gainNode = context.createGain();
+                gainNode.gain.value = settings.hsVolume;
+                source.connect(gainNode)
+                gainNode.connect(context.destination);
+                source.start(0);
+            }
             const baseScore = (note === "FT" || note === "ST")? 250 : 200
             // base score * (1 + combo multiplier) * (1 + bonues) //flowstate bonus is 0.5, timingBonus is 1 for perfect, and -0.5 for okay 
             if (flowState){
@@ -580,8 +601,17 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                 else if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
                     checkThirdLane()
                 }
-                hitsoundsRef.current[hitsoundIndex].play();
-                setHitsoundIndex((index) => (index + 1) % 12);       
+                const context = audioContextRef.current;
+                const buffer = audioBufferRef.current;
+                if (context && buffer) {
+                    const source = context.createBufferSource();
+                    source.buffer = buffer;
+                    const gainNode = context.createGain();
+                    gainNode.gain.value = settings.hsVolume;
+                    source.connect(gainNode)
+                    gainNode.connect(context.destination);
+                    source.start(0);
+                }    
                 return;
             }
     
@@ -593,8 +623,17 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                 else if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
                     checkFourthLane()    
                 }
-                hitsoundsRef.current[hitsoundIndex].play();
-                setHitsoundIndex((index) => (index + 1) % 12); 
+                const context = audioContextRef.current;
+                const buffer = audioBufferRef.current;
+                if (context && buffer) {
+                    const source = context.createBufferSource();
+                    source.buffer = buffer;
+                    const gainNode = context.createGain();
+                    gainNode.gain.value = settings.hsVolume;
+                    source.connect(gainNode)
+                    gainNode.connect(context.destination);
+                    source.start(0);
+                }
                 return
             } 
     
@@ -608,7 +647,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, hitsoundIndex, gameState, songStarted]);
+        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, gameState, songStarted]);
     
 
 
@@ -721,13 +760,18 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
 
     // Start Map
     useEffect(() => {
-        const tempHitsounds: { play: () => void; }[] = []
-        for (let i = 0; i < 12; i++) {
-          const hitsound  = new Audio('/hitsound.mp3'); // Needed for local 
-          hitsound.volume = settings.hsVolume
-          tempHitsounds.push(hitsound);
-        } 
-        hitsoundsRef.current = tempHitsounds;
+        const loadAudio = async () => {
+            const context = new AudioContext();
+            audioContextRef.current = context;
+        
+            const response = await fetch('/hitsound.mp3');
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await context.decodeAudioData(arrayBuffer);
+        
+            audioBufferRef.current = audioBuffer;
+        };
+      
+        loadAudio();
 
         const res = (gameMap.sort((firstItem: [number,string], secondItem: [number,string]) => firstItem[0] - secondItem[0]))
         // if (audioProp.current) {
