@@ -244,17 +244,16 @@ export default function Home() {
     setVerifiedSong(false)
     setSongBackground(song_background)
     setSongLength(gameLength)
-    console.log("handled", song_background)
   }
 
   const handleSongReady = () => {
     // Song is ready
-    console.log("Song is Ready")
+    // console.log("Song is Ready")
     setAudioReady(true)
   }
 
   const handleSongError = () => {
-    console.log("Error Loading Song")
+    // console.log("Error Loading Song")
     setAudioReady(false);
   } 
 
@@ -291,12 +290,11 @@ export default function Home() {
     }, [user, getProfile])
 
   const [gameLoading, setGameLoading] = useState<boolean>(true)
-
   const setStage = () => {
-    updateCamera([36,4,40,   32,4,38], false)
     setTimeout(() => {
+      updateCamera([36,4,40,   32,4,38], false)
       setGameLoading(false)
-    }, 750)
+    }, 200)
   }
 
   const backtoMainMenu = () => {
@@ -403,7 +401,7 @@ export default function Home() {
         </div>
       </div>
 
-      <LoadingScreen loading={gameLoading} setGameReady={() => setStage()}/>
+      <LoadingScreen loading={gameLoading} setGameReady={setStage}/>
       
       <div id='menuOptions' className={(menu === "sub_menu")? "activeMenu" : "unactiveMenu"}>
         <button className="menuBtn" disabled={(menu !== "sub_menu") || (htmlDiv === "")} onClick={() => {

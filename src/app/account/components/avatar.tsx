@@ -32,7 +32,7 @@ export default function Avatar({
         const url = URL.createObjectURL(data)
         // const url = data.publicUrl
         setAvatarUrl(url)
-        console.log("Image downloaded")
+        // console.log("Image downloaded")
       } catch (error) {
         console.log('Error downloading image: ', error)
       }

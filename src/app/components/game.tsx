@@ -262,7 +262,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                         .eq('song_id', song_id)
 
                         if (uploadError) {
-                            console.log("upload Error", uploadError)
+                            console.log("Upload Error", uploadError)
                             throw error
                         }
                     }

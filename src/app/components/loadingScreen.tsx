@@ -1,6 +1,6 @@
 import { useProgress } from "@react-three/drei"
 import "./loadingScreen.css"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 interface loadingScreenInterface {
     loading : boolean, 
@@ -13,36 +13,22 @@ export const LoadingScreen = ({loading, setGameReady} : loadingScreenInterface) 
     // May need to come back to revise logic to account for loading supabase
 
     const loadingScreenStyle = {
-        display: loading? "flex" : "none",
-        opacity: loaderClosed? 0 : 1
+        display: loaderClosed? "none" : "flex",
+        opacity: loading? 1 : 0
     }
+
+    useEffect(() => {
+        if (progress >= 100) {
+            setGameReady()
+            setTimeout(() => {
+                setLoaderClosed(true)
+            }, 700) 
+            // 500ms is length of opacity transition + 200 from gameready() timeout
+        }
+    }, [progress])
+
     return (
         <div id="loading_screen" style={loadingScreenStyle}>
-            <h1>Project Tape</h1>
-            <div id="loading_cas">
-                <div className="l_left loading_eye">
-                </div>
-                <div className="eye_lids left_lid top_lid"></div>
-                <div className="eye_lids left_lid bottom_lid"></div>
-
-                <div className="eye_lids right_lid top_lid"></div>
-                <div className="eye_lids right_lid bottom_lid"></div>
-                <div className="l_right loading_eye">
-                    <span className="cas_teeth_loading"></span>
-                    <span className="cas_teeth_loading"></span>
-                    <span className="cas_teeth_loading"></span>
-                </div>
-            </div>
-
-            
-            <div id="loading_container">
-                {(progress >= 100) &&
-                    <div id="loading_btn">
-                        <h2>Click Start to Begin</h2>
-                        <button disabled={progress < 100} onClick={() => {setLoaderClosed(true); setGameReady()}}>Start Game</button>
-                    </div>
-                }
-            </div>
             <div id="loading_bar" style={{width: `${progress}%`}}></div>
         </div>
     )
