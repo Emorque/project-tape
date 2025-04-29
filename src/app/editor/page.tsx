@@ -195,17 +195,6 @@ export default function EditorPage() {
   } as React.CSSProperties;
 
   const [audioURL, setAudioURL] = useState<string>("");
-  // const hitsoundsRef = useRef<{ play: () => void; }[]>([]);
-
-  // useEffect(() => {
-  //   const tempHitsounds: { play: () => void; }[] = []
-  //   for (let i = 0; i <8; i++) {
-  //     const hitsound  = new Audio('/hitsound.mp3');
-  //     hitsound.volume = 1
-  //     tempHitsounds.push(hitsound);
-  //   } 
-  //   hitsoundsRef.current = tempHitsounds;
-  // }, [])
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
 
