@@ -10,7 +10,7 @@ import React from 'react'
 import { useGLTF } from '@react-three/drei'
 
 export function PSRoom(props) {
-  const wireframeMaterial = new THREE.MeshBasicMaterial({ color: 'white', wireframe: true });
+  const wireframeMaterial = new THREE.MeshBasicMaterial({ color: "#91a89a", wireframe: true });
 
   const group = React.useRef()
   // const { nodes, materials, animations } = useGLTF('/project-tape-scene-transformed.glb')
