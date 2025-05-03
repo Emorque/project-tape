@@ -281,7 +281,7 @@ export const Settings = ({saveSettings} : settingsInterface) => {
             lTurn: "A",
             rTurn: "D",
             
-            pause: "Q",
+            pause: "Escape",
             restart: "P",
 
             scrollSpd: 1500,

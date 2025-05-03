@@ -180,6 +180,14 @@
         margin: 0 auto;
         color: var(--white)
     }
+    a {
+        font-size: 2rem;
+        transition: color 0.5s ease;
+    }
+}
+
+#how_to_wrapper a:hover {
+    color: var(--whiteLight)
 }
 
 #settings_header {

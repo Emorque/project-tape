@@ -1,25 +1,16 @@
 // 'use client' taken out because of the gameMapProp. use client is now implied i think b/c parent has use client
-import React, { RefObject, useCallback, useEffect, useRef, useState } from 'react';
-import "./game.css";
+import React, { RefObject, useEffect, useRef, useState } from 'react';
+import '../components/game.css';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { settingsType, ytBackgroundType } from '@/utils/helperTypes';
-import { type User } from '@supabase/supabase-js'
-import { createClient } from '@/utils/supabase/client'
-import ReactPlayer from "react-player/youtube";
+import { settingsType } from '@/utils/helperTypes';
+import Link from 'next/link';
 
 interface gameInterface {
     gameMap: [number,string][];
-    closeGame: (local : boolean) => void;
     settings: settingsType;
     audioProp: React.RefObject<HTMLAudioElement>;
-    ytAudio: boolean;
     gameLength: number;
-    user : User | null;
-    song_id: number | null;
-    songBackground: ytBackgroundType | null;
-    verified: boolean;
-    usingLocalMap: boolean
 }
 
 const gameWhite = "#def0e5";
@@ -31,12 +22,6 @@ const perfectColor = "#36c963"
 const getKeyMapping = (key : string) => {
     const res = [(key === "Spacebar") ? " " : key.charAt(0).toUpperCase() + key.slice(1), (key === "Spacebar") ? " " : key.charAt(0).toLowerCase() + key.slice(1)]
     return res
-}
-
-const getAccuracy = (perfect: number, okay: number, miss: number) => {
-    const total = perfect + okay + miss;
-    const accuracy = ((perfect + okay) / total) * 100
-    return accuracy.toFixed(2)
 }
 
 const getComboMultiplier = (combo: number) => {
@@ -51,9 +36,11 @@ const getComboMultiplier = (combo: number) => {
     return (Math.min(tenthDigit, 5))/10
 }
 
-export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLength, user, song_id, songBackground, verified, usingLocalMap} : gameInterface) => {   
-    const supabase = createClient() // Maybe both of these can work outside of the Game function
+export const TutorialGame = ({gameMap, settings, audioProp, gameLength } : gameInterface) => {   
+    
+    // console.log("Entered Tutorial")
     const { contextSafe } = useGSAP(); 
+
     const [gameState, setGameState] = useState<"Waiting" | "End" | "Running" | "Paused">("Waiting"); 
     const [songStarted, setSongStarted] = useState<boolean>(false)
     // Game Visuals
@@ -73,7 +60,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
     }
     const scrollSpeed = settings.scrollSpd;
     const offset = settings.offset
-    const mobileControls = settings.mobileControls
 
     const combo_bar = useRef<HTMLDivElement>(null);
     // Game States
@@ -87,7 +73,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
     const [flow, setFlow] = useState<number>(0);
 
     const [flippedScreen, setFlippedScreen] = useState<boolean>(false)
-    const [flippedBackground, setFlippedBackground] = useState<boolean>(false)
 
     const [comboCount, setComboCount] = useState<number>(0);
     const [maxCombo, setMaxCombo] = useState<number>(0);
@@ -149,27 +134,20 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
     const audioContextRef = useRef<AudioContext | null>(null);
     const audioBufferRef = useRef<AudioBuffer | null>(null);
 
-    // Score for Leaderboard
-    const [scoreUploading, setScoreUploading] = useState<boolean>(true)
-    const [leaderboardText, setLeadboardText] = useState<string>("Loading")
-    
+    // Score for Leaderboard    
     // States for YT Background(s) 
     const [backgroundDim, setBackgroundDim] = useState<number>(settings.backgroundDim || 0.5)
-    const [videoLoaded, setVideoLoaded] = useState<boolean>(false)
-    const [videoPlaying, setVideoPlaying] = useState<boolean>(true)
-    const [reactPlayerVolume, setReactPlayerVolumne] = useState<number>(0)
-    const reactPlayerRef = useRef<ReactPlayer | null>(null)
+    // const [videoLoaded, setVideoLoaded] = useState<boolean>(false)
+    // const [videoPlaying, setVideoPlaying] = useState<boolean>(true)
+    // const reactPlayerRef = useRef<ReactPlayer | null>(null)
 
-    const [videoVisible, setVideoVisible] = useState<boolean>(false)
-    const handleProgress = (state: {playedSeconds : number}) => {
-        if (songBackground && state.playedSeconds >= songBackground[0][2] - 1) {
-            setVideoPlaying(false)
-            setVideoVisible(false)
-            if (ytAudio){
-                handleEnd()
-            }
-        }
-    }
+    // const [videoVisible, setVideoVisible] = useState<boolean>(false)
+    // const handleProgress = (state: {playedSeconds : number}) => {
+    //     if (songBackground && state.playedSeconds >= songBackground[0][2] - 1) {
+    //         setVideoPlaying(false)
+    //         setVideoVisible(false)
+    //     }
+    // }
 
     // States to check whether player has left the tab 
     const [tabActive, setTabActive] = useState<boolean>(true)
@@ -186,7 +164,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
     }, [])
 
     useEffect(() => {
-        if (!tabActive && gameState !== "Paused" && gameState !== "End") {
+        if (!tabActive && gameState !== "Paused" && gameState !== "End" && tutorialStep !== 10) {
             pauseMap()
         }
     }, [tabActive, gameState])
@@ -218,104 +196,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
     
         return () => cancelAnimationFrame(animationFrameId); // Clean up on unmount or pause
     }, [stopwatchActive, stPaused]);
-
-    // Everything to do with Supabase, only executed if selectedSong and usingLocalMap is false
-    const uploadScore = useCallback(async () => {
-        if (gameState !== "End") return;
-        if (!user) {
-            setLeadboardText("You need to be logged in to upload scores")
-            setScoreUploading(false);
-            return; // Error without this. Likely because it would query profiles with a null id without it
-        }    
-        if (!song_id || usingLocalMap) {
-            setLeadboardText("Leaderboard Not Supported for Local Songs")
-            setScoreUploading(false);
-            return;
-        }
-        if (gameState === "End" && !verified) {
-            setLeadboardText("Leaderboard not available for pending songs")
-            setScoreUploading(false);
-            return;
-        }
-        try {
-            setScoreUploading(true)
-            const { data, error, status } = await supabase
-            .from('leaderboard')
-            .select(`score`)
-            .eq('user_id', user?.id)
-            .eq('song_id', song_id)
-            .single()
-    
-            if (error && status !== 406) {
-                console.log("Error obtaining leaderboard score", error)
-                throw error
-            }
-    
-            if (data) {
-                if (data.score < score) {
-                    try {
-                        const { error : uploadError } = await supabase
-                        .from('leaderboard')
-                        .update({ score: score, accuracy: getAccuracy(perfectCount, okayCount, missCount), perfect_count: perfectCount, okay_count: okayCount})
-                        .eq('user_id', user?.id)
-                        .eq('song_id', song_id)
-
-                        if (uploadError) {
-                            console.log("Upload Error", uploadError)
-                            throw error
-                        }
-                    }
-                    catch (uploadError) {
-                        console.log("Error Updating Score", uploadError)
-                    }
-                    finally {
-                        setLeadboardText("Updated Score to Leaderboard")
-                    }
-                }
-                else {
-                    setLeadboardText(`Your Previous Score: ${data.score}`)
-                }
-            }
-            else if (error && error.code === "PGRST116") {
-                // console.log("This row with these ids don't exist")
-                try {
-                    const { error : insertError } = await supabase
-                    .from('leaderboard')
-                    .insert([
-                    { 'song_id' : song_id, 'user_id': user?.id, 
-                        'score': score, 
-                        'accuracy': getAccuracy(perfectCount, okayCount, missCount),
-                        'perfect_count': perfectCount,
-                        'okay_count': okayCount, 
-                        'username' : user.user_metadata.username, 
-                        'max_combo': maxCombo},
-                    ])
-    
-                    if (insertError) {
-                        console.log("Error inserting score", insertError);
-                        throw insertError
-                    }
-                }                
-                catch (insertError) {
-                    console.log("Error inserting new score to leaderboard", insertError)
-                }
-                finally {
-                    setLeadboardText("Score Uploaded to Leaderboard")
-                }
-            }
-        } catch (error) {
-            console.log("Caught leaderboard error", error);
-        } finally {
-            // console.log("Leaderboard Score Complete")
-            setScoreUploading(false)
-        }
-    }, [user, supabase, gameState, perfectCount, okayCount, missCount, score, maxCombo, song_id, verified]);
-    
-    
-    // Remove use Effect and just tie the uploadScore function to be called once song ends 
-    useEffect(() => {
-        uploadScore()
-    }, [user, verified, uploadScore])
 
     // All animations
     const moveLeft = contextSafe(() => {
@@ -646,51 +526,73 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-        }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, gameState, songStarted]);
+    }, [time, direction, leftTimingIndex, rightTimingIndex, turnTimingIndex, gameState, songStarted]);
     
+    const [tutorialStep, setTutorialStep] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(0)
+
+    useEffect(() => {
+        if (time > (6000) && tutorialStep === 1) {
+            setTutorialStep(2)
+        }
+        else if (time > 17000 && tutorialStep === 2){
+            setTutorialStep(3)
+        }
+        else if (time > 27000 && tutorialStep === 3){
+            setTutorialStep(4)
+        }
+        else if (time > 39000 && tutorialStep === 4){
+            setTutorialStep(5)
+        }
+        else if (time > 46500 && tutorialStep === 5){
+            setTutorialStep(6)
+        }
+        else if (time > 61500 && tutorialStep === 6){
+            setTutorialStep(7)
+        }
+        else if (time > 66000 && tutorialStep === 7){
+            setFlow(0)
+            setFlowState(true)
+            flowStateAnimation.current.restart()
+            setTutorialStep(8)
+        }
+        else if (time > 67000 && tutorialStep === 8){
+            setTutorialStep(9)
+        }
+    }, [time, tutorialStep])
+
 
 
     // TODO: Remove this handleEnd and replace this by adding 1 or 2 classes in css file and adjusting class list for lane-container based on states
-    const handleEnd = contextSafe(() => {
-        gsap.to("#lane_container", {
-            opacity: 0,
-            duration: 1,
-            onComplete: () => {
-                setEndScreen(true)
-                setGameState("End")
-                setVideoVisible(false)
-                setVideoPlaying(false)
-                setStopwatchActive(false)
-            }
-        })
-    })
-
-    const gameOver = () => {
-        gsap.to("#lane_container", {
-            opacity: 0,
-            duration: 1,
-            onComplete: () => {
-                setGameState("End")
-                if (!ytAudio) audioProp.current?.pause()
-                setGameOverScreen(true)
-                setStopwatchActive(false)
-                setVideoVisible(false)
-                setVideoPlaying(false)
-            }
-        })
+    const handleEnd = () => {
+        setTutorialStep(10)
+        // setVideoVisible(false)
+        // setVideoPlaying(false)
+        setStopwatchActive(false)
     }
+
+    // const gameOver = () => {
+    //     gsap.to("#lane_container", {
+    //         opacity: 0,
+    //         duration: 1,
+    //         onComplete: () => {
+    //             setGameState("End")
+    //             setGameOverScreen(true)
+    //             setStopwatchActive(false)
+    //             setVideoVisible(false)
+    //             setVideoPlaying(false)
+    //         }
+    //     })
+    // }
 
     // Ends the game once the audio file ends 
     // I don't think ytAudio check needed here
     useEffect(() => {
-        if (!ytAudio) {
-            const audioReference = audioProp.current;
-            audioReference?.addEventListener('ended', handleEnd);        
-            return () => {
-                audioReference?.removeEventListener('ended', handleEnd);
-            }
+        const audioReference = audioProp.current;
+        audioReference?.addEventListener('ended', handleEnd);        
+        return () => {
+            audioReference?.removeEventListener('ended', handleEnd);
         }
-    }, [ytAudio])
+    }, [])
 
     useGSAP(() => {
         if (endScreen) {
@@ -720,15 +622,15 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
 
     const resumeMap = () => {
         const curves = document.querySelectorAll('.bar');
-        if (audioProp.current && !ytAudio) {
+        if (audioProp.current) {
             audioProp.current.play();
         }
         if (flowState) {
             flowStateAnimation.current.play()
         }
-        if (reactPlayerRef.current){
-            setVideoPlaying(true)
-        }
+        // if (reactPlayerRef.current){
+        //     setVideoPlaying(true)
+        // }
         setStopwatchActive(true);
         setStPaused(false);
         setGameState("Running");
@@ -740,15 +642,15 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
 
     const pauseMap = () => {
         const curves = document.querySelectorAll('.bar');
-        if (audioProp.current && !ytAudio) {
+        if (audioProp.current) {
             audioProp.current.pause();
         }
         if (flowState) {
             flowStateAnimation.current.pause()
         }
-        if (reactPlayerRef.current){
-            setVideoPlaying(false)
-        }
+        // if (reactPlayerRef.current){
+        //     setVideoPlaying(false)
+        // }
         setStopwatchActive(false);
         setStPaused(true);
         setGameState("Paused"); //Pause game
@@ -806,16 +708,10 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
         
         if (offset >= 0) {
             setTimeout(() => {
-                if (audioProp.current && !ytAudio) {
+                if (audioProp.current) {
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
-                }
-                if (reactPlayerRef.current && songBackground) {
-                    reactPlayerRef.current.seekTo(songBackground[0][1])
-                    setVideoVisible(true)
-                    setVideoLoaded(true)
-                    setReactPlayerVolumne(settings.gpVolume)
                 }
                 setSongStarted(true)
             }, ((scrollSpeed * 2) + 3000 + offset))
@@ -824,19 +720,15 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                 setStopwatchActive(true);
                 setStPaused(false);
                 setGameState("Running")
+                setTutorialStep(1)
             }, scrollSpeed + 3000)
         }
         else {
             setTimeout(() => {
-                if (audioProp.current && !ytAudio) {
+                if (audioProp.current) {
                     audioProp.current.currentTime = 0;
                     audioProp.current.volume = settings.gpVolume
                     audioProp.current.play();
-                }
-                if (reactPlayerRef.current && songBackground) {
-                    reactPlayerRef.current.seekTo(songBackground[0][1])
-                    setVideoVisible(true)
-                    setVideoLoaded(true)
                 }
                 setSongStarted(true)
             }, ((scrollSpeed * 2) + 3000))
@@ -848,10 +740,10 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
             
             setTimeout(() => {
                 setGameState("Running")
+                setTutorialStep(1)
             }, scrollSpeed + 3000)
         }
     }, [])
-
 
     // Restart Map
     const restartMap = () => {
@@ -859,11 +751,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
             audioProp.current.pause();
             audioProp.current.currentTime = 0;
             setSongStarted(false)
-        }
-        if (reactPlayerRef.current && songBackground) {
-            reactPlayerRef.current.seekTo(songBackground[0][1])
-            setVideoPlaying(false)
-            setVideoVisible(false)
         }
 
         setStopwatchActive(false);
@@ -877,6 +764,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
         setMaxCombo(0);
         setEndScreen(false);
         setGameOverScreen(false)
+        setTutorialStep(0)
 
         setHP(100)
         setFlow(0)
@@ -903,16 +791,17 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                     audioProp.current.play();
                     setSongStarted(true)
                 }
-                if (reactPlayerRef.current && songBackground) {
-                    setVideoPlaying(true)
-                    setVideoVisible(true)
-                }
+                // if (reactPlayerRef.current && songBackground) {
+                //     setVideoPlaying(true)
+                //     setVideoVisible(true)
+                // }
             }, ((scrollSpeed * 2) + 3000 + offset))
     
             setTimeout(() => {
                 setStopwatchActive(true);
                 setStPaused(false);
                 setGameState("Running")
+                setTutorialStep(1)
             }, scrollSpeed + 3000)
         }
         else {
@@ -923,10 +812,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                     audioProp.current.play();
                     setSongStarted(true)
                 }
-                if (reactPlayerRef.current && songBackground) {
-                    setVideoPlaying(true)
-                    setVideoVisible(true)
-                }
             }, ((scrollSpeed * 2) + 3000))
     
             setTimeout(() => {
@@ -936,6 +821,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
             
             setTimeout(() => {
                 setGameState("Running")
+                setTutorialStep(1)
             }, scrollSpeed + 3000)
         }
 
@@ -1057,46 +943,11 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
         setMissCount((count) => count + 1);
         setComboCount(0)
         if (hp <= 1) {
-            gameOver();
+            setHP(1)
         }
         setHP(prevHP => prevHP -= 2)
         if (combo_bar.current) combo_bar.current.style.transition = "none";
         setNoteIndex((index) => index + 1)
-    }
-
-    // Mobile Controls
-    const handleLeftTurn = () => {
-        if (direction === "Left") return
-        moveLeft();
-        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
-            handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "FT")
-        }
-    }
-
-    const handleRightTurn = () => {
-        if (direction === "Right") return
-        moveRight();
-        if (turnTimingIndex < turnTiming.current.length && turnTiming.current[turnTimingIndex][0] <= time + 150) {
-            handleInput(turnTiming.current, setTurnTimingIndex, turnTimingIndex, "ST")
-        }
-    }
-
-    const handleTopLane = () => {
-        if (direction === 'Left' && leftTimingIndex < leftTiming.current.length) {
-            checkFirstLane()
-        }
-        else if (direction === 'Right' && leftTimingIndex < leftTiming.current.length) {
-            checkThirdLane()
-        }
-    }
-
-    const handleBottomLane = () => {
-        if (direction === 'Left' && rightTimingIndex < rightTiming.current.length) {
-            checkSecondLane()              
-        }
-        else if (direction === 'Right' && rightTimingIndex < rightTiming.current.length) {
-            checkFourthLane()
-        }
     }
 
     const checkFirstLane = () => {
@@ -1141,37 +992,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
 
     return (
     <div>
-        {songBackground && 
-        <div id='video_background' style={{transform: flippedBackground? "scaleX(-1)" : ""}}>
-            <div id='video_visible' style={{opacity: videoVisible? (1 - backgroundDim) : 0}} className={videoLoaded? "showBackground" : "hideBackground"} >
-            {/* <div id='yt-cover'> */}
-            {/* </div> */}
-            {/* // https://www.youtube-nocookie.com/embed/eh1r0ZpTrXo?controls=0&rel=0&playsinline=1&disablekb=1&autoplay=0&modestbranding=1&nocookie=true&fs=0&enablejsapi=1&origin=https%3A%2F%2Frhythm-plus.com&widgetid=1&forigin=https%3A%2F%2Frhythm-plus.com%2Fgame%2FGyLLbFGVGXJ9TagPGE5dur&aoriginsup=1&vf=1 i found a secret */}
-            <ReactPlayer
-                ref={reactPlayerRef}
-                
-                url={`https://www.youtube-nocookie.com/watch?v=${songBackground[0][0]}?start=${songBackground[0][1]}&end=${songBackground[0][2]}&rel=0&nocookie=true`} //&rel=0 means that "more videos" are locked to uploader's channel
-                loop={false}
-                controls={false}
-                volume={reactPlayerVolume}
-                muted={!ytAudio}
-                height={"100%"}
-                width={"100%"}
-                playing={videoPlaying}
-                pip={false}
-                light={false}
-                playsinline={true}
-                onProgress={handleProgress}
-                config={{
-                    playerVars: {
-                        iv_load_policy: 3,
-                        disablekb: 1
-                    }
-                }}
-            />
-        </div>
-        </div>        
-        }
         <div id='game_container'>
             {(!endScreen || !gameOverScreen) && 
             <button id='pause_btn' onClick={pauseMap} disabled={(gameState === "End") || (gameState === "Paused")} style={{opacity: (gameState === "End")? 0 : 1 }}>
@@ -1186,15 +1006,6 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
               </svg>
               }
             </button>
-            }
-
-            {mobileControls &&
-            <div id='mobile_controls'>
-                <div id='top_staff_btn' onClick={() => handleLeftTurn()}></div>
-                <div id='bottom_staff_btn' onClick={() => handleRightTurn()}></div>
-                <div id='top_lane_btn' onClick={() => handleTopLane()}></div>
-                <div id='bottom_lane_btn' onClick={() => handleBottomLane()}></div>
-            </div>
             }
 
             <div id='progress_bar' style={{width: `${(time/(gameLength * 1000)) * 100}%`, opacity: (gameState === "End")? 0 : 1 }}></div>
@@ -1221,19 +1032,19 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                 <div className='lane_section'>
                     <div ref={lane_one} className='lane lane-one'> 
                     <div className='lane_circle_tape lct_left'></div>
-                    <div id='lc_one' className='lane_circle'>
-                        <span className="lane_circle_teeth"></span>
-                        <span className="lane_circle_teeth"></span>
-                        <span className="lane_circle_teeth"></span>
-                    </div>
+                        <div id='lc_one' className='lane_circle'>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
+                        </div>
                     </div>
                     <div ref={lane_two} className='lane lane-two'>  
-                    <div className='lane_circle_tape lct_right'></div>
-                    <div id='lc_two' className='lane_circle'>
-                        <span className="lane_circle_teeth"></span>
-                        <span className="lane_circle_teeth"></span>
-                        <span className="lane_circle_teeth"></span>
-                    </div>
+                        <div className='lane_circle_tape lct_right'></div>
+                        <div id='lc_two' className='lane_circle'>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
+                            <span className="lane_circle_teeth"></span>
+                        </div>
                     </div>    
                 </div>
                 <div className='lane_section'>
@@ -1271,6 +1082,120 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                 </div>
             </div>
 
+            <div id='tutorial_div_wrapper' className={tutorialStep === 10? "final_screen" : "not_final"}>
+                <div id='tutorial_divs'>
+                    {(tutorialStep < 4 || tutorialStep === 5 || tutorialStep === 7 || tutorialStep === 8|| tutorialStep === 10) &&<div className='tutorial_bg'></div>}
+                    <div className={tutorialStep === 1? "tutorial_div active_tutorial" : "tutorial_div unactive_tutorial"}>
+                        <h1>Welcome to Project Tape!</h1>
+                        <h2>Project Tape is a web-based Rhythm Game, where you can create, play, and share songs with anyone!</h2>
+                        <br/>
+                        <div className='hori_div'>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-music-note" viewBox="0 0 16 16">
+                                <path d="M9 13c0 1.105-1.12 2-2.5 2S4 14.105 4 13s1.12-2 2.5-2 2.5.895 2.5 2"/>
+                                <path fillRule="evenodd" d="M9 3v10H8V3z"/>
+                                <path d="M8 2.82a1 1 0 0 1 .804-.98l3-.6A1 1 0 0 1 13 2.22V4L8 5z"/>
+                            </svg>
+                            <h2>Connected - Hydelic</h2>
+                        </div>
+                    </div>
+
+                    <div className={tutorialStep === 2? "tutorial_div active_tutorial" : "tutorial_div unactive_tutorial"}>
+                        <h1>How to Play:</h1>
+                        <h2>Each song features a Top Deck and a Bottom Deck. Spin between them
+                            using the <span>A</span> and <span>D</span> keys respectively.</h2>
+                        <h2>Each Deck has a Top Lane (<span>J</span> Key) and a Bottom Lane (<span>L</span> Key).
+                        </h2>
+                        <h2>You can <span>only</span> hit the notes of your current Deck.</h2>
+                        <div className='hori_div'>
+                            <img src='/cas.svg'/>
+                            <h2>&apos;s position indicates your current Deck.</h2>
+                        </div>
+                        <br/>
+                    </div>
+
+                    <div className={tutorialStep === 3? "tutorial_div active_tutorial" : "tutorial_div unactive_tutorial"}>
+                        <h1>Scoring:</h1>
+                        <h2>Notes appear from the right, matching the song&apos;s rhythm. When a note reaches the left white line
+                             of your current Deck, hit the corresponding lane key (<span>J</span> and <span>L</span>). 
+                        </h2>
+                        <div className='scoring_demo'>
+                            <div>
+                            <div className='demo_bar'>
+                                <div className='lane_circle_tape lct_left'></div>
+                                <div className='lane_circle_tape lct_left'></div>
+                                <div className='lane_circle'>
+                                    <span className="lane_circle_teeth"></span>
+                                    <span className="lane_circle_teeth"></span>
+                                    <span className="lane_circle_teeth"></span>
+                                </div>
+                            </div>
+                            <div className='demo_bar'>
+                                <div className='lane_circle_tape lct_right'></div>
+                                <div className='lane_circle'>
+                                    <span className="lane_circle_teeth"></span>
+                                    <span className="lane_circle_teeth"></span>
+                                    <span className="lane_circle_teeth"></span>
+                                </div>
+                            </div>
+                            </div>
+                            
+                            <div className='demo_note_bar'>
+                            </div>
+                            <div className='demo_note_bar'>
+                            </div>
+                        </div>
+                        <h2 className='perfect'>Perfect Range</h2>
+                        <h2 className='okay'>Okay Range</h2>
+                        <br/>
+                    </div>
+
+                    <div className={tutorialStep === 5? "tutorial_div active_tutorial" : "tutorial_div unactive_tutorial"}>
+                        <h1>Spin Notes:</h1>
+                        <div className='scoring_demo_turn'>
+                            <div className='demo_turn_bar'></div>
+                            <div className='demo_turn_bar'></div>
+                        </div>
+                        <h2>Hit Spin Notes with the corresponding Spin key (<span>A</span> or <span>D</span>) as they reach the white line.</h2>
+                        <h2>A Spin Note only registers if you spin from the <span>opposite</span> Deck.</h2>
+                        <br/>
+                    </div>
+
+                    <div className={(tutorialStep === 7 || tutorialStep === 8)? "tutorial_div active_tutorial" : "tutorial_div unactive_tutorial"}>
+                        <h1>More:</h1>
+                        <div className='hori_div'>
+                            <h2>
+                                <span>Flow</span>: Hit enough notes, and<img id='shrink_cas' src='/cas.svg'/>
+                               will enter &quot;Flow&quot;, which grants bonus points. Let&apos;s try it!</h2>
+                        </div>
+                        <h2><span className='green_span'>HP</span>: Missing too many notes leads to Game Over.</h2>
+                        <br/>
+                    </div>
+
+                    <div className={(tutorialStep === 10)? "tutorial_div active_tutorial" : "tutorial_div unactive_tutorial"}>
+                        <h1>That&apos;s All!</h1>
+                        <h2>You should now be able to play any song!</h2>
+                        <h2>Songs are rated from 1 - 6 in difficulty:</h2>
+                        <div className='hori_div split_it'>
+                            {[1,2,3,4,5,6].map((difficulty) => {
+                                return (
+                                    <div className="tutorial_spinner" key={`${difficulty} spinner`}>
+                                        <span className={((difficulty) >= 5 )? "cas_teeth active_teeth" : ((difficulty) >= 2)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                        <span className={((difficulty) === 6 )? "cas_teeth active_teeth" : ((difficulty) >= 3)? "cas_teeth half_active_teeth" : "unactive_teeth"}></span>
+                                        <span className={((difficulty) >= 4 )?"cas_teeth active_teeth" : "cas_teeth half_active_teeth"}></span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div id='tutorial_end'>
+                            <Link href={"/"}>Go Back to the Game</Link>
+                            <button onClick={restartMap}>Restart the Tutorial</button>
+                        </div>
+                        <br/>
+                    </div>
+                    
+                </div>
+            </div>
+
             <div id='pause_wrapper' className={(gameState === "Paused")? "pause_active" : 'pause_unactive'}>
                 <div id="pause_screen">
                     <label id='bg_label' htmlFor='bg_slider'>Background Dim</label>
@@ -1287,14 +1212,14 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                     <button onClick={() => resumeMap()}>Resume</button>
                     <button onClick={() => restartMap()}>Retry</button>
                     <button onClick={() => setFlippedScreen(!flippedScreen)}>Flip Screen</button>
-                    <button onClick={() => setFlippedBackground(!flippedBackground)}>Flip Background</button>
-                    <button onClick={() => {closeGame(usingLocalMap)}}>Main Menu</button>
+                    {/* <button onClick={() => setFlippedBackground(!flippedBackground)}>Flip Background</button> */}
+                    <Link href={"/"}>Close Tutorial</Link>
                 </div>
             </div>
 
             {gameState === "Waiting"? 
             <div id='waiting_wrapper'>
-                {songBackground && <p id='yt_info'>Video Background Powered by Youtube. Video copyright belongs to respective owners.</p>}
+                {/* {songBackground && <p id='yt_info'>Video Background Powered by Youtube. Video copyright belongs to respective owners.</p>} */}
                     <span>3</span>
                     <span>2</span>
                     <span>1</span>
@@ -1305,7 +1230,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
             </>
             }
 
-            {endScreen && 
+            {/* {endScreen && 
                 <div id='end_screen_wrapper'>
                     <div>
                         <h1 id='score_text'>0</h1>
@@ -1347,15 +1272,13 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                     </div>
                     <div id='scoreUpload_menu'>
                         <div id='menu_div'>
-                            <button onClick={restartMap} className='gameBtns'>Retry</button>
-                            <button onClick={() => {closeGame(usingLocalMap)}} className='gameBtns'>Main Menu</button>
-                        </div>
+                            </div>
                         <h2>{scoreUploading? "Checking server..." : leaderboardText}</h2>
                     </div>                    
                 </div>
-            }
+            } */}
 
-            {gameOverScreen && 
+            {/* {gameOverScreen && 
                 <div id='game_over_screen_wrapper'>
                     <div id="game_over_screen">
                         <h1>Game Over</h1>
@@ -1363,7 +1286,7 @@ export const Game = ({gameMap, closeGame, settings, audioProp, ytAudio, gameLeng
                         <button onClick={() => {closeGame(usingLocalMap)}}>Main Menu</button>
                     </div>
                 </div>
-            }
+            } */}
         </div>
     </div>
   )

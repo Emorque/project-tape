@@ -278,24 +278,25 @@
     cursor: pointer;
     padding: 8px 4px 4px 4px;
     margin: 0;
-    background-color: var(--screenBlack);
+    background-color: var(--green);
     transition: all 0.2s ease;
+    border: 2px solid var(--screenBlack);
 }
 
 #song_btns button:first-child {
     padding: 6px;
     font-size: 1.8rem;
-    color: var(--white)
+    color: var(--screenBlack)
 }
 
 #song_btns button:hover {
-    background-color: var(--black);
+    background-color: var(--white);
 } 
 
 #song_btns button svg{
     height: 20px;
     aspect-ratio: 1;
-    fill: var(--white)
+    fill: var(--screenBlack)
 }
 
 @media screen and (max-height: 400px) {

@@ -129,6 +129,7 @@ export default function Home() {
 
       if (songMap) {
         setGameMap(songMap.normal_map)
+        console.log("gameMapSupabase")
         if (songMap.audio_link.startsWith("https://www.youtube.com/watch?v=")) {
           setYTAudio(true)
         }
@@ -238,6 +239,7 @@ export default function Home() {
     }
     else {
       setYTAudio(false)
+      setAudioURL(song_url)
     }
     setGameMap(formatNotes(song_notes))
     setUsingLocalMap(true)
@@ -248,7 +250,7 @@ export default function Home() {
 
   const handleSongReady = () => {
     // Song is ready
-    // console.log("Song is Ready")
+    console.log("Song is Ready")
     setAudioReady(true)
   }
 
@@ -552,6 +554,7 @@ export default function Home() {
             </svg>
           </button>
           <div>
+            <Link href={"/tutorial"}>Play Tutorial</Link>
             <h1>View Settings to Reference Keybinds</h1>
             <br/>
             <h1>Each stage consists of 4 lanes.</h1>
